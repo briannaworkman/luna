@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { X, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/badge'
+import { Button } from '@/components/ui/button'
 import type { LunarLocation } from './types'
 
 interface LocationPanelProps {
@@ -56,13 +57,13 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
             <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan">
               {location?.region ?? ''}
             </div>
-            <button
+            <Button
+              variant="icon"
               onClick={onClose}
               aria-label="Close panel"
-              className="w-6 h-6 grid place-items-center bg-transparent border-none text-luna-fg-3 cursor-pointer rounded-sm transition-colors hover:text-luna-fg hover:bg-luna-base-3"
             >
               <X size={16} strokeWidth={1.5} />
-            </button>
+            </Button>
           </div>
 
           {/* Name + proposed badge */}
@@ -144,13 +145,13 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
 
         {/* Bottom CTA */}
         <div className="px-8 pt-5 pb-8 border-t border-luna-hairline">
-          <button
+          <Button
             onClick={() => location && onResearch(location)}
-            className="w-full h-10 bg-luna-cyan text-luna-base border border-luna-cyan rounded font-sans font-medium text-sm cursor-pointer inline-flex items-center justify-center gap-2 transition-colors hover:bg-luna-cyan-dim hover:border-luna-cyan-dim"
+            className="w-full"
           >
             Analyze this location
             <ArrowRight size={14} strokeWidth={1.75} />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

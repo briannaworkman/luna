@@ -138,7 +138,7 @@
     /* #E8EDF5 */ --foreground:             220 43% 94%;
                   --card-foreground:        220 43% 94%;
                   --popover-foreground:     220 43% 94%;
-                  --primary:                220 43% 94%;
+    /* #7DD3FC */ --primary:               200 95% 74%;
     /* #050C1A */ --primary-foreground:     220 56% 7%;
     /* #111E33 */ --secondary:              220 50% 14%;
     /* #E8EDF5 */ --secondary-foreground:   220 43% 94%;

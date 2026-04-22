@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+  .beacon { height: 140px; background: var(--luna-base-1); border: 1px solid var(--luna-hairline); border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .dot { width: 14px; height: 14px; border-radius: 999px; background: #7DD3FC; box-shadow: 0 0 0 4px rgba(125,211,252,0.18), 0 0 24px rgba(125,211,252,0.55); }
+  .pulse { position: absolute; width: 60px; height: 60px; border-radius: 999px; border: 1px solid rgba(125,211,252,0.32); animation: p 2.4s infinite ease-out; }
+  @keyframes p { 0% { transform: scale(0.5); opacity: 0.9 } 100% { transform: scale(2.2); opacity: 0 } }
+  .tag { position: absolute; top: 10px; left: 12px; font-family: var(--luna-font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #7DD3FC; }
+  .swgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .sw { height: 64px; border-radius: 6px; border: 1px solid var(--luna-hairline); padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-between; }
+  .n { font-family: var(--luna-font-display); font-weight: 500; font-size: 11px; color: var(--luna-fg); }
+  .h { font-family: var(--luna-font-mono); font-size: 9px; color: var(--luna-fg-3); }
+</style></head>
+<body><div class="card"><div class="hero">
+  <div class="beacon">
+    <div class="pulse"></div><div class="dot"></div>
+    <div class="tag">◉ active agent</div>
+  </div>
+  <div class="swgrid">
+    <div class="sw" style="background:#7DD3FC"><span class="n" style="color:#050C1A">cyan</span><span class="h" style="color:#050C1A">#7DD3FC</span></div>
+    <div class="sw" style="background:#4FA5CD"><span class="n" style="color:#050C1A">cyan-dim</span><span class="h" style="color:#050C1A">#4FA5CD</span></div>
+    <div class="sw" style="background:rgba(125,211,252,0.08); border-color: rgba(125,211,252,0.32)"><span class="n" style="color:#7DD3FC">cyan-wash</span><span class="h" style="color:#7DD3FC">8% α</span></div>
+    <div class="sw" style="background:rgba(125,211,252,0.16); border-color: rgba(125,211,252,0.32)"><span class="n" style="color:#7DD3FC">cyan-glow</span><span class="h" style="color:#7DD3FC">16% α</span></div>
+  </div>
+</div></div></body></html>

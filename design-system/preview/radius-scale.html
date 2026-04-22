@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .box { width: 88px; height: 64px; background: var(--luna-base-2); border: 1px solid var(--luna-hairline-2); }
+  .name { font-family: var(--luna-font-mono); font-size: 10px; color: var(--luna-fg); letter-spacing: 0.06em; }
+  .val { font-family: var(--luna-font-mono); font-size: 9px; color: var(--luna-fg-3); }
+</style></head>
+<body><div class="card"><div class="grid5">
+  <div class="tile"><div class="box" style="border-radius:2px"></div><span class="name">xs</span><span class="val">2 px</span></div>
+  <div class="tile"><div class="box" style="border-radius:4px"></div><span class="name">sm</span><span class="val">4 px</span></div>
+  <div class="tile"><div class="box" style="border-radius:6px"></div><span class="name">md · default</span><span class="val">6 px</span></div>
+  <div class="tile"><div class="box" style="border-radius:8px"></div><span class="name">panel</span><span class="val">8 px</span></div>
+  <div class="tile"><div class="box" style="border-radius:12px"></div><span class="name">hero</span><span class="val">12 px</span></div>
+</div></div></body></html>

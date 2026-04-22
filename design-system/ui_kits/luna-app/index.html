@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LUNA — research console</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="app.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root" data-screen-label="01 LUNA research console"></div>
+
+<script type="text/babel" src="Primitives.jsx"></script>
+<script type="text/babel" src="AppShell.jsx"></script>
+<script type="text/babel" src="AgentRail.jsx"></script>
+<script type="text/babel" src="Conversation.jsx"></script>
+<script type="text/babel" src="Composer.jsx"></script>
+<script type="text/babel" src="DataDock.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// Scripted streams to simulate agent runs without real backend.
+const SCRIPT = {
+  tranquillitatis: {
+    prompt: "What's the regolith temperature at Mare Tranquillitatis at lunar noon?",
+    activeAgents: ["orbit", "thermal", "mineralogy"],
+    stream: [
+      { t: "04:12:08", agent: "orbit",       status: "active", text: "computing ground track for 2024-08-12T03:14Z" },
+      { t: "04:12:09", agent: "thermal",     status: "active", text: "requesting Diviner tile near 0.69° N, 23.47° E" },
+      { t: "04:12:11", agent: "mineralogy",  status: "idle",   text: "waiting on M3 spectra batch" },
+      { t: "04:12:14", agent: "thermal",     status: "done",   text: "returned peak surface T = 384 K · midday, equatorial" },
+      { t: "04:12:17", agent: "orbit",       status: "done",   text: "solar incidence angle 3.2° at solar noon" },
+      { t: "04:12:19", agent: "mineralogy",  status: "done",   text: "14 pyroxene matches · 3 flagged for review" },
+    ],
+    answer: (
+      <>
+        At solar noon over Mare Tranquillitatis, Diviner measurements put the regolith surface at roughly <strong>384 K (111 °C)</strong>, with the subsurface cooling sharply — about <strong>240 K</strong> just 10 cm down<sup>1</sup>. The equatorial mare runs hotter than highland terrain because of its lower albedo; Apollo 11 recorded <strong>381 K</strong> during EVA<sup>2</sup>. Pyroxene-rich basalts dominate the thermophysical response<sup>3</sup>.
+      </>
+    ),
+    citations: [
+      { label: "Diviner tile · 2024-06", meta: "LRO · 128 ppd" },
+      { label: "Apollo 11 HTC · 1969", meta: "NASA MSC" },
+      { label: "M3 pyroxene fit", meta: "Chandrayaan-1" },
+    ],
+  },
+};
+
+function App() {
+  const [activeAgent, setActiveAgent] = useState("orbit");
+  const [statuses, setStatuses] = useState(Object.fromEntries(AGENTS.map(a => [a.id, "idle"])));
+  const [turns, setTurns] = useState([]);
+  const [prompt, setPrompt] = useState("");
+  const [running, setRunning] = useState(false);
+  const [dockOpen, setDockOpen] = useState(false);
+  const [focusedCitation, setFocusedCitation] = useState(null);
+  const scrollRef = useRef(null);
+
+  const runScripted = (key) => {
+    const s = SCRIPT[key]; if (!s) return;
+    setTurns(t => [...t, { kind: "user", text: s.prompt }]);
+    setPrompt("");
+    setRunning(true);
+
+    // Assistant turn pushed immediately, we stream into it.
+    const turnId = Date.now();
+    setTurns(t => [...t, { kind: "assistant", id: turnId, stream: [], answer: null, citations: [] }]);
+
+    let i = 0;
+    const tick = () => {
+      if (i >= s.stream.length) {
+        setTurns(t => t.map(tn => tn.id === turnId ? { ...tn, answer: s.answer, citations: s.citations } : tn));
+        // mark all done
+        const final = Object.fromEntries(AGENTS.map(a => [a.id, s.activeAgents.includes(a.id) ? "done" : "idle"]));
+        setStatuses(final);
+        setRunning(false);
+        return;
+      }
+      const line = s.stream[i++];
+      setTurns(t => t.map(tn => tn.id === turnId ? { ...tn, stream: [...tn.stream, line] } : tn));
+      // reflect in rail
+      setStatuses(st => ({ ...st, [line.agent]: line.status === "done" ? "done" : line.status === "active" ? "active" : "idle" }));
+      setTimeout(tick, 520);
+    };
+    setTimeout(tick, 340);
+  };
+
+  const submit = (textOverride) => {
+    const text = textOverride || prompt;
+    if (!text.trim()) return;
+    // Any prompt runs the tranquillitatis script for demo purposes.
+    runScripted("tranquillitatis");
+  };
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [turns]);
+
+  useEffect(() => {
+    const h = (e) => { setPrompt(e.detail); runScripted("tranquillitatis"); };
+    window.addEventListener("luna:ask", h);
+    return () => window.removeEventListener("luna:ask", h);
+  }, []);
+
+  const openCitation = (c) => { setFocusedCitation(c); setDockOpen(true); };
+
+  return (
+    <div className="luna-app" data-dock-open={dockOpen}>
+      <TopBar onToggleDock={() => setDockOpen(v => !v)} />
+      <AgentRail active={activeAgent} statuses={statuses} onPick={setActiveAgent} />
+      <main className="luna-main">
+        <div className="luna-scroll" ref={scrollRef}>
+          {turns.length === 0 ? <EmptyState /> : turns.map((tn, i) => {
+            if (tn.kind === "user") return <TurnUser key={i} text={tn.text} />;
+            return <TurnAssistant key={i} stream={tn.stream} answer={tn.answer} citations={tn.citations || []} onOpenCitation={openCitation} />;
+          })}
+        </div>
+        <Composer
+          value={prompt}
+          onChange={setPrompt}
+          onSubmit={submit}
+          running={running}
+          activeAgents={SCRIPT.tranquillitatis.activeAgents}
+        />
+      </main>
+      <DataDock open={dockOpen} onClose={() => setDockOpen(false)} focusedCitation={focusedCitation} />
+    </div>
+  );
+}
+
+// Also bind suggestions to run immediately
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".luna-suggest");
+  if (btn) {
+    // Trigger the composer directly via a custom event.
+    window.dispatchEvent(new CustomEvent("luna:ask", { detail: btn.textContent }));
+  }
+});
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

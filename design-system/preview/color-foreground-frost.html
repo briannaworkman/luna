@@ -1,0 +1,18 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .swatch { aspect-ratio: 2/1; border-radius: 6px; display: flex; align-items: flex-end; padding: 10px 12px; border: 1px solid var(--luna-hairline); }
+  .stack { display: flex; flex-direction: column; gap: 4px; margin-top: 10px;}
+  .name { font-family: var(--luna-font-display); font-weight: 500; font-size: 12px; color: var(--luna-fg); }
+  .hex { font-family: var(--luna-font-mono); font-size: 10px; color: var(--luna-fg-3); }
+  .sample { font-family: var(--luna-font-display); font-size: 20px; font-weight: 500; letter-spacing: -0.01em; }
+</style></head>
+<body><div class="card">
+  <div class="row4">
+    <div><div class="swatch" style="background:#E8EDF5"><span class="sample" style="color:#050C1A">Aa</span></div><div class="stack"><span class="name">fg</span><span class="hex">#E8EDF5</span></div></div>
+    <div><div class="swatch" style="background:#111E33"><span class="sample" style="color:#B8C1D1">Aa</span></div><div class="stack"><span class="name">fg-2</span><span class="hex">#B8C1D1</span></div></div>
+    <div><div class="swatch" style="background:#111E33"><span class="sample" style="color:#7A849A">Aa</span></div><div class="stack"><span class="name">fg-3</span><span class="hex">#7A849A</span></div></div>
+    <div><div class="swatch" style="background:#111E33"><span class="sample" style="color:#4A5368">Aa</span></div><div class="stack"><span class="name">fg-4</span><span class="hex">#4A5368</span></div></div>
+  </div>
+</div></body></html>

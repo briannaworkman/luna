@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .stack { display: grid; gap: 12px; }
+  .field { display: grid; gap: 6px; }
+  .lbl { font-family: var(--luna-font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--luna-fg-3); }
+  input, textarea { width: 100%; height: 36px; background: rgba(26,41,66,0.4); border: 1px solid var(--luna-hairline-2); border-radius: 4px; padding: 0 12px; color: var(--luna-fg); font-family: var(--luna-font-body); font-size: 14px; outline: none; transition: all 120ms ease-out; }
+  textarea { height: 54px; padding: 10px 12px; resize: none; }
+  input::placeholder, textarea::placeholder { color: var(--luna-fg-4); }
+  input:focus, textarea:focus { border-color: #7DD3FC; box-shadow: 0 0 0 2px rgba(125,211,252,0.18); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hint { font-family: var(--luna-font-mono); font-size: 10px; color: var(--luna-fg-4); letter-spacing: 0.04em; }
+  .slot { position: relative; }
+  .slot svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--luna-fg-3); fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .slot input { padding-left: 32px; }
+  .slot .cmd { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-family: var(--luna-font-mono); font-size: 10px; color: var(--luna-fg-3); border: 1px solid var(--luna-hairline); padding: 1px 5px; border-radius: 2px; }
+</style></head>
+<body><div class="card"><div class="stack">
+  <div class="field"><span class="lbl">Search</span>
+    <div class="slot"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input placeholder="Find a crater, mission, or coordinate…"><span class="cmd">⌘K</span></div>
+  </div>
+  <div class="two">
+    <div class="field"><span class="lbl">Latitude</span><input value="0.6889° N" style="font-family:var(--luna-font-mono); color:#7DD3FC"></div>
+    <div class="field"><span class="lbl">Longitude</span><input value="23.4731° E" style="font-family:var(--luna-font-mono); color:#7DD3FC"></div>
+  </div>
+  <div class="field"><span class="lbl">Prompt</span><textarea placeholder="Ask LUNA anything about the Moon."></textarea>
+    <span class="hint">Shift + ⏎ for newline</span>
+  </div>
+</div></div></body></html>

@@ -27,7 +27,7 @@ describe('fetchJson', () => {
 
   it('includes the HTTP status code in UpstreamError', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
-    const err = await fetchJson('https://example.com').catch((e) => e);
+    const err = (await fetchJson('https://example.com').catch((e) => e)) as UpstreamError;
     expect(err.statusCode).toBe(503);
   });
 

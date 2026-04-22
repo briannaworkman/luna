@@ -8,14 +8,7 @@ const LunarGlobe = dynamic(
 
 export default function Home() {
   return (
-    <main
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: '#050C1A',
-        overflow: 'hidden',
-      }}
-    >
+    <main className="fixed inset-0 overflow-hidden bg-luna-base">
       <LunarGlobe />
     </main>
   )

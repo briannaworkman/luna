@@ -1,29 +1,74 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { LOCATIONS } from './locations'
 import type { LunarLocation } from './types'
 
-// Design tokens
+// Design tokens (--luna-fg, --luna-fg-4, --luna-cyan, --luna-base)
 const COLOR_FROST    = 0xe8edf5
 const COLOR_FROST_4  = 0x4a5368
 const COLOR_CYAN     = 0x7dd3fc
 const COLOR_BASE     = 0x050c1a
 
 // Globe constants
-const SPHERE_RADIUS   = 1
-const SPHERE_SEGS     = 64     // smooth at full viewport
-const DOT_RADIUS      = 0.018
-const DOT_SEGS        = 8
-const DOT_SURFACE_GAP = 1.015  // dots sit slightly above the surface
-const AUTO_ROT_SPEED  = 0.0008 // radians/frame — slow, purposeful
-const CAMERA_DIST     = 2.5
-const AMBIENT_INTENSITY = 0.15
-const SUN_INTENSITY     = 1.2
+const SPHERE_RADIUS     = 1
+const SPHERE_SEGS       = 64
+const MARKER_W          = 0.065
+const DOT_SURFACE_GAP   = 1.003
+const AUTO_ROT_SPEED    = 0.048 // radians/second
+const CAMERA_FOV        = 45
+const CAMERA_MARGIN     = 0.85
+const AMBIENT_INTENSITY = 0.35
+const SUN_INTENSITY     = 0.8
 
-// Sun direction — from upper-right, creates a visible terminator across the sphere
-const SUN_POS = new THREE.Vector3(5, 3, 4).normalize()
+const SUN_DIR = new THREE.Vector3(5, 3, 4).normalize()
+
+// Lucide MapPin icon rendered to canvas via Path2D — exact paths from lucide-react.
+// viewBox is 0 0 24 24; we scale up to 128×128 for crisp rendering.
+function makeMarkerTexture(): THREE.CanvasTexture {
+  const size = 128
+  const scale = size / 24
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  ctx.clearRect(0, 0, size, size)
+  ctx.scale(scale, scale)
+
+  // Pin body
+  ctx.fillStyle = '#ffffff'
+  ctx.fill(new Path2D(
+    'M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0',
+  ))
+
+  // Center circle cutout
+  ctx.fillStyle = 'rgba(5, 12, 26, 0.5)'
+  ctx.beginPath()
+  ctx.arc(12, 10, 3, 0, Math.PI * 2)
+  ctx.fill()
+
+  return new THREE.CanvasTexture(canvas)
+}
+
+// Returns a quaternion that places the plane flat on the sphere surface with
+// the pin head pointing roughly north (world +Y projected onto the tangent plane).
+function surfaceOrientation(pos: THREE.Vector3): THREE.Quaternion {
+  const normal = pos.clone().normalize()
+  let right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), normal)
+  if (right.lengthSq() < 0.001) right.set(1, 0, 0) // pole fallback
+  right.normalize()
+  const up = new THREE.Vector3().crossVectors(normal, right)
+  return new THREE.Quaternion().setFromRotationMatrix(
+    new THREE.Matrix4().makeBasis(right, up, normal),
+  )
+}
+
+function cameraDist(aspect: number): number {
+  const halfFov = (CAMERA_FOV / 2) * (Math.PI / 180)
+  const halfAngle = aspect >= 1 ? halfFov : Math.atan(Math.tan(halfFov) * aspect)
+  return SPHERE_RADIUS / (Math.sin(halfAngle) * CAMERA_MARGIN)
+}
 
 function latLonToVec3(lat: number, lon: number, r: number): THREE.Vector3 {
   const phi = (lat * Math.PI) / 180
@@ -41,49 +86,35 @@ interface LunarGlobeProps {
 
 export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
   const mountRef = useRef<HTMLDivElement>(null)
-  const [selected, setSelected] = useState<LunarLocation | null>(null)
+  const onSelectRef = useRef(onLocationSelect)
+  useEffect(() => { onSelectRef.current = onLocationSelect })
 
   useEffect(() => {
     const mount = mountRef.current as HTMLDivElement
     if (!mount) return
 
-    // ── Scene ───────────────────────────────────────────────────────────────
     const scene = new THREE.Scene()
 
-    // ── Camera ──────────────────────────────────────────────────────────────
-    // Positioned on the +x axis so lon=0 (near-side prime meridian) faces forward
-    const camera = new THREE.PerspectiveCamera(
-      45,
-      mount.clientWidth / mount.clientHeight,
-      0.1,
-      100,
-    )
-    camera.position.set(CAMERA_DIST, 0, 0)
+    const aspect0 = mount.clientWidth / mount.clientHeight
+    const camera = new THREE.PerspectiveCamera(CAMERA_FOV, aspect0, 0.1, 100)
+    camera.position.set(cameraDist(aspect0), 0, 0)
     camera.lookAt(0, 0, 0)
 
-    // ── Renderer ─────────────────────────────────────────────────────────────
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-    })
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(mount.clientWidth, mount.clientHeight)
-    renderer.setClearColor(COLOR_BASE, 0) // transparent — body background shows through
+    renderer.setClearColor(COLOR_BASE, 0)
     mount.appendChild(renderer.domElement)
 
-    // ── Lights ───────────────────────────────────────────────────────────────
     const ambient = new THREE.AmbientLight(0xffffff, AMBIENT_INTENSITY)
     scene.add(ambient)
-
     const sun = new THREE.DirectionalLight(0xfff8e8, SUN_INTENSITY)
-    sun.position.set(5, 3, 4)
+    sun.position.copy(SUN_DIR)
     scene.add(sun)
 
-    // ── Moon group (rotates; dots are children so they move with it) ─────────
     const moonGroup = new THREE.Group()
     scene.add(moonGroup)
 
-    // ── Moon sphere ──────────────────────────────────────────────────────────
     const sphereGeo = new THREE.SphereGeometry(SPHERE_RADIUS, SPHERE_SEGS, SPHERE_SEGS)
     const textureLoader = new THREE.TextureLoader()
     const moonTex = textureLoader.load('/textures/lunar_surface.jpg')
@@ -92,28 +123,36 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
       specular: new THREE.Color(0x060c18),
       shininess: 4,
     })
-    const moonMesh = new THREE.Mesh(sphereGeo, sphereMat)
-    moonGroup.add(moonMesh)
+    moonGroup.add(new THREE.Mesh(sphereGeo, sphereMat))
 
-    // ── Location dots ────────────────────────────────────────────────────────
-    const dotGeo = new THREE.SphereGeometry(DOT_RADIUS, DOT_SEGS, DOT_SEGS)
+    // ── Location pins ────────────────────────────────────────────────────────
+    const markerTex = makeMarkerTexture()
+    const markerGeo = new THREE.PlaneGeometry(MARKER_W, MARKER_W)
     const dotMeshes: THREE.Mesh[] = []
     const dotMats: THREE.MeshBasicMaterial[] = []
 
-    for (const loc of LOCATIONS) {
-      const mat = new THREE.MeshBasicMaterial({ color: COLOR_FROST })
-      const mesh = new THREE.Mesh(dotGeo, mat)
+    for (let i = 0; i < LOCATIONS.length; i++) {
+      const loc = LOCATIONS[i]!
+      const mat = new THREE.MeshBasicMaterial({
+        map: markerTex,
+        color: COLOR_FROST,
+        transparent: true,
+        alphaTest: 0.05,
+        depthTest: false,
+        depthWrite: false,
+      })
+      const mesh = new THREE.Mesh(markerGeo, mat)
       const pos = latLonToVec3(loc.lat, loc.lon, DOT_SURFACE_GAP)
       mesh.position.copy(pos)
+      mesh.quaternion.copy(surfaceOrientation(pos))
       mesh.userData.locationId = loc.id
+      mesh.userData.dotIdx = i
       moonGroup.add(mesh)
       dotMeshes.push(mesh)
       dotMats.push(mat)
     }
 
-    // ── Raycaster ────────────────────────────────────────────────────────────
     const raycaster = new THREE.Raycaster()
-    raycaster.params.Points = { threshold: 0.02 }
     const mouse = new THREE.Vector2()
 
     let hoveredIdx = -1
@@ -121,10 +160,12 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
     let autoRotating = true
     let pulseT = 0
 
-    // ── Dot colour pass ──────────────────────────────────────────────────────
-    // Runs every frame; uses world-space position to test if dot is in shadow.
-    const sunDir = sun.position.clone().normalize()
     const worldPos = new THREE.Vector3()
+
+    function applyActive(mat: THREE.MeshBasicMaterial) {
+      mat.color.setHex(COLOR_FROST)
+      mat.opacity = 1
+    }
 
     function refreshDots() {
       for (let i = 0; i < dotMeshes.length; i++) {
@@ -132,89 +173,87 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
         const mat = dotMats[i]!
 
         if (i === selectedIdx) {
-          // Cyan pulse — scale 1.0→1.35 over ~3 s
-          const pulse = 1.0 + 0.35 * (0.5 + 0.5 * Math.sin(pulseT * 2.1))
-          mesh.scale.setScalar(pulse)
-          mat.color.setHex(COLOR_CYAN)
-          mat.opacity = 1
-          mat.transparent = false
+          mesh.scale.setScalar(1.0 + 0.35 * (0.5 + 0.5 * Math.sin(pulseT * 2.1)))
+          applyActive(mat)
           continue
         }
-
-        mesh.scale.setScalar(i === hoveredIdx ? 1.3 : 1.0)
 
         if (i === hoveredIdx) {
-          mat.color.setHex(COLOR_CYAN)
-          mat.opacity = 1
-          mat.transparent = false
+          mesh.scale.setScalar(1.3)
+          applyActive(mat)
           continue
         }
 
-        // Shadow test: project dot world position onto sun direction
+        mesh.scale.setScalar(1.0)
         mesh.getWorldPosition(worldPos)
-        const lit = worldPos.dot(sunDir) > 0
 
+        // depthTest is off; manually hide back-hemisphere markers
+        if (worldPos.x <= 0) {
+          mat.opacity = 0
+          continue
+        }
+
+        const lit = worldPos.dot(SUN_DIR) > 0
         if (lit) {
           mat.color.setHex(COLOR_FROST)
           mat.opacity = 1
-          mat.transparent = false
         } else {
           mat.color.setHex(COLOR_FROST_4)
-          mat.opacity = 0.4
-          mat.transparent = true
+          mat.opacity = 0.35
         }
       }
     }
 
-    // ── Input handlers ───────────────────────────────────────────────────────
-    function screenToNdc(e: MouseEvent) {
+    function coordsToNdc(clientX: number, clientY: number) {
       const rect = mount.getBoundingClientRect()
-      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
-      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+      mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1
+      mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1
     }
 
     function handleMouseMove(e: MouseEvent) {
-      screenToNdc(e)
+      coordsToNdc(e.clientX, e.clientY)
       raycaster.setFromCamera(mouse, camera)
       const hits = raycaster.intersectObjects(dotMeshes)
       const prev = hoveredIdx
-      hoveredIdx = hits.length > 0 ? dotMeshes.indexOf(hits[0]!.object as THREE.Mesh) : -1
+      hoveredIdx = hits.length > 0 ? (hits[0]!.object.userData.dotIdx as number) : -1
       mount.style.cursor = hoveredIdx >= 0 ? 'pointer' : 'default'
       if (prev !== hoveredIdx) refreshDots()
     }
 
-    function handleClick(e: MouseEvent) {
-      screenToNdc(e)
+    function selectDot(clientX: number, clientY: number) {
+      coordsToNdc(clientX, clientY)
       raycaster.setFromCamera(mouse, camera)
       const hits = raycaster.intersectObjects(dotMeshes)
-
       if (hits.length > 0) {
-        const idx = dotMeshes.indexOf(hits[0]!.object as THREE.Mesh)
-        if (idx !== -1) {
-          selectedIdx = idx
-          autoRotating = false
-          const loc = LOCATIONS[idx] ?? null
-          setSelected(loc)
-          onLocationSelect?.(loc)
-        }
+        const idx = hits[0]!.object.userData.dotIdx as number
+        selectedIdx = idx
+        autoRotating = false
+        onSelectRef.current?.(LOCATIONS[idx] ?? null)
       }
+    }
+
+    function handleClick(e: MouseEvent) { selectDot(e.clientX, e.clientY) }
+    function handleTouchEnd(e: TouchEvent) {
+      const touch = e.changedTouches[0]
+      if (touch) selectDot(touch.clientX, touch.clientY)
     }
 
     mount.addEventListener('mousemove', handleMouseMove)
     mount.addEventListener('click', handleClick)
+    mount.addEventListener('touchend', handleTouchEnd)
 
-    // ── Resize ───────────────────────────────────────────────────────────────
     function handleResize() {
       const w = mount.clientWidth
       const h = mount.clientHeight
-      camera.aspect = w / h
+      const aspect = w / h
+      camera.aspect = aspect
+      camera.position.setX(cameraDist(aspect))
       camera.updateProjectionMatrix()
       renderer.setSize(w, h)
     }
     const resizeObserver = new ResizeObserver(handleResize)
     resizeObserver.observe(mount)
 
-    // ── Animation loop ───────────────────────────────────────────────────────
     let raf: number
     const clock = new THREE.Clock()
 
@@ -222,41 +261,31 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
       raf = requestAnimationFrame(animate)
       const dt = clock.getDelta()
       pulseT += dt
-
-      if (autoRotating) {
-        moonGroup.rotation.y += AUTO_ROT_SPEED
-      }
-
+      if (autoRotating) moonGroup.rotation.y += AUTO_ROT_SPEED * dt
       refreshDots()
       renderer.render(scene, camera)
     }
 
     animate()
 
-    // ── Cleanup ──────────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(raf)
       resizeObserver.disconnect()
       mount.removeEventListener('mousemove', handleMouseMove)
       mount.removeEventListener('click', handleClick)
-
+      mount.removeEventListener('touchend', handleTouchEnd)
       renderer.dispose()
       sphereGeo.dispose()
       sphereMat.dispose()
       moonTex.dispose()
-      dotGeo.dispose()
+      markerTex.dispose()
+      markerGeo.dispose()
       for (const m of dotMats) m.dispose()
-
-      if (mount.contains(renderer.domElement)) {
-        mount.removeChild(renderer.domElement)
-      }
+      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
     }
-  }, [onLocationSelect])
+  }, [])
 
   return (
-    <div
-      ref={mountRef}
-      style={{ width: '100%', height: '100%', display: 'block' }}
-    />
+    <div ref={mountRef} style={{ width: '100%', height: '100%', display: 'block' }} />
   )
 }

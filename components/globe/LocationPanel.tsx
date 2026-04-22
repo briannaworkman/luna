@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { X, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/badge'
 import type { LunarLocation } from './types'
 
 interface LocationPanelProps {
@@ -70,9 +71,7 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
               {location?.name ?? ''}
             </h1>
             {location?.isProposed && (
-              <span className="inline-flex items-center h-5 px-1.5 bg-luna-base-3 text-luna-cyan rounded-xs font-mono text-[10px] tracking-[0.08em] font-medium translate-y-0.5">
-                proposed
-              </span>
+              <Badge className="translate-y-0.5">proposed</Badge>
             )}
           </div>
         </div>

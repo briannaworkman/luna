@@ -18,6 +18,7 @@ const MARKER_W          = 0.065
 const DOT_SURFACE_GAP   = 1.003
 const AUTO_ROT_SPEED    = 0.0838 // radians/second — one full rotation ≈ 75 s
 const ROT_EASE_K        = 6      // exponential ease factor for stop/resume
+const MARKER_HIT_RADIUS = 0.07   // invisible hit sphere — larger than visible marker for easy tapping
 const DRAG_THRESHOLD    = 3      // px moved before a mousedown becomes a drag
 const DRAG_SENSITIVITY  = 0.005  // radians per pixel
 const RESUME_DELAY      = 2000   // ms after drag release before auto-rotation resumes
@@ -132,11 +133,16 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
     // ── Location pins ────────────────────────────────────────────────────────
     const markerTex = makeMarkerTexture()
     const markerGeo = new THREE.PlaneGeometry(MARKER_W, MARKER_W)
+    const hitGeo    = new THREE.SphereGeometry(MARKER_HIT_RADIUS, 8, 8)
+    const hitMat    = new THREE.MeshBasicMaterial({ visible: false })
     const dotMeshes: THREE.Mesh[] = []
-    const dotMats: THREE.MeshBasicMaterial[] = []
+    const dotMats:   THREE.MeshBasicMaterial[] = []
+    const hitMeshes: THREE.Mesh[] = []
 
     for (let i = 0; i < LOCATIONS.length; i++) {
       const loc = LOCATIONS[i]!
+      const pos = latLonToVec3(loc.lat, loc.lon, DOT_SURFACE_GAP)
+
       const mat = new THREE.MeshBasicMaterial({
         map: markerTex,
         color: COLOR_FROST,
@@ -146,14 +152,18 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
         depthWrite: false,
       })
       const mesh = new THREE.Mesh(markerGeo, mat)
-      const pos = latLonToVec3(loc.lat, loc.lon, DOT_SURFACE_GAP)
       mesh.position.copy(pos)
       mesh.quaternion.copy(surfaceOrientation(pos))
-      mesh.userData.locationId = loc.id
       mesh.userData.dotIdx = i
       moonGroup.add(mesh)
       dotMeshes.push(mesh)
       dotMats.push(mat)
+
+      const hit = new THREE.Mesh(hitGeo, hitMat)
+      hit.position.copy(pos)
+      hit.userData.dotIdx = i
+      moonGroup.add(hit)
+      hitMeshes.push(hit)
     }
 
     const raycaster = new THREE.Raycaster()
@@ -188,25 +198,22 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
 
     const worldPos = new THREE.Vector3()
 
-    function applyActive(mat: THREE.MeshBasicMaterial) {
-      mat.color.setHex(COLOR_FROST)
-      mat.opacity = 1
-    }
-
     function refreshDots() {
       for (let i = 0; i < dotMeshes.length; i++) {
         const mesh = dotMeshes[i]!
         const mat = dotMats[i]!
 
         if (i === selectedIdx) {
-          mesh.scale.setScalar(1.0 + 0.35 * (0.5 + 0.5 * Math.sin(pulseT * 2.1)))
-          applyActive(mat)
+          mesh.scale.setScalar(1.2 + 0.2 * Math.sin(pulseT * (Math.PI * 2 / 1.5)))
+          mat.color.setHex(COLOR_CYAN)
+          mat.opacity = 1
           continue
         }
 
         if (i === hoveredIdx) {
           mesh.scale.setScalar(1.3)
-          applyActive(mat)
+          mat.color.setHex(COLOR_CYAN)
+          mat.opacity = 1
           continue
         }
 
@@ -239,9 +246,14 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
     function handleMouseMove(e: MouseEvent) {
       coordsToNdc(e.clientX, e.clientY)
       raycaster.setFromCamera(mouse, camera)
-      const hits = raycaster.intersectObjects(dotMeshes)
+      const hits = raycaster.intersectObjects(hitMeshes)
       const prev = hoveredIdx
-      hoveredIdx = hits.length > 0 ? (hits[0]!.object.userData.dotIdx as number) : -1
+      if (hits.length > 0) {
+        hits[0]!.object.getWorldPosition(worldPos)
+        hoveredIdx = worldPos.x > 0 ? (hits[0]!.object.userData.dotIdx as number) : -1
+      } else {
+        hoveredIdx = -1
+      }
       mount.style.cursor = hoveredIdx >= 0 ? 'pointer' : 'default'
       if (prev !== hoveredIdx) refreshDots()
     }
@@ -250,14 +262,15 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
     function handleTap(clientX: number, clientY: number) {
       coordsToNdc(clientX, clientY)
       raycaster.setFromCamera(mouse, camera)
-      const hits = raycaster.intersectObjects(dotMeshes)
+      const hits = raycaster.intersectObjects(hitMeshes)
       if (hits.length > 0) {
+        hits[0]!.object.getWorldPosition(worldPos)
+        if (worldPos.x <= 0) return  // dot is on far side of globe
         const idx = hits[0]!.object.userData.dotIdx as number
         selectedIdx = idx
         stopRotation()
         onSelectRef.current?.(LOCATIONS[idx] ?? null)
       } else if (selectedIdx !== -1) {
-        // Click on empty space clears selection and queues resume
         selectedIdx = -1
         onSelectRef.current?.(null)
         scheduleResume()
@@ -379,6 +392,8 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
       moonTex.dispose()
       markerTex.dispose()
       markerGeo.dispose()
+      hitGeo.dispose()
+      hitMat.dispose()
       for (const m of dotMats) m.dispose()
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
     }

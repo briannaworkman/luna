@@ -185,3 +185,80 @@ This is a normal, non-error response for far-side locations (Carroll, Integrity)
 8. **Station coordinate table has ~30 entries** across the 6 missions. Intra-mission stations are within 5–30 km of each other; inter-mission distances are 700–3000 km. The nearest-station logic effectively identifies the mission first, then selects the best-documented station within it.
 
 **Cache-Control:** `public, s-maxage=3600, stale-while-revalidate=86400`
+
+---
+
+## `/api/svs-illumination`
+
+**Purpose:** Returns the full NASA SVS 2026 hourly lunar illumination dataset for the Orbit agent's landing window analysis. The 2MB JSON is fetched from NASA once and served from server-side cache on all subsequent requests.
+
+**Request:**
+```
+GET /api/svs-illumination
+```
+
+No parameters. The dataset covers the entire calendar year 2026 at hourly resolution (8760 entries).
+
+**Response:** `SvsIlluminationResponse`
+```json
+{
+  "entries": [
+    {
+      "time": "01 Jan 2026 00:00 UT",
+      "phase": 91.4,
+      "age": 11.928,
+      "diameter": 1985.1,
+      "distance": 361045,
+      "j2000": { "ra": 4.2348, "dec": 26.3373 },
+      "subsolar": { "lon": 32.52, "lat": -1.346 },
+      "subearth": { "lon": -1.279, "lat": -6.556 },
+      "posangle": 349.893
+    }
+  ],
+  "source": "svs.gsfc.nasa.gov/5587"
+}
+```
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `time` | string | "DD Mon YYYY HH:MM UT" — not ISO 8601; parse manually |
+| `phase` | number | Illuminated fraction 0–100 (100 = full moon) |
+| `age` | number | Days since new moon |
+| `diameter` | number | Apparent diameter in arcseconds |
+| `distance` | number | Earth–Moon distance in km |
+| `subsolar.lon` | number | Selenographic longitude of the subsolar point (−180 to +180) |
+| `subsolar.lat` | number | Selenographic latitude of the subsolar point |
+| `subearth.lon` | number | Selenographic longitude of the subearth point |
+| `subearth.lat` | number | Selenographic latitude of the subearth point |
+| `posangle` | number | Position angle of the Moon's axis, degrees |
+
+**Determining surface illumination for a landing site:**
+For a flat equatorial site at selenographic longitude `L`, the site is illuminated when:
+`|subsolar.lon - L| < 90` (wrapping at ±180). For polar sites (|lat| > 80°), local topography dominates and this approximation breaks down — the Orbit agent should apply the appropriate polar illumination model.
+
+**Error response** (status 502):
+```json
+{ "error": "SVS illumination data unavailable", "code": "FETCH_FAILED" }
+```
+
+**Cache-Control:** `no-store` — data is served from server-side memory/disk cache; CDN caching is unnecessary.
+
+**Caching strategy:**
+- In-memory singleton via `globalThis` — survives Next.js hot reloads in dev.
+- Filesystem backup at `/tmp/svs-mooninfo-2026.json` — survives dev server restarts.
+- Warming starts on module load (not on first user request). Cold-start fetch from NASA takes ~3–5 seconds over a typical connection (2 MB file); after that all requests are served from memory in <1ms.
+- No TTL — dataset is static for 2026. Invalidation is manual (restart).
+
+**Quirks found during real API testing:**
+
+1. **JSON URL is not the SVS page URL.** The published page at `svs.gsfc.nasa.gov/5587` links to the JSON at `/vis/a000000/a005500/a005587/mooninfo_2026.json`. Use that direct URL.
+
+2. **`time` field is not ISO 8601.** Format is `"DD Mon YYYY HH:MM UT"` (e.g. "15 Jun 2026 12:00 UT"). Parse with `new Date(entry.time.replace(' UT', ' UTC'))`.
+
+3. **`phase` is illuminated fraction (0–100), not phase angle.** Range observed in 2026 dataset: 0.01 – 100.00.
+
+4. **`subsolar.lon` wraps at ±180.** Range: −179.97 to +179.98 in 2026 data. No discontinuity issues if you treat it as a standard selenographic longitude.
+
+5. **Dataset is 8760 entries (365 × 24 hours).** Response payload is ~2 MB uncompressed. Gzip in production reduces this to ~300 KB. The Orbit agent should filter to the relevant time window server-side before passing data to the LLM.
+
+6. **No Shackleton / Integrity specific quirk.** The dataset is geocentric — it describes the Moon's global illumination state, not site-specific illumination. Both near-side (Shackleton, −89.9°, 0°) and far-side (Integrity, 2.66°N, −104.9°W) landing sites use the same dataset; the Orbit agent applies the site longitude against `subsolar.lon` to derive surface illumination.

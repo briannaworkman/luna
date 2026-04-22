@@ -73,12 +73,16 @@ export interface SvsIlluminationEntry {
   posangle: number;   // position angle of the Moon's axis in degrees
 }
 
-export interface SvsIlluminationResponse {
-  entries: SvsIlluminationEntry[];
-  source: string;
+export interface IlluminationWindow {
+  date: string;              // YYYY-MM-DD UTC
+  sunriseUtc: string | null; // ISO 8601 — null when permanentlyShadowed
+  sunsetUtc: string | null;  // ISO 8601 — null when permanentlyShadowed
+  illuminatedHours: number;
+  solarElevationDeg: number; // peak solar elevation for the day
+  permanentlyShadowed: boolean;
 }
 
-export interface SvsIlluminationErrorResponse {
+export interface IlluminationWindowsErrorResponse {
   error: string;
-  code: 'FETCH_FAILED';
+  code: 'FETCH_FAILED' | 'INVALID_PARAMS';
 }

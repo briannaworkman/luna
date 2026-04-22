@@ -1,31 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa';
+import { extractInstrument } from '@/lib/utils/extract-instrument';
 
 const NASA_IMAGES_API = 'https://images-api.nasa.gov/search';
 const TIMEOUT_MS = 8000;
-const RESULT_LIMIT = 4;
 const SPARSE_THRESHOLD = 2;
-
-// Known lunar instrument/mission keywords to extract a meaningful instrument label
-const INSTRUMENT_KEYWORDS: [RegExp, string][] = [
-  [/LROC|Lunar Reconnaissance Orbiter Camera/i, 'LROC'],
-  [/LRO|Lunar Reconnaissance Orbiter/i, 'LRO'],
-  [/Clementine/i, 'Clementine'],
-  [/Chandrayaan/i, 'Chandrayaan'],
-  [/LCROSS/i, 'LCROSS'],
-  [/Diviner/i, 'Diviner'],
-  [/GRAIL/i, 'GRAIL'],
-  [/Apollo/i, 'Apollo'],
-  [/Kaguya|SELENE/i, 'Kaguya'],
-];
-
-function extractInstrument(keywords: string[], center: string): string {
-  const combined = keywords.join(' ');
-  for (const [pattern, label] of INSTRUMENT_KEYWORDS) {
-    if (pattern.test(combined)) return label;
-  }
-  return center || 'NASA';
-}
 
 // Derive region-specific search terms from lat/lon for the fallback query.
 // Selenographic: lon in [-90, 90] = near-side; outside = far-side.
@@ -59,7 +38,7 @@ async function searchImages(query: string): Promise<NasaApiItem[]> {
   const url = new URL(NASA_IMAGES_API);
   url.searchParams.set('q', query);
   url.searchParams.set('media_type', 'image');
-  url.searchParams.set('page_size', '10');
+  url.searchParams.set('page_size', '20');
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -101,8 +80,7 @@ function normalizeItems(items: NasaApiItem[]): NasaImage[] {
       };
     })
     .filter((img): img is NasaImage => img !== null)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, RESULT_LIMIT);
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResponse>> {
@@ -118,31 +96,22 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
     );
   }
 
-  // Primary search: location name
-  const primaryItems = await searchImages(`${name} moon lunar`);
-  const primaryImages = normalizeItems(primaryItems);
-
-  if (primaryImages.length >= SPARSE_THRESHOLD) {
-    return NextResponse.json({
-      images: primaryImages,
-      limitedCoverage: false,
-    });
-  }
-
-  // Fallback: coordinate-region keywords
+  // Run both searches in parallel — name-specific and region-derived
   const regionQuery = buildRegionQuery(lat, lon);
-  const fallbackItems = await searchImages(regionQuery);
-  const fallbackImages = normalizeItems(fallbackItems);
+  const [primaryItems, fallbackItems] = await Promise.all([
+    searchImages(`${name} moon lunar`),
+    searchImages(regionQuery),
+  ]);
 
-  // Merge: primary results first (deduped), pad with fallback
+  const primaryImages = normalizeItems(primaryItems);
   const seen = new Set(primaryImages.map((img) => img.assetId));
   const merged = [
     ...primaryImages,
-    ...fallbackImages.filter((img) => !seen.has(img.assetId)),
-  ].slice(0, RESULT_LIMIT);
+    ...normalizeItems(fallbackItems).filter((img) => !seen.has(img.assetId)),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  return NextResponse.json({
-    images: merged,
-    limitedCoverage: merged.length < SPARSE_THRESHOLD,
-  });
+  return NextResponse.json(
+    { images: merged, limitedCoverage: merged.length < SPARSE_THRESHOLD },
+    { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } }
+  );
 }

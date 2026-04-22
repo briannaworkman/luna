@@ -85,19 +85,22 @@ GET /api/nasa-images?name=<string>&lat=<number>&lon=<number>
 }
 ```
 
-- Up to 4 results, sorted by `date` descending (most recent first).
+- All results returned (up to 20 per call), sorted by `date` descending (most recent first).
 - `limitedCoverage: true` when fewer than 2 results found (triggers gallery coverage banner).
 - Returns `{ images: [], limitedCoverage: true }` with HTTP 400 if required params are missing.
 
 ### Search strategy
 
-1. **Name-first:** queries `images-api.nasa.gov/search?q=<name>+moon+lunar&media_type=image`
-2. **Coordinate fallback:** if fewer than 2 results, runs a region-derived query:
+Both searches run in parallel on every request — results are merged and deduplicated by `assetId`, sorted by date descending.
+
+1. **Name search:** `q=<name>+moon+lunar` — surfaces specific crater/landmark imagery for well-known locations (Tycho, Copernicus, etc.)
+2. **Region search:** coordinate-derived keywords pad in geographically relevant imagery for all locations:
    - `|lon| > 90°` → `"moon far side surface"`
    - `lat > 60°` → `"moon north pole lunar surface"`
    - `lat < -60°` → `"moon south pole lunar surface"`
    - otherwise → `"moon lunar surface"`
-3. Merges primary + fallback (deduplicated), sorted by date, top 4.
+
+Name results appear first in the merged list (they're more specific); region results fill in behind.
 
 ### Upstream API quirks found in testing
 
@@ -107,12 +110,12 @@ GET /api/nasa-images?name=<string>&lat=<number>&lon=<number>
 - **Date format** from the API is ISO 8601 (`2025-05-09T00:00:00Z`). Passed through as-is.
 - **`instrument` field** is derived from keywords (LROC, LRO, Clementine, Apollo, etc.) or falls back to the `center` field (e.g. "JSC", "JPL", "MSFC").
 - **Timeout:** 8s per fetch call. Empty result returned on timeout — never a 500.
-- **`page_size=10`** is requested from the API per call to give the sort-and-slice room to work. We never request more than 10.
+- **`page_size=20`** is requested from the API per call. The route returns all normalized results — no artificial cap. The UI is responsible for any display limit.
 
 ### Tested locations
 
 | Location | lat | lon | Name hits | Fallback used | Coverage |
 |----------|-----|-----|-----------|---------------|----------|
-| Shackleton | -89.9 | 0 | 0 | Yes (south pole) | false (4 images) |
-| Carroll | 18.84 | -86.51 | 2 | No | false (3+ images) |
-| Integrity | 2.66 | -104.92 | 867 (unrelated) | No | false (4 images) |
+| Shackleton | -89.9 | 0 | 0 | Yes (south pole) | false (up to 20 regional) |
+| Carroll | 18.84 | -86.51 | 2 | No | false (2 name hits + regional pad) |
+| Integrity | 2.66 | -104.92 | 867 (unrelated) | No | false (up to 20) |

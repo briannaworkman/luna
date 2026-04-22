@@ -16,7 +16,10 @@ const SPHERE_RADIUS     = 1
 const SPHERE_SEGS       = 64
 const MARKER_W          = 0.065
 const DOT_SURFACE_GAP   = 1.003
-const AUTO_ROT_SPEED    = 0.048 // radians/second
+const AUTO_ROT_SPEED    = 0.0838 // radians/second — one full rotation ≈ 75 s
+const ROT_EASE_K        = 6      // exponential ease factor for stop/resume
+const DRAG_THRESHOLD    = 3      // px moved before a mousedown becomes a drag
+const RESUME_DELAY      = 2000   // ms after drag release before auto-rotation resumes
 const CAMERA_FOV        = 45
 const CAMERA_MARGIN     = 0.85
 const AMBIENT_INTENSITY = 0.35
@@ -157,8 +160,30 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
 
     let hoveredIdx = -1
     let selectedIdx = -1
-    let autoRotating = true
     let pulseT = 0
+
+    // Auto-rotation state — smooth ease via rotSpeedFactor (0..1)
+    let rotSpeedFactor = 1     // current multiplier (lerped each frame)
+    let rotSpeedTarget = 1     // 1 = rotating, 0 = stopped
+    let resumeTimer: ReturnType<typeof setTimeout> | null = null
+
+    // Drag state
+    let pointerDown = false
+    let isDragging   = false
+    let dragStartX   = 0
+    let dragLastX    = 0
+
+    function scheduleResume() {
+      if (resumeTimer) clearTimeout(resumeTimer)
+      resumeTimer = setTimeout(() => {
+        if (selectedIdx === -1) rotSpeedTarget = 1
+      }, RESUME_DELAY)
+    }
+
+    function stopRotation(clearPending = true) {
+      rotSpeedTarget = 0
+      if (clearPending && resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null }
+    }
 
     const worldPos = new THREE.Vector3()
 
@@ -220,26 +245,102 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
       if (prev !== hoveredIdx) refreshDots()
     }
 
-    function selectDot(clientX: number, clientY: number) {
+    // Resolve a tap/click — select a dot or deselect if tapping empty space
+    function handleTap(clientX: number, clientY: number) {
       coordsToNdc(clientX, clientY)
       raycaster.setFromCamera(mouse, camera)
       const hits = raycaster.intersectObjects(dotMeshes)
       if (hits.length > 0) {
         const idx = hits[0]!.object.userData.dotIdx as number
         selectedIdx = idx
-        autoRotating = false
+        stopRotation()
         onSelectRef.current?.(LOCATIONS[idx] ?? null)
+      } else if (selectedIdx !== -1) {
+        // Click on empty space clears selection and queues resume
+        selectedIdx = -1
+        onSelectRef.current?.(null)
+        scheduleResume()
       }
     }
 
-    function handleClick(e: MouseEvent) { selectDot(e.clientX, e.clientY) }
+    // ── Mouse drag-to-rotate ──────────────────────────────────────────────────
+    function handleMouseDown(e: MouseEvent) {
+      pointerDown = true
+      isDragging   = false
+      dragStartX   = e.clientX
+      dragLastX    = e.clientX
+    }
+
+    function handleMouseMoveGlobal(e: MouseEvent) {
+      if (!pointerDown) return
+      const dx = e.clientX - dragStartX
+      if (!isDragging && Math.abs(dx) > DRAG_THRESHOLD) {
+        isDragging = true
+        stopRotation()
+      }
+      if (isDragging) {
+        const delta = e.clientX - dragLastX
+        moonGroup.rotation.y += delta * 0.005
+        dragLastX = e.clientX
+      }
+    }
+
+    function handleMouseUpGlobal(e: MouseEvent) {
+      if (!pointerDown) return
+      pointerDown = false
+      if (isDragging) {
+        isDragging = false
+        scheduleResume()
+      } else {
+        // Treat as tap
+        handleTap(e.clientX, e.clientY)
+      }
+    }
+
+    // ── Touch drag-to-rotate ──────────────────────────────────────────────────
+    function handleTouchStart(e: TouchEvent) {
+      const t = e.touches[0]
+      if (!t) return
+      pointerDown = true
+      isDragging   = false
+      dragStartX   = t.clientX
+      dragLastX    = t.clientX
+    }
+
+    function handleTouchMoveGlobal(e: TouchEvent) {
+      if (!pointerDown) return
+      const t = e.touches[0]
+      if (!t) return
+      const dx = t.clientX - dragStartX
+      if (!isDragging && Math.abs(dx) > DRAG_THRESHOLD) {
+        isDragging = true
+        stopRotation()
+      }
+      if (isDragging) {
+        const delta = t.clientX - dragLastX
+        moonGroup.rotation.y += delta * 0.005
+        dragLastX = t.clientX
+      }
+    }
+
     function handleTouchEnd(e: TouchEvent) {
-      const touch = e.changedTouches[0]
-      if (touch) selectDot(touch.clientX, touch.clientY)
+      if (!pointerDown) return
+      pointerDown = false
+      if (isDragging) {
+        isDragging = false
+        scheduleResume()
+      } else {
+        const touch = e.changedTouches[0]
+        if (touch) handleTap(touch.clientX, touch.clientY)
+      }
     }
 
     mount.addEventListener('mousemove', handleMouseMove)
-    mount.addEventListener('click', handleClick)
+    mount.addEventListener('mousedown', handleMouseDown)
+    window.addEventListener('mousemove', handleMouseMoveGlobal)
+    window.addEventListener('mouseup',   handleMouseUpGlobal)
+    mount.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchmove', handleTouchMoveGlobal, { passive: true })
     mount.addEventListener('touchend', handleTouchEnd)
 
     function handleResize() {
@@ -261,7 +362,11 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
       raf = requestAnimationFrame(animate)
       const dt = clock.getDelta()
       pulseT += dt
-      if (autoRotating) moonGroup.rotation.y += AUTO_ROT_SPEED * dt
+
+      // Ease rotation speed toward target (exponential approach)
+      rotSpeedFactor += (rotSpeedTarget - rotSpeedFactor) * (1 - Math.exp(-ROT_EASE_K * dt))
+      if (!isDragging) moonGroup.rotation.y += AUTO_ROT_SPEED * rotSpeedFactor * dt
+
       refreshDots()
       renderer.render(scene, camera)
     }
@@ -270,9 +375,14 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
 
     return () => {
       cancelAnimationFrame(raf)
+      if (resumeTimer) clearTimeout(resumeTimer)
       resizeObserver.disconnect()
       mount.removeEventListener('mousemove', handleMouseMove)
-      mount.removeEventListener('click', handleClick)
+      mount.removeEventListener('mousedown', handleMouseDown)
+      window.removeEventListener('mousemove', handleMouseMoveGlobal)
+      window.removeEventListener('mouseup',   handleMouseUpGlobal)
+      mount.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMoveGlobal)
       mount.removeEventListener('touchend', handleTouchEnd)
       renderer.dispose()
       sphereGeo.dispose()

@@ -252,6 +252,13 @@ shadcn/ui + Tailwind for structural scaffolding (dropdowns, cards, scroll areas,
 - Save + compare multiple site briefs
 - User accounts + brief history
 - Shareable brief links
+- **Expanded globe locations with type filters** — extend the hardcoded 17 dots to a larger set of well-defined points, with a filter strip on the globe letting users toggle which types are visible:
+  - **Craters** — named impact craters (the current Artemis 15 plus others)
+  - **Robotic landers** — Surveyor 1–7, Luna 9/13/16/17/20/21/24, Chang'e 3/4/5, Chandrayaan-3; coordinates are known to sub-km precision
+  - **Apollo sites** — the 6 landing sites as top-level globe dots (distinct from the sub-station data already used by the Mineralogy agent)
+  - **Crew-proposed** — Carroll, Integrity, and any future crew-named features
+  - The `lib/data/apollo-stations.ts` pattern (typed station records + `findNearestStation`) scales naturally to other location types — each category gets its own typed data file under `lib/data/`
+  - UX note: adding ~20+ dots risks crowding the near-side; filters should default to "craters only" to preserve the sparse, intentional feel of the V1 globe
 
 ### Screen 0 — Landing Page *(optional, time permitting)*
 A single-viewport entry point. The lunar globe — or a high-quality static screenshot of it — fills the background, dark and atmospheric. No scrolling. No sections. No feature list.

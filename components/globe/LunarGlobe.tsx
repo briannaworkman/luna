@@ -198,25 +198,22 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
 
     const worldPos = new THREE.Vector3()
 
-    function applyActive(mat: THREE.MeshBasicMaterial) {
-      mat.color.setHex(COLOR_FROST)
-      mat.opacity = 1
-    }
-
     function refreshDots() {
       for (let i = 0; i < dotMeshes.length; i++) {
         const mesh = dotMeshes[i]!
         const mat = dotMats[i]!
 
         if (i === selectedIdx) {
-          mesh.scale.setScalar(1.0 + 0.35 * (0.5 + 0.5 * Math.sin(pulseT * 2.1)))
-          applyActive(mat)
+          mesh.scale.setScalar(1.2 + 0.2 * Math.sin(pulseT * (Math.PI * 2 / 1.5)))
+          mat.color.setHex(COLOR_CYAN)
+          mat.opacity = 1
           continue
         }
 
         if (i === hoveredIdx) {
           mesh.scale.setScalar(1.3)
-          applyActive(mat)
+          mat.color.setHex(COLOR_CYAN)
+          mat.opacity = 1
           continue
         }
 

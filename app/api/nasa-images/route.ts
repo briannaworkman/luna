@@ -41,8 +41,13 @@ async function searchImages(query: string): Promise<NasaApiItem[]> {
   url.searchParams.set('media_type', 'image');
   url.searchParams.set('page_size', '20');
 
-  const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url);
-  return (json?.collection?.items ?? []) as NasaApiItem[];
+  try {
+    const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url);
+    return (json.collection?.items ?? []) as NasaApiItem[];
+  } catch (err) {
+    console.warn('[nasa-images] search failed, returning empty', err);
+    return [];
+  }
 }
 
 function normalizeItems(items: NasaApiItem[]): NasaImage[] {

@@ -85,7 +85,17 @@ GET /api/lroc?lat=-89.9&lon=0
 
 Both lists are sorted by `resolutionMpp` ascending — best resolution (smallest value) first. Up to 20 products per type are returned.
 
-**Empty arrays** are returned (not errors) when no products exist for the bounding box, or when ODE returns an error status.
+**Empty arrays** (`{ wac: [], nac: [] }`) are returned when no products exist for the bounding box — this is a normal, non-error result.
+
+**Error responses** (status 200) are returned when the ODE request fails. Shape: `LrocErrorResponse`
+```json
+{ "error": "LROC data unavailable", "code": "TIMEOUT", "results": [] }
+{ "error": "LROC data unavailable", "code": "UPSTREAM_ERROR", "results": [] }
+```
+- `TIMEOUT` — ODE did not respond within 8 seconds
+- `UPSTREAM_ERROR` — ODE returned a non-2xx HTTP status, a network error occurred, or the JSON body contains `Status: "ERROR"`
+
+Server-side `console.error` logs are written on both error paths with `{ errorType, statusCode?, lat, lon }` for diagnostics. No raw ODE error details are forwarded to the client.
 
 **Quirks found during real API testing:**
 
@@ -104,6 +114,6 @@ Both lists are sorted by `resolutionMpp` ascending — best resolution (smallest
 
 6. **Coverage is global.** Unlike image search APIs, ODE has calibrated data for the entire lunar surface including the far side. Both Shackleton and Integrity return 100 products in a ±0.5° box — the route caps results at 20 per instrument type.
 
-7. **8-second timeout** aborts the fetch. On timeout or network error, the affected list returns empty (graceful degradation).
+7. **8-second timeout** aborts the fetch. On timeout the route returns `{ code: 'TIMEOUT' }`; on any other network/HTTP failure it returns `{ code: 'UPSTREAM_ERROR' }`. See error responses above.
 
 **Cache-Control:** `public, s-maxage=3600, stale-while-revalidate=86400`

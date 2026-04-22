@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useState, useRef, useCallback } from 'react'
 import { LocationPanel } from '@/components/globe/LocationPanel'
+import { ImageGalleryDialog } from '@/components/gallery/ImageGalleryDialog'
 import type { LunarLocation } from '@/components/globe/types'
 
 // Three.js creates a WebGL context — must be client-only, no SSR
@@ -13,6 +14,8 @@ const LunarGlobe = dynamic(
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<LunarLocation | null>(null)
+  const [galleryLocation, setGalleryLocation] = useState<LunarLocation | null>(null)
+  const [galleryOpen, setGalleryOpen] = useState(false)
   const deselectRef = useRef<(() => void) | null>(null)
 
   const handleLocationSelect = useCallback((location: LunarLocation | null) => {
@@ -24,8 +27,18 @@ export default function Home() {
     setSelectedLocation(null)
   }, [])
 
-  const handleResearch = useCallback((_location: LunarLocation) => {
-    // TODO: open image gallery dialog (Screen 1.5)
+  const handleResearch = useCallback((location: LunarLocation) => {
+    setGalleryLocation(location)
+    setGalleryOpen(true)
+  }, [])
+
+  const handleGalleryClose = useCallback(() => {
+    setGalleryOpen(false)
+  }, [])
+
+  const handleGalleryContinue = useCallback((_location: LunarLocation) => {
+    setGalleryOpen(false)
+    // TODO: navigate to Screen 2 (Query Input) with selected images
   }, [])
 
   return (
@@ -38,6 +51,12 @@ export default function Home() {
         location={selectedLocation}
         onClose={handlePanelClose}
         onResearch={handleResearch}
+      />
+      <ImageGalleryDialog
+        location={galleryLocation}
+        open={galleryOpen}
+        onClose={handleGalleryClose}
+        onContinue={handleGalleryContinue}
       />
     </main>
   )

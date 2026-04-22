@@ -35,9 +35,7 @@ export interface LrocErrorResponse {
   results: LrocProduct[];
 }
 
-// JSC Lunar Sample API types
-// This is a public API contract read by downstream agents (Foxtrot, Delta).
-// Do not change field names or nullability without flagging as a breaking change.
+// Public API contract — do not change field names or nullability without flagging as a breaking change.
 
 export interface JscSample {
   sampleId: string;

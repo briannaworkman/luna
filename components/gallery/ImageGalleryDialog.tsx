@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import type { LunarLocation } from '@/components/globe/types'
 
 interface ImageGalleryDialogProps {
@@ -89,13 +90,13 @@ export function ImageGalleryDialog({
               {location?.name ?? ''}
             </h2>
           </div>
-          <button
+          <Button
+            variant="icon"
             onClick={onClose}
             aria-label="Close image gallery"
-            className="w-8 h-8 grid place-items-center rounded-sm text-luna-fg-3 hover:text-luna-fg hover:bg-luna-base-3 transition-colors"
           >
             <X size={18} strokeWidth={1.5} />
-          </button>
+          </Button>
         </div>
 
         {/* ── Gallery body — placeholder until Screen 1.5 images land ── */}
@@ -134,18 +135,12 @@ export function ImageGalleryDialog({
             Select up to 4 images to include in your query
           </span>
           <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="h-9 px-4 rounded font-sans text-sm text-luna-fg-3 border border-luna-hairline hover:text-luna-fg hover:border-luna-hairline-2 transition-colors"
-            >
+            <Button variant="outline" onClick={onClose}>
               Skip
-            </button>
-            <button
-              onClick={() => location && onContinue(location)}
-              className="h-9 px-5 rounded font-sans font-medium text-sm bg-luna-cyan text-luna-base border border-luna-cyan hover:bg-luna-cyan-dim hover:border-luna-cyan-dim transition-colors"
-            >
+            </Button>
+            <Button onClick={() => location && onContinue(location)}>
               Continue
-            </button>
+            </Button>
           </div>
         </div>
       </div>

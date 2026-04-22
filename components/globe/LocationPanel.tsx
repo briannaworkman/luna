@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { X, ArrowRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type { LunarLocation } from './types'
 
 interface LocationPanelProps {
@@ -14,7 +15,6 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
   const open = location !== null
   const panelRef = useRef<HTMLDivElement>(null)
 
-  // Escape key to close
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && open) onClose()
@@ -23,7 +23,6 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [open, onClose])
 
-  // Click outside panel to close
   function handleBackdropClick(e: React.MouseEvent) {
     if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
       onClose()
@@ -31,260 +30,122 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
   }
 
   return (
-    // Backdrop — covers the full screen but is pointer-events:none when closed
     <div
       onClick={handleBackdropClick}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        pointerEvents: open ? 'auto' : 'none',
-        zIndex: 20,
-      }}
+      className={cn('absolute inset-0 z-20', open ? 'pointer-events-auto' : 'pointer-events-none')}
     >
-      {/* Panel */}
       <div
         ref={panelRef}
+        className={cn(
+          'absolute top-0 right-0 bottom-0 w-[360px]',
+          'bg-luna-base-2 border-l border-luna-hairline',
+          'flex flex-col',
+          open ? 'translate-x-0 opacity-100 pointer-events-auto' : 'translate-x-full opacity-0 pointer-events-none',
+        )}
         style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: '320px',
-          background: 'rgba(10, 20, 36, 0.92)',
-          backdropFilter: 'blur(20px)',
-          borderLeft: '1px solid var(--luna-hairline)',
-          display: 'flex',
-          flexDirection: 'column',
-          transform: open ? 'translateX(0)' : 'translateX(100%)',
-          opacity: open ? 1 : 0,
           transition: open
             ? 'transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms cubic-bezier(0.16, 1, 0.3, 1)'
             : 'transform 300ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 200ms cubic-bezier(0.22, 0.61, 0.36, 1)',
-          pointerEvents: open ? 'auto' : 'none',
-          boxShadow: open ? 'var(--luna-shadow-lg)' : 'none',
         }}
       >
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            padding: '20px 20px 0',
-            gap: '12px',
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p
-              style={{
-                fontFamily: 'var(--luna-font-mono)',
-                fontSize: '10px',
-                letterSpacing: '0.14em',
-                color: 'var(--luna-cyan)',
-                textTransform: 'uppercase',
-                marginBottom: '6px',
-                fontWeight: 500,
-              }}
+        {/* Panel top */}
+        <div className="px-8 pt-8">
+          {/* Mission crumb + close */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan">
+              {location?.region ?? ''}
+            </div>
+            <button
+              onClick={onClose}
+              aria-label="Close panel"
+              className="w-6 h-6 grid place-items-center bg-transparent border-none text-luna-fg-3 cursor-pointer rounded-sm transition-colors hover:text-luna-fg hover:bg-luna-base-3"
             >
-              Location
-            </p>
-            <h2
-              style={{
-                fontFamily: 'var(--luna-font-body)',
-                fontSize: '17px',
-                fontWeight: 600,
-                letterSpacing: '-0.01em',
-                color: 'var(--luna-fg)',
-                lineHeight: 1.25,
-                margin: 0,
-              }}
-            >
-              {location?.name ?? ''}
-            </h2>
+              <X size={16} strokeWidth={1.5} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Close panel"
-            style={{
-              flexShrink: 0,
-              marginTop: '2px',
-              width: '28px',
-              height: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'transparent',
-              border: '1px solid var(--luna-hairline)',
-              borderRadius: '4px',
-              color: 'var(--luna-fg-3)',
-              cursor: 'pointer',
-              transition: 'color 120ms, border-color 120ms, background 120ms',
-            }}
-            onMouseEnter={e => {
-              const b = e.currentTarget
-              b.style.color = 'var(--luna-fg)'
-              b.style.borderColor = 'var(--luna-hairline-2)'
-              b.style.background = 'var(--luna-base-2)'
-            }}
-            onMouseLeave={e => {
-              const b = e.currentTarget
-              b.style.color = 'var(--luna-fg-3)'
-              b.style.borderColor = 'var(--luna-hairline)'
-              b.style.background = 'transparent'
-            }}
-          >
-            <X size={14} strokeWidth={2} />
-          </button>
+
+          {/* Name + proposed badge */}
+          <div className="flex items-center gap-3 mt-1 mb-5">
+            <h1 className="font-sans font-medium text-[28px] leading-[1.15] tracking-[-0.01em] text-luna-fg m-0">
+              {location?.name ?? ''}
+            </h1>
+            {location?.isProposed && (
+              <span className="inline-flex items-center h-5 px-1.5 bg-luna-base-3 text-luna-cyan rounded-xs font-mono text-[10px] tracking-[0.08em] font-medium translate-y-0.5">
+                proposed
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Divider */}
-        <div
-          style={{
-            height: '1px',
-            background: 'var(--luna-hairline)',
-            margin: '16px 20px 0',
-          }}
-        />
+        <div className="h-px bg-luna-hairline" />
 
-        {/* Data fields */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-          }}
-        >
-          {/* Coordinates */}
-          <div>
-            <p
-              style={{
-                fontFamily: 'var(--luna-font-mono)',
-                fontSize: '10px',
-                letterSpacing: '0.14em',
-                color: 'var(--luna-fg-4)',
-                textTransform: 'uppercase',
-                marginBottom: '4px',
-                fontWeight: 500,
-              }}
-            >
-              Coordinates
-            </p>
-            <p
-              style={{
-                fontFamily: 'var(--luna-font-mono)',
-                fontSize: '13px',
-                color: 'var(--luna-fg)',
-                letterSpacing: '0.02em',
-                margin: 0,
-              }}
-            >
-              {location?.coords ?? ''}
-            </p>
+        {/* Coordinates */}
+        <div className="px-8 pt-5 pb-6">
+          <div className="font-mono text-[13px] text-luna-cyan tracking-[0.02em] tabular-nums flex items-center gap-5">
+            {location?.coords.split(',').map((part, i) => (
+              <span key={i}>{part.trim()}</span>
+            ))}
           </div>
+          <div className="mt-2 font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3">
+            LROC confirmed · Apr 6 2026
+          </div>
+        </div>
 
-          {/* Diameter — only if present */}
-          {location?.diameter && (
-            <div>
-              <p
-                style={{
-                  fontFamily: 'var(--luna-font-mono)',
-                  fontSize: '10px',
-                  letterSpacing: '0.14em',
-                  color: 'var(--luna-fg-4)',
-                  textTransform: 'uppercase',
-                  marginBottom: '4px',
-                  fontWeight: 500,
-                }}
-              >
-                Diameter
-              </p>
-              <p
-                style={{
-                  fontFamily: 'var(--luna-font-mono)',
-                  fontSize: '13px',
-                  color: 'var(--luna-fg)',
-                  letterSpacing: '0.02em',
-                  margin: 0,
-                }}
-              >
-                {location.diameter}
-              </p>
-            </div>
-          )}
+        <div className="h-px bg-luna-hairline" />
 
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto">
           {/* Significance */}
-          <div>
-            <p
-              style={{
-                fontFamily: 'var(--luna-font-mono)',
-                fontSize: '10px',
-                letterSpacing: '0.14em',
-                color: 'var(--luna-fg-4)',
-                textTransform: 'uppercase',
-                marginBottom: '4px',
-                fontWeight: 500,
-              }}
-            >
-              Significance
-            </p>
-            <p
-              style={{
-                fontFamily: 'var(--luna-font-body)',
-                fontSize: '13px',
-                color: 'var(--luna-fg-2)',
-                lineHeight: 1.6,
-                margin: 0,
-              }}
-            >
+          <div className="px-8 pt-5 pb-1">
+            <p className="font-sans text-sm leading-relaxed text-luna-fg-2 m-0">
               {location?.significance ?? ''}
             </p>
           </div>
+
+          {/* Diameter */}
+          {location?.diameter && (
+            <div className="px-8 pt-4 pb-1">
+              <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3 mb-2.5">
+                Diameter
+              </div>
+              <div className="font-mono text-[13px] text-luna-fg tracking-[0.02em]">
+                {location.diameter}
+              </div>
+            </div>
+          )}
+
+          {/* Named by */}
+          {location?.namedBy && location.namedBy.length > 0 && (
+            <div className="px-8 py-6">
+              <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3 mb-2.5">
+                Named by
+              </div>
+              <div className="font-sans text-[13px] text-luna-fg leading-[1.55]">
+                {location.namedBy.map((name, i) => (
+                  <span key={name}>
+                    {name}
+                    {i < location.namedBy!.length - 1 && (
+                      <span className="text-luna-fg-3 mx-1.5">·</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* CTA */}
-        <div
-          style={{
-            padding: '16px 20px 20px',
-            borderTop: '1px solid var(--luna-hairline)',
-          }}
-        >
+        {/* Bottom CTA */}
+        <div className="px-8 pt-5 pb-8 border-t border-luna-hairline">
           <button
             onClick={() => location && onResearch(location)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '8px',
-              padding: '11px 16px',
-              background: 'var(--luna-cyan)',
-              color: 'var(--luna-base)',
-              fontFamily: 'var(--luna-font-body)',
-              fontSize: '13px',
-              fontWeight: 600,
-              letterSpacing: '0.01em',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              transition: 'background 150ms, box-shadow 150ms',
-            }}
-            onMouseEnter={e => {
-              const b = e.currentTarget
-              b.style.background = '#a5e3fd'
-              b.style.boxShadow = '0 0 0 1px rgba(125,211,252,0.5), 0 4px 16px rgba(125,211,252,0.2)'
-            }}
-            onMouseLeave={e => {
-              const b = e.currentTarget
-              b.style.background = 'var(--luna-cyan)'
-              b.style.boxShadow = 'none'
-            }}
+            className="w-full h-10 bg-luna-cyan text-luna-base border border-luna-cyan rounded font-sans font-medium text-sm cursor-pointer inline-flex items-center justify-center gap-2 transition-colors hover:bg-luna-cyan-dim hover:border-luna-cyan-dim"
           >
-            <span>Research this location</span>
-            <ArrowRight size={14} strokeWidth={2.5} />
+            Analyze this location
+            <ArrowRight size={14} strokeWidth={1.75} />
           </button>
+          <div className="mt-2.5 font-mono text-[10px] tracking-[0.14em] uppercase text-luna-fg-3 text-center">
+            Routes to the mineralogy and thermal agents
+          </div>
         </div>
       </div>
     </div>

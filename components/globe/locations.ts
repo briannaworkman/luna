@@ -6,6 +6,8 @@ import type { LunarLocation } from './types'
 // z = cos(lat_rad) * sin(lon_rad)
 // Camera sits on the +x axis so lon=0 (prime meridian / near-side center) faces forward.
 
+const ARTEMIS_CREW = ['Reid Wiseman', 'Christina Koch', 'Victor Glover', 'Jeremy Hansen']
+
 export const LOCATIONS: LunarLocation[] = [
   {
     id: 'spa',
@@ -16,6 +18,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Largest, deepest, oldest known impact basin on the Moon; far side',
     isProposed: false,
     coords: '56°S, 180°W',
+    region: 'FAR SIDE',
   },
   {
     id: 'orientale',
@@ -26,6 +29,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: '"Bullseye" crater with 3 concentric rings; seen by human eyes for the first time by Artemis II crew',
     isProposed: false,
     coords: '19°S, 95°W',
+    region: 'FAR SIDE',
   },
   {
     id: 'tycho',
@@ -36,6 +40,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Most prominent young crater; bright ray system visible from Earth with naked eye',
     isProposed: false,
     coords: '43°S, 11°W',
+    region: 'NEAR SIDE',
   },
   {
     id: 'copernicus',
@@ -46,6 +51,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: '"Monarch of the Moon"; famous ray system and terraced walls',
     isProposed: false,
     coords: '10°N, 20°W',
+    region: 'NEAR SIDE',
   },
   {
     id: 'clavius',
@@ -56,6 +62,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'One of the largest near-side craters; famous chain of smaller craters within it',
     isProposed: false,
     coords: '58°S, 14°W',
+    region: 'NEAR SIDE',
   },
   {
     id: 'bailly',
@@ -66,6 +73,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'One of the largest craters on the near side; heavily degraded ancient basin',
     isProposed: false,
     coords: '67°S, 69°W',
+    region: 'NEAR SIDE',
   },
   {
     id: 'petavius',
@@ -76,6 +84,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Prominent central peak; massive floor fracture (rille) radiating from center',
     isProposed: false,
     coords: '25°S, 61°E',
+    region: 'NEAR SIDE',
   },
   {
     id: 'langrenus',
@@ -86,6 +95,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Well-preserved; complex terraced walls and bright central peak',
     isProposed: false,
     coords: '9°S, 61°E',
+    region: 'NEAR SIDE',
   },
   {
     id: 'humboldt',
@@ -96,6 +106,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Near the eastern limb; known for distinctive floor fractures',
     isProposed: false,
     coords: '27°S, 81°E',
+    region: 'NEAR SIDE',
   },
   {
     id: 'janssen',
@@ -106,6 +117,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Ancient, heavily eroded highland crater on the southeastern near side',
     isProposed: false,
     coords: '45°S, 41°E',
+    region: 'NEAR SIDE',
   },
   {
     id: 'schickard',
@@ -116,6 +128,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Large walled plain near the Moon\'s southwestern limb',
     isProposed: false,
     coords: '44°S, 55°W',
+    region: 'NEAR SIDE',
   },
   {
     id: 'stofler',
@@ -126,6 +139,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Southern highlands; heavily overlapped by subsequent impacts',
     isProposed: false,
     coords: '41°S, 6°E',
+    region: 'NEAR SIDE',
   },
   {
     id: 'maginus',
@@ -136,6 +150,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Ancient, worn crater in the rugged southern highlands',
     isProposed: false,
     coords: '50°S, 6°W',
+    region: 'NEAR SIDE',
   },
   {
     id: 'longomontanus',
@@ -146,6 +161,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Large old crater southwest of Tycho',
     isProposed: false,
     coords: '50°S, 21°W',
+    region: 'NEAR SIDE',
   },
   {
     id: 'vendelinus',
@@ -156,23 +172,28 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Ancient crater on the edge of Mare Fecunditatis',
     isProposed: false,
     coords: '16°S, 62°E',
+    region: 'NEAR SIDE',
   },
   {
     id: 'carroll',
-    name: 'Carroll (proposed)',
+    name: 'Carroll',
     lat: 18.84,
     lon: -86.51,
     significance: 'Named for Carroll Taylor Wiseman, late wife of commander Reid Wiseman (died 2020). Near the near/far side boundary — visible from Earth at certain times. "A bright spot on the moon."',
     isProposed: true,
     coords: '18.84°N, 86.51°W',
+    region: 'FAR SIDE',
+    namedBy: ARTEMIS_CREW,
   },
   {
     id: 'integrity',
-    name: 'Integrity (proposed)',
+    name: 'Integrity',
     lat: 2.66,
     lon: -104.92,
     significance: 'Named for the Orion spacecraft. Located just northwest of Orientale basin on the far side. Named moments after the crew broke the human distance record from Earth.',
     isProposed: true,
     coords: '2.66°N, 104.92°W',
+    region: 'FAR SIDE',
+    namedBy: ARTEMIS_CREW,
   },
 ]

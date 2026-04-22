@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa';
 import { extractInstrument } from '@/lib/utils/extract-instrument';
+import { fetchJson } from '@/lib/utils/fetch-with-timeout';
+import { CACHE_CONTROL_1H } from '@/lib/constants/cache';
 
 const NASA_IMAGES_API = 'https://images-api.nasa.gov/search';
-const TIMEOUT_MS = 8000;
 const SPARSE_THRESHOLD = 2;
 
 // Derive region-specific search terms from lat/lon for the fallback query.
@@ -40,19 +41,8 @@ async function searchImages(query: string): Promise<NasaApiItem[]> {
   url.searchParams.set('media_type', 'image');
   url.searchParams.set('page_size', '20');
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const res = await fetch(url.toString(), { signal: controller.signal });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return (json?.collection?.items ?? []) as NasaApiItem[];
-  } catch {
-    return [];
-  } finally {
-    clearTimeout(timer);
-  }
+  const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url);
+  return (json?.collection?.items ?? []) as NasaApiItem[];
 }
 
 function normalizeItems(items: NasaApiItem[]): NasaImage[] {
@@ -112,6 +102,6 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
 
   return NextResponse.json(
     { images: merged, limitedCoverage: merged.length < SPARSE_THRESHOLD },
-    { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } }
+    { headers: { 'Cache-Control': CACHE_CONTROL_1H } }
   );
 }

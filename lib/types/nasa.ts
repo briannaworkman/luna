@@ -15,3 +15,16 @@ export interface NasaImagesResponse {
   images: NasaImage[];
   limitedCoverage: boolean;
 }
+
+export interface LrocProduct {
+  productId: string;
+  resolutionMpp: number;
+  acquisitionDate: string; // ISO 8601 string
+  downloadUrl: string;
+  instrument: string;
+}
+
+export interface LrocResponse {
+  wac: LrocProduct[];
+  nac: LrocProduct[];
+}

@@ -109,7 +109,7 @@ describe('GET /api/jsc-samples', () => {
       expect(sample.sampleId).toBe('72135');
       expect(sample.mission).toBe('Apollo 17');
       expect(sample.station).toBe('2');
-      expect(sample.weight).toBe(336.9);
+      expect(sample.weightGrams).toBe(336.9);
       expect(sample.mineralFlags).toEqual(['breccia', 'fragmental']);
       expect(sample.description).toBe('coarsely brecciated ilmenite basalt');
       expect(sample.jscUrl).toBe(
@@ -138,7 +138,7 @@ describe('GET /api/jsc-samples', () => {
         makeRawSample({ ORIGINALWEIGHT: null }),
       ])));
       const body = await GET(makeRequest(APOLLO_17)).then((r) => r.json());
-      expect(body.results[0].weight).toBeNull();
+      expect(body.results[0].weightGrams).toBeNull();
     });
 
     it('sets null description when GENERICDESCRIPTION is null', async () => {
@@ -147,6 +147,14 @@ describe('GET /api/jsc-samples', () => {
       ])));
       const body = await GET(makeRequest(APOLLO_17)).then((r) => r.json());
       expect(body.results[0].description).toBeNull();
+    });
+
+    it('strips HTML tags and entities from description', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jscResponse([
+        makeRawSample({ GENERICDESCRIPTION: '<p>coarsely brecciated &amp; ilmenite basalt</p>' }),
+      ])));
+      const body = await GET(makeRequest(APOLLO_17)).then((r) => r.json());
+      expect(body.results[0].description).toBe('coarsely brecciated ilmenite basalt');
     });
 
     it('sets Cache-Control on success', async () => {

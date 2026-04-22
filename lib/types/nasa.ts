@@ -41,7 +41,7 @@ export interface JscSample {
   sampleId: string;
   mission: string;
   station: string;
-  weight: number | null;
+  weightGrams: number | null;
   mineralFlags: string[];
   description: string | null;
   jscUrl: string;

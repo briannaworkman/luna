@@ -29,15 +29,19 @@ function buildMineralFlags(type: string | null, subtype: string | null): string[
   return flags;
 }
 
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function normalizeSamples(raw: JscRawSample[], mission: string, station: string): JscSample[] {
   return raw
     .map((s): JscSample => ({
       sampleId: s.GENERIC,
       mission: s.MISSION || mission,
       station: s.STATION ?? station,
-      weight: s.ORIGINALWEIGHT ?? null,
+      weightGrams: s.ORIGINALWEIGHT ?? null,
       mineralFlags: buildMineralFlags(s.SAMPLETYPE, s.SAMPLESUBTYPE),
-      description: s.GENERICDESCRIPTION ?? null,
+      description: s.GENERICDESCRIPTION ? stripHtml(s.GENERICDESCRIPTION) : null,
       jscUrl: `${JSC_CATALOG_URL}?sample=${s.GENERIC}`,
     }))
     .sort((a, b) => {
@@ -45,7 +49,7 @@ function normalizeSamples(raw: JscRawSample[], mission: string, station: string)
       const aIsSoil = a.mineralFlags[0] === 'soil';
       const bIsSoil = b.mineralFlags[0] === 'soil';
       if (aIsSoil !== bIsSoil) return aIsSoil ? 1 : -1;
-      return (b.weight ?? 0) - (a.weight ?? 0);
+      return (b.weightGrams ?? 0) - (a.weightGrams ?? 0);
     })
     .slice(0, MAX_RESULTS);
 }

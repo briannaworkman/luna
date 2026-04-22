@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .surface { background: var(--luna-base-2); border: 1px solid var(--luna-hairline); border-radius: 6px; padding: 18px; box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 2px 8px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden;}
+  .eyebrow { font-family: var(--luna-font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #7DD3FC; }
+  .title { font-family: var(--luna-font-display); font-weight: 500; font-size: 18px; color: var(--luna-fg); letter-spacing: -0.01em; line-height: 1.2; }
+  .body { font-family: var(--luna-font-body); font-size: 13px; color: var(--luna-fg-2); line-height: 1.5; }
+  .meta { display:flex; gap: 10px; margin-top: 4px; font-family: var(--luna-font-mono); font-size: 10px; color: var(--luna-fg-3); letter-spacing: 0.04em; }
+  .feat { background: linear-gradient(180deg, rgba(125,211,252,0.04), transparent 60%), var(--luna-base-2); border-color: rgba(125,211,252,0.22); }
+  .divider { height: 1px; background: var(--luna-hairline); margin: 4px -18px; }
+</style></head>
+<body><div class="card"><div class="two">
+  <div class="surface">
+    <span class="eyebrow">◦ 04:12 UTC</span>
+    <span class="title">Mare Tranquillitatis thermal scan</span>
+    <span class="body">The thermal agent processed 14 strips from Diviner and cross-checked against LROC.</span>
+    <div class="divider"></div>
+    <div class="meta"><span>3 sources</span><span>·</span><span>2 agents</span></div>
+  </div>
+  <div class="surface feat">
+    <span class="eyebrow">◉ featured</span>
+    <span class="title">Apollo 11 landing site, re-visited</span>
+    <span class="body">Re-registered LROC NAC imagery against the original Hasselblad frames.</span>
+    <div class="divider"></div>
+    <div class="meta"><span>LROC NAC</span><span>·</span><span>2024-08-12</span></div>
+  </div>
+</div></div></body></html>

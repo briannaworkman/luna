@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" aria-label="LUNA wordmark">
+  
+  <g transform="translate(4, 20)">
+    <circle cx="10" cy="0" r="9" fill="none" stroke="currentColor" stroke-width="1.25" opacity="0.3"></circle>
+    <path d="M10 -9a9 9 0 1 0 0 18 6 6 0 0 1 0 -18Z" fill="currentColor"></path>
+  </g>
+  <text x="36" y="27" class="wm" font-size="22">LUNA</text>
+</svg>

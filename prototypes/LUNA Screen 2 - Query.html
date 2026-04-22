@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>LUNA — Query</title>
+<meta name="viewport" content="width=1440" />
+
+<style>
+  /* ================== Fonts ================== */
+  @font-face {
+    font-family: 'Geist';
+    src: url('fonts/Geist-VariableFont_wght.ttf') format('truetype-variations'),
+         url('fonts/Geist-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'JetBrains Mono';
+    src: url('fonts/JetBrainsMono-VariableFont_wght.ttf') format('truetype-variations'),
+         url('fonts/JetBrainsMono-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+
+  :root{
+    --base:      #050C1A;
+    --base-2:    #080F1E;
+    --base-3:    #1A2942;
+    --hairline:  #1F2E4A;
+    --hairline-2:#2A3B5C;
+    --frost:     #E8EDF5;
+    --frost-2:   #9BA8BC;
+    --frost-3:   #4A5368;
+    --cyan:      #7DD3FC;
+    --cyan-dim:  #4FA5CD;
+
+    --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --lit-top:   #0D1829;
+    --lit-bot:   #081322;
+    --dark-top:  #050C1A;
+    --dark-bot:  #030811;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--base);
+    color: var(--frost-2);
+    font-family: var(--font-sans);
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+  }
+
+  .viewport {
+    position: relative;
+    width: 1440px; height: 900px;
+    background: var(--base);
+    overflow: hidden;
+  }
+
+  /* ================== Grain — page background only, not rail/panel/thumbnail ================== */
+  .grain {
+    position: absolute;
+    inset: 56px 0 0 220px;        /* exclude topbar & rail */
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 1;
+    z-index: 1;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.91  0 0 0 0 0.93  0 0 0 0 0.96  0 0 0 0.035 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ================== Top bar ================== */
+  .topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--base);
+    border-bottom: 1px solid var(--hairline);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    z-index: 10;
+  }
+
+  .wordmark {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.14em;
+    color: var(--frost);
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .wordmark .mark {
+    width: 14px; height: 14px;
+    display: inline-block;
+    position: relative;
+  }
+  .wordmark .mark::before {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: var(--frost);
+    mask: radial-gradient(circle at 70% 50%, transparent 55%, #000 56%);
+    -webkit-mask: radial-gradient(circle at 70% 50%, transparent 55%, #000 56%);
+  }
+
+  .ghost-btn {
+    height: 32px;
+    padding: 0 14px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--frost);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .ghost-btn:hover { background: var(--base-3); }
+
+  /* ================== Agent rail ================== */
+  /* animates: slides in from left, 300ms ease-out, slight delay after globe transition */
+  .rail {
+    position: absolute;
+    top: 56px; left: 0;
+    width: 220px; height: calc(900px - 56px);
+    background: var(--base-2);
+    border-right: 1px solid var(--hairline);
+    z-index: 6;
+    display: flex; flex-direction: column;
+  }
+
+  .rail-head {
+    padding: 24px 16px 12px 16px;
+  }
+  .rail-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--frost-3);
+  }
+
+  .agent-list {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+  }
+  .agent-row {
+    height: 44px;
+    padding: 0 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--hairline);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--frost-3);
+  }
+  .agent-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .agent-row .status {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--hairline-2);      /* #2A3B5C — idle indicator */
+    line-height: 1;
+    width: 10px; text-align: center;
+  }
+
+  .rail-foot {
+    margin-top: auto;
+    padding: 14px 16px 20px 16px;
+    border-top: 1px solid var(--hairline);
+  }
+  .rail-status {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--hairline-2);
+  }
+  .rail-status .sep { color: var(--hairline-2); margin: 0 6px; }
+
+  /* ================== Query panel ================== */
+  /* animates: fades up 4px, 220ms ease-out, after rail appears */
+  .panel {
+    position: absolute;
+    top: 56px; left: 220px;
+    width: calc(1440px - 220px);
+    height: calc(900px - 56px);
+    overflow: hidden;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---- Location header ---- */
+  .loc-header {
+    position: relative;
+    border-bottom: 1px solid var(--hairline);
+    display: flex;
+    align-items: stretch;
+  }
+  .loc-header-left {
+    flex: 1;
+    min-width: 0;
+    padding: 32px;
+  }
+  .loc-header-right {
+    flex: 0 0 auto;
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .loc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .loc-left { min-width: 0; }
+  .loc-right {
+    text-align: right;
+    padding-top: 28px;    /* vertically align with name baseline */
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 14px;
+  }
+  .eyebrow .sep { color: var(--frost-3); margin: 0 8px; }
+
+  .loc-name {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--frost);
+    margin: 0 0 14px 0;
+  }
+  .badge {
+    display: inline-flex; align-items: center;
+    height: 20px;
+    padding: 0 6px;
+    background: var(--base-3);
+    color: var(--cyan);
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
+    font-weight: 500;
+    translate: 0 3px;
+  }
+
+  .coord-line {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--cyan);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 10px;
+  }
+  .coord-line .sep { color: var(--frost-3); margin: 0 12px; }
+
+  .confirm {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--frost-3);
+  }
+  .confirm .sep { margin: 0 8px; color: var(--frost-3); }
+
+  .sig-note {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--frost-2);
+    margin: 0 0 18px 0;
+    text-align: right;
+    max-width: 320px;
+    margin-left: auto;
+    text-wrap: pretty;
+  }
+
+  .named-by-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--frost-3);
+    margin-bottom: 8px;
+  }
+  .named-by-crew {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--frost);
+    line-height: 1.55;
+  }
+  .named-by-crew .dot-sep { color: var(--frost-3); margin: 0 6px; }
+
+  .citations {
+    margin-top: 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--frost-3);
+    line-height: 1.7;
+  }
+  .citations .sep { color: var(--hairline-2); margin: 0 10px; }
+
+  /* ---- Composer ---- */
+  .composer {
+    position: relative;
+    padding: 24px 32px 24px 32px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .templates {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--frost-3);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: border-color 120ms ease, color 120ms ease;
+  }
+  .chip:hover,
+  .chip.is-active {
+    border-color: var(--hairline-2);
+    color: var(--frost-2);
+  }
+
+  .input-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 160px;
+    display: flex;
+  }
+  .input {
+    display: block;
+    width: 100%;
+    flex: 1;
+    min-height: 160px;
+    resize: none;
+    background: var(--base-2);
+    border: 1px solid var(--hairline-2);
+    border-radius: 6px;
+    padding: 16px;
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--frost);
+    outline: none;
+    caret-color: var(--cyan);
+  }
+  .input::placeholder { color: var(--frost-3); }
+
+  /* ---- Suggested questions ---- */
+  .suggested {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+  }
+  .suggested-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--frost-3);
+    margin-bottom: 4px;
+  }
+  .suggested-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .suggested-row {
+    height: 36px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+    margin: 0 -8px;
+    border: none;
+    border-bottom: 1px solid var(--hairline);
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .suggested-row:last-child { border-bottom: none; }
+  .suggested-row .bullet {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--hairline-2);
+    line-height: 1;
+    width: 8px;
+    text-align: center;
+  }
+  .suggested-row .q {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--frost-3);
+    transition: color 120ms ease;
+    flex: 1;
+    text-wrap: pretty;
+  }
+  .suggested-row .arrow {
+    width: 14px; height: 14px;
+    color: var(--hairline-2);
+    stroke-width: 1.5;
+    transition: color 120ms ease;
+    flex-shrink: 0;
+  }
+  .suggested-row:hover { background: var(--base-2); }
+  .suggested-row:hover .q { color: var(--frost-2); }
+  .suggested-row:hover .arrow { color: var(--cyan); }
+
+  .submit-row {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ---- Keyboard hint (right-aligned above submit row) ---- */
+  .kbd-hint {
+    display: block;
+    margin-top: 16px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--hairline-2);
+    letter-spacing: 0.04em;
+    pointer-events: none;
+  }
+
+  .attach-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--frost-3);
+    cursor: pointer;
+    transition: border-color 120ms ease, color 120ms ease;
+  }
+  .attach-btn:hover { border-color: var(--frost-2); color: var(--frost-2); }
+  .attach-btn svg { width: 16px; height: 16px; stroke-width: 1.5; }
+
+  .analyze {
+    width: 120px;
+    height: 40px;
+    background: var(--cyan);
+    color: var(--base);
+    border: 1px solid var(--cyan);
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .analyze:hover { background: var(--cyan-dim); border-color: var(--cyan-dim); }
+
+  /* ================== Globe thumbnail ================== */
+  /* animates: globe shrinks from full viewport, moves to top-right corner, 400ms ease-out */
+  .thumb {
+    position: relative;
+    width: 280px; height: 280px;
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    background: var(--base);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 120ms ease;
+  }
+  .thumb:hover { border-color: var(--cyan); }
+
+  .thumb-hover-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    background: rgba(5, 12, 26, 0.72);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--frost);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+  .thumb:hover .thumb-hover-scrim { opacity: 1; }
+  /* Protection gradient at the bottom of the thumbnail */
+  .thumb::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 60px;
+    background: linear-gradient(180deg, transparent 0%, var(--base) 100%);
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .thumb-globe-wrap {
+    position: absolute;
+    inset: 0;
+    display: grid; place-items: center;
+  }
+  .thumb-globe {
+    position: relative;
+    width: 230px; height: 230px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, var(--dark-top) 0%, var(--dark-bot) 100%);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline),
+      inset 16px 0 48px rgba(0,0,0,0.55),
+      inset -4px -8px 32px rgba(0,0,0,0.6);
+  }
+  .thumb-lit {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(ellipse 110% 90% at 30% 35%, var(--lit-top) 0%, var(--lit-bot) 70%, transparent 100%);
+    -webkit-mask: radial-gradient(ellipse 75% 100% at 22% 50%, #000 46%, rgba(0,0,0,0.55) 58%, transparent 68%);
+            mask: radial-gradient(ellipse 75% 100% at 22% 50%, #000 46%, rgba(0,0,0,0.55) 58%, transparent 68%);
+    mix-blend-mode: screen;
+  }
+  .thumb-grid {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .thumb-grid svg { width: 100%; height: 100%; display: block; }
+
+  .thumb-rim {
+    position: absolute; inset: -6px;
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow:
+      inset 0 0 0 1px rgba(42, 59, 92, 0.35),
+      0 0 40px rgba(5, 12, 26, 0.9);
+  }
+
+  /* Dots — scaled down */
+  .thumb-dot {
+    position: absolute;
+    width: 3px; height: 3px;
+    margin-left: -1.5px; margin-top: -1.5px;
+    background: var(--frost);
+    border-radius: 50%;
+    opacity: 0.55;
+  }
+  .thumb-dot.shadowed { opacity: 0.28; }
+  .thumb-dot.selected {
+    width: 5px; height: 5px;
+    margin-left: -2.5px; margin-top: -2.5px;
+    background: var(--cyan);
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(125,211,252,0.55);
+  }
+  .thumb-dot.selected::after {
+    content: "";
+    position: absolute;
+    width: 10px; height: 10px;
+    left: 50%; top: 50%;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: rgba(125, 211, 252, 0.28);
+  }
+
+  /* Tiny mono caption inside the thumbnail, bottom-left */
+  .thumb-meta {
+    position: absolute;
+    left: 14px; bottom: 12px;
+    z-index: 4;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--frost-3);
+  }
+</style>
+</head>
+<body>
+
+<div class="viewport">
+
+  <!-- ====================== TOP BAR ====================== -->
+  <header class="topbar">
+    <div class="wordmark">
+      <span class="mark" aria-hidden="true"></span>
+      LUNA
+    </div>
+    <button class="ghost-btn" type="button">about</button>
+  </header>
+
+  <!-- ====================== AGENT RAIL ====================== -->
+  <aside class="rail" aria-label="Agents">
+    <div class="rail-head">
+      <div class="rail-eyebrow">AGENTS</div>
+    </div>
+
+    <div class="agent-list">
+      <div class="agent-row"><span class="status">○</span><span>data ingest</span></div>
+      <div class="agent-row"><span class="status">○</span><span>orbit</span></div>
+      <div class="agent-row"><span class="status">○</span><span>mineralogy</span></div>
+      <div class="agent-row"><span class="status">○</span><span>imagery</span></div>
+      <div class="agent-row"><span class="status">○</span><span>mission history</span></div>
+      <div class="agent-row"><span class="status">○</span><span>thermal</span></div>
+      <div class="agent-row"><span class="status">○</span><span>topography</span></div>
+      <div class="agent-row"><span class="status">○</span><span>hazards</span></div>
+    </div>
+
+    <div class="rail-foot">
+      <div class="rail-status">8 agents<span class="sep">·</span>0 active</div>
+    </div>
+  </aside>
+
+  <!-- grain overlay (page background only) -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- ====================== QUERY PANEL ====================== -->
+  <main class="panel" aria-label="Query panel">
+
+    <!-- Location header -->
+    <section class="loc-header">
+      <div class="loc-header-left">
+        <div class="loc-grid">
+          <div class="loc-left">
+            <div class="eyebrow">
+              ARTEMIS II<span class="sep">·</span>FAR SIDE
+            </div>
+            <h1 class="loc-name">
+              Integrity
+              <span class="badge">proposed</span>
+            </h1>
+            <div class="coord-line">
+              <span>2.66°N</span><span class="sep">·</span><span>104.92°W</span>
+            </div>
+            <div class="confirm">
+              LROC CONFIRMED<span class="sep">·</span>APR 6 2026
+            </div>
+          </div>
+
+          <div class="loc-right">
+            <p class="sig-note">Named for the Orion spacecraft. Located just northwest of Orientale basin on the far side.</p>
+            <div class="named-by-label">Named by</div>
+            <div class="named-by-crew">
+              Reid Wiseman<span class="dot-sep">·</span>Christina Koch<span class="dot-sep">·</span>Victor Glover<span class="dot-sep">·</span>Jeremy Hansen
+            </div>
+          </div>
+        </div>
+
+        <div class="citations">
+          LROC NAC · M1499837120LE<span class="sep">·</span>IAU pending · review 2026-Q3<span class="sep">·</span>NASA transcript · sol 4 · 18:22 UTC
+        </div>
+      </div>
+
+      <!-- Globe thumbnail — right column of the header -->
+      <!-- animates: globe shrinks from full viewport, moves to top-right corner, 400ms ease-out -->
+      <div class="loc-header-right">
+        <!-- clicking thumbnail navigates back to Screen 1 -->
+        <aside class="thumb" aria-label="Change location — return to globe" role="button" tabindex="0">
+          <div class="thumb-globe-wrap">
+            <div class="thumb-globe">
+              <div class="thumb-lit"></div>
+
+              <div class="thumb-grid">
+                <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    <clipPath id="thumbSphereClip"><circle cx="100" cy="100" r="99" /></clipPath>
+                  </defs>
+                  <g clip-path="url(#thumbSphereClip)" fill="none"
+                     stroke="#2A3B5C" stroke-width="0.5" stroke-opacity="0.6">
+                    <ellipse cx="100" cy="100" rx="99" ry="20"/>
+                    <ellipse cx="100" cy="100" rx="99" ry="48"/>
+                    <ellipse cx="100" cy="100" rx="99" ry="75"/>
+                    <ellipse cx="100" cy="100" rx="20" ry="99"/>
+                    <ellipse cx="100" cy="100" rx="48" ry="99"/>
+                    <ellipse cx="100" cy="100" rx="75" ry="99"/>
+                    <line x1="1" y1="100" x2="199" y2="100" stroke-opacity="0.8"/>
+                    <line x1="100" y1="1" x2="100" y2="199" stroke-opacity="0.8"/>
+                  </g>
+                </svg>
+              </div>
+
+              <span class="thumb-dot"          style="left:34%; top:22%"></span>
+              <span class="thumb-dot"          style="left:20%; top:34%"></span>
+              <span class="thumb-dot"          style="left:12%; top:52%"></span>
+              <span class="thumb-dot"          style="left:22%; top:68%"></span>
+              <span class="thumb-dot"          style="left:38%; top:80%"></span>
+              <span class="thumb-dot"          style="left:28%; top:46%"></span>
+              <span class="thumb-dot"          style="left:40%; top:58%"></span>
+              <span class="thumb-dot"          style="left:46%; top:30%"></span>
+              <span class="thumb-dot selected" style="left:50%; top:48%"></span>
+              <span class="thumb-dot shadowed" style="left:62%; top:24%"></span>
+              <span class="thumb-dot shadowed" style="left:72%; top:38%"></span>
+              <span class="thumb-dot shadowed" style="left:80%; top:54%"></span>
+              <span class="thumb-dot shadowed" style="left:74%; top:70%"></span>
+              <span class="thumb-dot shadowed" style="left:62%; top:80%"></span>
+              <span class="thumb-dot shadowed" style="left:58%; top:64%"></span>
+              <span class="thumb-dot shadowed" style="left:68%; top:52%"></span>
+              <span class="thumb-dot shadowed" style="left:86%; top:42%"></span>
+
+              <div class="thumb-rim"></div>
+            </div>
+          </div>
+          <div class="thumb-meta">FAR SIDE<span style="color:var(--hairline-2);margin:0 6px">·</span>INTEGRITY</div>
+          <div class="thumb-hover-scrim">Change location</div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Composer -->
+    <section class="composer">
+      <!-- animates: clicking a chip fades out old text and fades in pre-filled query, 120ms -->
+      <div class="templates" role="tablist" aria-label="Query templates">
+        <button class="chip" type="button">Geological composition</button>
+        <button class="chip is-active" type="button">Landing site assessment</button>
+        <button class="chip" type="button">Mission history</button>
+      </div>
+
+      <div class="input-wrap">
+        <textarea
+          class="input"
+          placeholder="Ask anything about Integrity — geology, landing conditions, mission history…"
+        >What do we know about this region geologically, and is it a viable candidate for Artemis III?</textarea>
+      </div>
+
+      <!-- Suggested questions — quiet affordance for the non-specialist -->
+      <div class="suggested" aria-label="Suggested questions">
+        <div class="suggested-eyebrow">SUGGESTED FOR INTEGRITY</div>
+        <div class="suggested-list">
+          <button class="suggested-row" type="button">
+            <span class="bullet">·</span>
+            <span class="q">What volcanic history exists in this region?</span>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <button class="suggested-row" type="button">
+            <span class="bullet">·</span>
+            <span class="q">How does this compare to Shackleton Crater for a landing site?</span>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <button class="suggested-row" type="button">
+            <span class="bullet">·</span>
+            <span class="q">What Apollo samples came from nearby terrain?</span>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="kbd-hint" aria-hidden="true">⌘↵ to analyze</div>
+
+      <div class="submit-row">
+        <button class="attach-btn" type="button">
+          <!-- Lucide paperclip -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 17.99 8.8l-8.58 8.57a2 2 0 0 1-2.83-2.83l8.49-8.49"/></svg>
+          Attach Artemis II imagery
+        </button>
+        <button class="analyze" type="button">
+          Analyze
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .chip { padding: 14px; border-radius: 6px; border: 1px solid var(--luna-hairline); background: var(--luna-base-1); display: flex; flex-direction: column; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 999px; }
+  .row2 { display:flex; align-items:center; gap:8px; }
+  .label { font-family: var(--luna-font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--luna-fg); }
+  .hex { font-family: var(--luna-font-mono); font-size: 10px; color: var(--luna-fg-3); }
+  .desc { font-family: var(--luna-font-display); font-size: 11px; color: var(--luna-fg-2); }
+</style></head>
+<body><div class="card"><div class="grid4">
+  <div class="chip"><div class="row2"><span class="dot" style="background:#6EE7B7"></span><span class="label">success</span></div><span class="desc">Verified data</span><span class="hex">#6EE7B7</span></div>
+  <div class="chip"><div class="row2"><span class="dot" style="background:#FCD34D"></span><span class="label">warning</span></div><span class="desc">Needs human</span><span class="hex">#FCD34D</span></div>
+  <div class="chip"><div class="row2"><span class="dot" style="background:#FB7185"></span><span class="label">danger</span></div><span class="desc">Contradiction</span><span class="hex">#FB7185</span></div>
+  <div class="chip"><div class="row2"><span class="dot" style="background:#C4B5FD"></span><span class="label">violet</span></div><span class="desc">Citation link</span><span class="hex">#C4B5FD</span></div>
+</div></div></body></html>

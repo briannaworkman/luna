@@ -67,6 +67,14 @@ Pre-computed 3D cartesian positions — hardcoded, no runtime math. Conversion: 
 
 15 Artemis landmarks + 2 crew-proposed craters: **Carroll** (18.84°N, 86.51°W) and **Integrity** (2.66°N, 104.92°W) — always labeled "proposed" in all UI.
 
+## Design Reference
+
+- `design-system/` — full Claude Design output: color/type CSS, component HTML files, SVG assets, fonts
+- `prototypes/` — screen-by-screen HTML mockups (Globe, Query, Stream, Mission Brief) + screenshots
+- `design-system/README.md` — design system overview and usage notes
+
+Agents working on UI should read the relevant prototype HTML and the component files in `design-system/ui_kits/` before implementing.
+
 ## Design System
 
 **Dark mode only. Always.**

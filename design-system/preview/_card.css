@@ -1,0 +1,70 @@
+/* Shared preview-card styling — imported by every card in preview/ */
+@import url('../colors_and_type.css');
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--luna-base);
+  color: var(--luna-fg-2);
+  font-family: var(--luna-font-body);
+  overflow: hidden;
+}
+
+.card {
+  width: 700px;
+  padding: 28px 32px;
+  background: var(--luna-base);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle grain on the card body */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--luna-grain);
+  opacity: 0.4;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.card > * { position: relative; z-index: 1; }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.grid {
+  display: grid;
+  gap: 12px;
+}
+
+.eyebrow {
+  font-family: var(--luna-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--luna-fg-3);
+}
+
+.label {
+  font-family: var(--luna-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--luna-fg-3);
+  margin-top: 6px;
+}
+
+.token {
+  font-family: var(--luna-font-mono);
+  font-size: 10px;
+  color: var(--luna-fg-4);
+  letter-spacing: 0.02em;
+}

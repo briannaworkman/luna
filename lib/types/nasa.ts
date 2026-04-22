@@ -28,3 +28,9 @@ export interface LrocResponse {
   wac: LrocProduct[];
   nac: LrocProduct[];
 }
+
+export interface LrocErrorResponse {
+  error: string;
+  code: 'TIMEOUT' | 'UPSTREAM_ERROR';
+  results: [];
+}

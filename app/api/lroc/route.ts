@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { LrocProduct, LrocResponse } from '@/lib/types/nasa';
-import { fetchJson } from '@/lib/utils/fetch-with-timeout';
+import type { LrocProduct, LrocResponse, LrocErrorResponse } from '@/lib/types/nasa';
+import { fetchJson, TimeoutError, UpstreamError } from '@/lib/utils/fetch-with-timeout';
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache';
 
 const ODE_API = 'https://oderest.rsl.wustl.edu/live2/';
@@ -56,10 +56,11 @@ async function fetchProducts(
   url.searchParams.set('minlat', String(box.minlat));
   url.searchParams.set('maxlat', String(box.maxlat));
 
+  // fetchJson throws TimeoutError or UpstreamError on failure
   const json = await fetchJson<OdeJson>(url);
-  if (!json) return [];
   const result = json.ODEResults;
-  if (result.Status === 'ERROR' || !result.Products) return [];
+  if (result.Status === 'ERROR') throw new UpstreamError();
+  if (!result.Products) return [];
 
   // ODE returns a single object (not array) when there is only one product.
   const raw = result.Products.Product;
@@ -89,7 +90,7 @@ function normalizeProducts(raw: OdeProduct[], instrument: string): LrocProduct[]
     .slice(0, MAX_RESULTS);
 }
 
-export async function GET(req: NextRequest): Promise<NextResponse<LrocResponse>> {
+export async function GET(req: NextRequest): Promise<NextResponse<LrocResponse | LrocErrorResponse>> {
   const { searchParams } = req.nextUrl;
   const lat = parseFloat(searchParams.get('lat') ?? '');
   const lon = parseFloat(searchParams.get('lon') ?? '');
@@ -100,16 +101,26 @@ export async function GET(req: NextRequest): Promise<NextResponse<LrocResponse>>
 
   const box = buildBoundingBox(lat, lon);
 
-  const [nacRaw, wacRaw] = await Promise.all([
-    fetchProducts(PT_NAC, box),
-    fetchProducts(PT_WAC, box),
-  ]);
+  try {
+    const [nacRaw, wacRaw] = await Promise.all([
+      fetchProducts(PT_NAC, box),
+      fetchProducts(PT_WAC, box),
+    ]);
 
-  const nac = normalizeProducts(nacRaw, INSTRUMENT_NAC);
-  const wac = normalizeProducts(wacRaw, INSTRUMENT_WAC);
+    const nac = normalizeProducts(nacRaw, INSTRUMENT_NAC);
+    const wac = normalizeProducts(wacRaw, INSTRUMENT_WAC);
 
-  return NextResponse.json(
-    { wac, nac },
-    { headers: { 'Cache-Control': CACHE_CONTROL_1H } }
-  );
+    return NextResponse.json(
+      { wac, nac },
+      { headers: { 'Cache-Control': CACHE_CONTROL_1H } }
+    );
+  } catch (err) {
+    if (err instanceof TimeoutError) {
+      console.error('[lroc] ODE request timed out', { errorType: 'TIMEOUT', lat, lon });
+      return NextResponse.json({ error: 'LROC data unavailable', code: 'TIMEOUT', results: [] });
+    }
+    const statusCode = err instanceof UpstreamError ? err.statusCode : undefined;
+    console.error('[lroc] ODE upstream error', { errorType: 'UPSTREAM_ERROR', statusCode, lat, lon });
+    return NextResponse.json({ error: 'LROC data unavailable', code: 'UPSTREAM_ERROR', results: [] });
+  }
 }

@@ -155,26 +155,39 @@ describe('GET /api/lroc', () => {
       const body = await res.json();
       expect(body).toEqual({ wac: [], nac: [] });
     });
+  });
 
-    it('returns empty arrays when ODE returns an error status', async () => {
+  describe('error responses', () => {
+    it('returns UPSTREAM_ERROR when ODE returns an error status', async () => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue(odeError()));
-      const body = await GET(makeRequest(SHACKLETON)).then((r) => r.json());
-      expect(body.nac).toEqual([]);
-      expect(body.wac).toEqual([]);
+      const res = await GET(makeRequest(SHACKLETON));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual({ error: 'LROC data unavailable', code: 'UPSTREAM_ERROR', results: [] });
     });
 
-    it('returns empty arrays when fetch throws', async () => {
+    it('returns UPSTREAM_ERROR when fetch throws a network error', async () => {
       vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
-      const body = await GET(makeRequest(SHACKLETON)).then((r) => r.json());
-      expect(body.nac).toEqual([]);
-      expect(body.wac).toEqual([]);
+      const res = await GET(makeRequest(SHACKLETON));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual({ error: 'LROC data unavailable', code: 'UPSTREAM_ERROR', results: [] });
     });
 
-    it('returns empty arrays when fetch returns non-ok status', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
-      const body = await GET(makeRequest(SHACKLETON)).then((r) => r.json());
-      expect(body.nac).toEqual([]);
-      expect(body.wac).toEqual([]);
+    it('returns UPSTREAM_ERROR when fetch returns non-ok status', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+      const res = await GET(makeRequest(SHACKLETON));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual({ error: 'LROC data unavailable', code: 'UPSTREAM_ERROR', results: [] });
+    });
+
+    it('returns TIMEOUT when fetch is aborted', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new DOMException('aborted', 'AbortError')));
+      const res = await GET(makeRequest(SHACKLETON));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual({ error: 'LROC data unavailable', code: 'TIMEOUT', results: [] });
     });
   });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchJson } from './fetch-with-timeout';
+import { fetchJson, TimeoutError, UpstreamError } from './fetch-with-timeout';
 
 function okResponse(body: unknown) {
   return { ok: true, json: async () => body };
@@ -20,22 +20,25 @@ describe('fetchJson', () => {
     expect(result).not.toBeNull();
   });
 
-  it('returns null when the response is not ok', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
-    const result = await fetchJson('https://example.com');
-    expect(result).toBeNull();
+  it('throws UpstreamError when the response is not ok', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    await expect(fetchJson('https://example.com')).rejects.toBeInstanceOf(UpstreamError);
   });
 
-  it('returns null when fetch throws a network error', async () => {
+  it('includes the HTTP status code in UpstreamError', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    const err = await fetchJson('https://example.com').catch((e) => e);
+    expect(err.statusCode).toBe(503);
+  });
+
+  it('throws UpstreamError when fetch throws a network error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network failure')));
-    const result = await fetchJson('https://example.com');
-    expect(result).toBeNull();
+    await expect(fetchJson('https://example.com')).rejects.toBeInstanceOf(UpstreamError);
   });
 
-  it('returns null when fetch is aborted', async () => {
+  it('throws TimeoutError when fetch is aborted', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new DOMException('aborted', 'AbortError')));
-    const result = await fetchJson('https://example.com');
-    expect(result).toBeNull();
+    await expect(fetchJson('https://example.com')).rejects.toBeInstanceOf(TimeoutError);
   });
 
   it('aborts the request after the specified timeout', async () => {
@@ -56,11 +59,10 @@ describe('fetchJson', () => {
     const promise = fetchJson('https://example.com', 500);
     expect(capturedSignal?.aborted).toBe(false);
 
+    const assertion = expect(promise).rejects.toBeInstanceOf(TimeoutError);
     await vi.advanceTimersByTimeAsync(500);
     expect(capturedSignal?.aborted).toBe(true);
-
-    const result = await promise;
-    expect(result).toBeNull();
+    await assertion;
 
     vi.useRealTimers();
   });

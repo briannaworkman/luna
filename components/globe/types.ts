@@ -5,6 +5,7 @@ export interface LunarLocation {
   lon: number
   diameter?: string
   significance: string
+  namingStory?: string
   isProposed: boolean
   coords: string
   region: string

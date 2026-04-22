@@ -101,6 +101,15 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
             </p>
           </div>
 
+          {/* Naming story */}
+          {location?.namingStory && (
+            <div className="mx-8 mt-4 mb-1 px-4 py-3 border-l-2 border-luna-cyan/30 bg-luna-base-3/40">
+              <p className="font-sans text-[12.5px] leading-relaxed text-luna-fg-3 m-0 italic">
+                {location.namingStory}
+              </p>
+            </div>
+          )}
+
           {/* Diameter */}
           {location?.diameter && (
             <div className="px-8 pt-4 pb-1">
@@ -142,9 +151,6 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
             Analyze this location
             <ArrowRight size={14} strokeWidth={1.75} />
           </button>
-          <div className="mt-2.5 font-mono text-[10px] tracking-[0.14em] uppercase text-luna-fg-3 text-center">
-            Routes to the mineralogy and thermal agents
-          </div>
         </div>
       </div>
     </div>

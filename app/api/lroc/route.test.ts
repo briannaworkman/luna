@@ -101,7 +101,7 @@ describe('GET /api/lroc', () => {
       expect(product.resolutionMpp).toBe(0.904);
       expect(product.acquisitionDate).toBe('2009-07-04T12:39:00.489Z');
       expect(product.downloadUrl).toContain('M101350392LC');
-      expect(product.instrument).toBe('NAC');
+      expect(product.instrument).toBe('LROC NAC');
     });
 
     it('assigns WAC instrument to wac products', async () => {
@@ -111,7 +111,7 @@ describe('GET /api/lroc', () => {
       );
 
       const body = await GET(makeRequest(SHACKLETON)).then((r) => r.json());
-      expect(body.wac[0].instrument).toBe('WAC');
+      expect(body.wac[0].instrument).toBe('LROC WAC');
     });
   });
 

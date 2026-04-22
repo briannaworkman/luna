@@ -8,6 +8,8 @@ const BOX_HALF_DEG = 0.5;
 const MAX_RESULTS = 20;
 const PT_NAC = 'CDRNAC4';
 const PT_WAC = 'CDRWAC4';
+const INSTRUMENT_NAC = 'LROC NAC';
+const INSTRUMENT_WAC = 'LROC WAC';
 
 function toPositiveLon(lon: number): number {
   return lon < 0 ? lon + 360 : lon;
@@ -103,8 +105,8 @@ export async function GET(req: NextRequest): Promise<NextResponse<LrocResponse>>
     fetchProducts(PT_WAC, box),
   ]);
 
-  const nac = normalizeProducts(nacRaw, 'NAC');
-  const wac = normalizeProducts(wacRaw, 'WAC');
+  const nac = normalizeProducts(nacRaw, INSTRUMENT_NAC);
+  const wac = normalizeProducts(wacRaw, INSTRUMENT_WAC);
 
   return NextResponse.json(
     { wac, nac },

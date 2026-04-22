@@ -258,9 +258,8 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
       }
       mount.style.cursor = hoveredIdx >= 0 ? 'pointer' : 'default'
 
-      // Tooltip — only for proposed craters (Carroll, Integrity)
       if (tooltip) {
-        if (hoveredIdx >= 0 && LOCATIONS[hoveredIdx]?.isProposed) {
+        if (hoveredIdx >= 0) {
           const rect = mount.getBoundingClientRect()
           tooltip.style.left = `${e.clientX - rect.left + 14}px`
           tooltip.style.top = `${e.clientY - rect.top - 36}px`

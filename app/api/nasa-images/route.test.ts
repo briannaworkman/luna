@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET } from './route';
 
-function mockItem(id: string, date: string, keywords: string[] = [], center = 'JSC') {
+function mockItem(id: string, date: string, keywords: string[] = []) {
   return {
     href: `https://images-assets.nasa.gov/image/${id}/collection.json`,
-    data: [{ nasa_id: id, date_created: date, title: `Image ${id}`, center, keywords }],
+    data: [{ nasa_id: id, date_created: date, title: `Image ${id}`, keywords }],
     links: [
       { href: `https://images-assets.nasa.gov/image/${id}/${id}~thumb.jpg`, rel: 'preview', render: 'image' },
       { href: `https://images-assets.nasa.gov/image/${id}/${id}~orig.jpg`, rel: 'canonical', render: 'image' },
@@ -90,6 +90,14 @@ describe('GET /api/nasa-images', () => {
   });
 
   describe('limitedCoverage flag', () => {
+    it('returns 200 with empty images and limitedCoverage: true when both searches return nothing', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(nasaResponse([])));
+      const res = await GET(makeRequest(VALID_PARAMS));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual({ images: [], limitedCoverage: true });
+    });
+
     it('is false when 2 or more total results', async () => {
       vi.stubGlobal('fetch', vi.fn()
         .mockResolvedValueOnce(nasaResponse([mockItem('a', '2024-01-01T00:00:00Z'), mockItem('b', '2023-01-01T00:00:00Z')]))

@@ -2,43 +2,55 @@ import { describe, it, expect } from 'vitest';
 import { extractInstrument } from './extract-instrument';
 
 describe('extractInstrument', () => {
-  it('matches LROC', () => {
-    expect(extractInstrument(['LROC', 'lunar surface'], 'GSFC')).toBe('LROC');
+  it('matches LROC NAC', () => {
+    expect(extractInstrument(['LROC NAC', 'lunar surface'])).toBe('LROC NAC');
+  });
+
+  it('matches LROC WAC', () => {
+    expect(extractInstrument(['LROC WAC', 'lunar surface'])).toBe('LROC WAC');
+  });
+
+  it('matches generic LROC when NAC/WAC not present', () => {
+    expect(extractInstrument(['LROC', 'lunar surface'])).toBe('LROC');
+  });
+
+  it('prioritizes LROC NAC over generic LROC', () => {
+    expect(extractInstrument(['LROC', 'LROC NAC'])).toBe('LROC NAC');
   });
 
   it('matches full name Lunar Reconnaissance Orbiter Camera', () => {
-    expect(extractInstrument(['Lunar Reconnaissance Orbiter Camera'], 'GSFC')).toBe('LROC');
+    expect(extractInstrument(['Lunar Reconnaissance Orbiter Camera'])).toBe('LROC');
   });
 
   it('matches LRO when LROC not present', () => {
-    expect(extractInstrument(['LRO imagery'], 'GSFC')).toBe('LRO');
+    expect(extractInstrument(['LRO imagery'])).toBe('LRO');
   });
 
-  it('prioritizes LROC over LRO', () => {
-    expect(extractInstrument(['LRO', 'LROC'], 'GSFC')).toBe('LROC');
+  it('matches Artemis II crew', () => {
+    expect(extractInstrument(['Artemis II', 'lunar flyby'])).toBe('Artemis II crew');
+  });
+
+  it('matches Artemis 2 crew', () => {
+    expect(extractInstrument(['Artemis 2', 'crew photography'])).toBe('Artemis II crew');
   });
 
   it('matches Apollo', () => {
-    expect(extractInstrument(['Apollo 11', 'lunar surface'], 'JSC')).toBe('Apollo');
+    expect(extractInstrument(['Apollo 11', 'lunar surface'])).toBe('Apollo');
   });
 
   it('matches Clementine', () => {
-    expect(extractInstrument(['Clementine mission'], 'GSFC')).toBe('Clementine');
+    expect(extractInstrument(['Clementine mission'])).toBe('Clementine');
   });
 
   it('is case-insensitive', () => {
-    expect(extractInstrument(['lroc nac imagery'], '')).toBe('LROC');
+    expect(extractInstrument(['lroc nac imagery'])).toBe('LROC NAC');
   });
 
-  it('falls back to center when no keyword matches', () => {
-    expect(extractInstrument(['some unknown instrument'], 'JPL')).toBe('JPL');
+  it('returns Unknown instrument when no keywords match', () => {
+    expect(extractInstrument(['unrelated tag'])).toBe('Unknown instrument');
   });
 
-  it('falls back to NASA when no keywords and no center', () => {
-    expect(extractInstrument([], '')).toBe('NASA');
-  });
-
-  it('falls back to NASA when keywords have no match and center is empty', () => {
-    expect(extractInstrument(['unrelated tag'], '')).toBe('NASA');
+  it('returns Unknown instrument for empty keywords', () => {
+    expect(extractInstrument([])).toBe('Unknown instrument');
   });
 });

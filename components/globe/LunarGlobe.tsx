@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { LOCATIONS } from './locations'
 import type { LunarLocation } from './types'
@@ -87,9 +87,11 @@ function latLonToVec3(lat: number, lon: number, r: number): THREE.Vector3 {
 
 interface LunarGlobeProps {
   onLocationSelect?: (location: LunarLocation | null) => void
+  /** Populated by the component — call to programmatically deselect and resume rotation */
+  deselectRef?: React.MutableRefObject<(() => void) | null>
 }
 
-export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
+export function LunarGlobe({ onLocationSelect, deselectRef }: LunarGlobeProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const onSelectRef = useRef(onLocationSelect)
@@ -196,6 +198,15 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
     function stopRotation(clearPending = true) {
       rotSpeedTarget = 0
       if (clearPending && resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null }
+    }
+
+    // Expose programmatic deselect so the panel's close actions can sync globe state
+    if (deselectRef) {
+      deselectRef.current = () => {
+        selectedIdx = -1
+        onSelectRef.current?.(null)
+        scheduleResume()
+      }
     }
 
     const worldPos = new THREE.Vector3()
@@ -412,7 +423,7 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
       for (const m of dotMats) m.dispose()
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>

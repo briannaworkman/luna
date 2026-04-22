@@ -91,11 +91,13 @@ interface LunarGlobeProps {
 
 export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
   const mountRef = useRef<HTMLDivElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
   const onSelectRef = useRef(onLocationSelect)
   useEffect(() => { onSelectRef.current = onLocationSelect })
 
   useEffect(() => {
     const mount = mountRef.current as HTMLDivElement
+    const tooltip = tooltipRef.current as HTMLDivElement
     if (!mount) return
 
     const scene = new THREE.Scene()
@@ -255,6 +257,19 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
         hoveredIdx = -1
       }
       mount.style.cursor = hoveredIdx >= 0 ? 'pointer' : 'default'
+
+      if (tooltip) {
+        if (hoveredIdx >= 0) {
+          const rect = mount.getBoundingClientRect()
+          tooltip.style.left = `${e.clientX - rect.left + 14}px`
+          tooltip.style.top = `${e.clientY - rect.top - 36}px`
+          tooltip.textContent = LOCATIONS[hoveredIdx]!.name
+          tooltip.style.display = 'block'
+        } else {
+          tooltip.style.display = 'none'
+        }
+      }
+
       if (prev !== hoveredIdx) refreshDots()
     }
 
@@ -400,6 +415,26 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
   }, [])
 
   return (
-    <div ref={mountRef} style={{ width: '100%', height: '100%', display: 'block' }} />
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
+      <div
+        ref={tooltipRef}
+        style={{
+          position: 'absolute',
+          display: 'none',
+          pointerEvents: 'none',
+          background: 'rgba(5, 12, 26, 0.88)',
+          border: '1px solid rgba(125, 211, 252, 0.35)',
+          color: '#e8edf5',
+          fontFamily: 'var(--font-geist-sans, sans-serif)',
+          fontSize: '11px',
+          letterSpacing: '0.06em',
+          padding: '4px 8px',
+          borderRadius: '3px',
+          whiteSpace: 'nowrap',
+          zIndex: 10,
+        }}
+      />
+    </div>
   )
 }

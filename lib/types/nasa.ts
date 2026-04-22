@@ -34,3 +34,27 @@ export interface LrocErrorResponse {
   code: 'TIMEOUT' | 'UPSTREAM_ERROR';
   results: LrocProduct[];
 }
+
+// Public API contract — do not change field names or nullability without flagging as a breaking change.
+
+export interface JscSample {
+  sampleId: string;
+  mission: string;
+  station: string;
+  weight: number | null;
+  mineralFlags: string[];
+  description: string | null;
+  jscUrl: string;
+}
+
+export interface JscSamplesResponse {
+  results: JscSample[];
+  nearestMission: string | null;
+}
+
+export interface JscSamplesErrorResponse {
+  error: string;
+  code: 'TIMEOUT' | 'UPSTREAM_ERROR';
+  results: JscSample[];
+  nearestMission: null;
+}

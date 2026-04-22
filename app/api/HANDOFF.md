@@ -117,3 +117,71 @@ Server-side `console.error` logs are written on both error paths with `{ errorTy
 7. **8-second timeout** aborts the fetch. On timeout the route returns `{ code: 'TIMEOUT' }`; on any other network/HTTP failure it returns `{ code: 'UPSTREAM_ERROR' }`. See error responses above.
 
 **Cache-Control:** `public, s-maxage=3600, stale-while-revalidate=86400`
+
+---
+
+## `/api/jsc-samples`
+
+**Purpose:** Returns Apollo lunar sample records from the JSC Curator database for the Apollo mission station nearest to the given coordinates. Provides the Mineralogy agent with primary source data (rock types, weights, descriptions) rather than general knowledge.
+
+**Request:**
+```
+GET /api/jsc-samples?lat=20.19&lon=30.77
+```
+
+| Param | Type   | Required | Notes |
+|-------|--------|----------|-------|
+| lat   | number | yes      | Selenographic latitude (-90 to 90) |
+| lon   | number | yes      | Selenographic longitude (-180 to 180) |
+
+**Response:** `JscSamplesResponse`
+```json
+{
+  "results": [
+    {
+      "sampleId": "72135",
+      "mission": "Apollo 17",
+      "station": "2",
+      "weight": 336.9,
+      "mineralFlags": ["breccia", "fragmental"],
+      "description": "coarsely brecciated ilmenite basalt, unstudied",
+      "jscUrl": "https://curator.jsc.nasa.gov/lunar/samplecatalog/sampleinfo.cfm?sample=72135"
+    }
+  ],
+  "nearestMission": "Apollo 17"
+}
+```
+
+Up to 10 samples are returned, sorted by relevance: non-soil samples (rocks, breccias) first, then by weight descending.
+
+**Empty result** (coordinates >500 km from any Apollo station):
+```json
+{ "results": [], "nearestMission": null }
+```
+This is a normal, non-error response for far-side locations (Carroll, Integrity) and south polar sites (Shackleton).
+
+**Error responses** (status 200):
+```json
+{ "error": "JSC sample data unavailable", "code": "TIMEOUT", "results": [], "nearestMission": null }
+{ "error": "JSC sample data unavailable", "code": "UPSTREAM_ERROR", "results": [], "nearestMission": null }
+```
+
+**Quirks found during real API testing:**
+
+1. **API documentation is at `/lunar/api/index.cfm`**, not discoverable from the REST root (which returns 401). The correct base URL is `https://curator.jsc.nasa.gov/rest/lunarapi/samples`.
+
+2. **Station names are strings**, not integers. Valid values include numeric strings ("1", "2", "9A"), alpha ("A", "B", "C", "C'", "Bg"), and named ("LM", "ALSEP", "SEP"). The lookup table maps coordinates to the exact station string expected by the API.
+
+3. **Apollo 11 and 12 have only LM and null stations** — all samples collected near the LM area. Querying station "LM" returns results for both missions.
+
+4. **`GENERICDESCRIPTION` is frequently null** for soil samples but populated for rock samples (breccias, basalts). The `mineralFlags` array is always populated from `SAMPLETYPE` + `SAMPLESUBTYPE`.
+
+5. **`ORIGINALWEIGHT` is in grams.** Can be null for some samples.
+
+6. **`jscUrl` points to the full sample catalog page** at `curator.jsc.nasa.gov/lunar/samplecatalog/sampleinfo.cfm?sample={GENERIC}`. The GENERIC number is the primary sample identifier (e.g., "72135" not "72135,47" which is a sub-split).
+
+7. **500 km cutoff**: All 6 Apollo landing sites are near-side, between ±27°N and ±9°S latitude, ±30° longitude. Shackleton (−89.9°, 0°) → 2454 km from Apollo 16 → empty. Integrity (2.66°N, −104.9°W) → 2476 km from Apollo 12 → empty. Near Apollo 17 (20.19°N, 30.77°E) → 0.1 km → full results.
+
+8. **Station coordinate table has ~30 entries** across the 6 missions. Intra-mission stations are within 5–30 km of each other; inter-mission distances are 700–3000 km. The nearest-station logic effectively identifies the mission first, then selects the best-documented station within it.
+
+**Cache-Control:** `public, s-maxage=3600, stale-while-revalidate=86400`

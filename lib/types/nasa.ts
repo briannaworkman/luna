@@ -60,12 +60,11 @@ export interface JscSamplesErrorResponse {
 }
 
 // Public API contract — do not change field names or nullability without flagging as a breaking change.
-// Read by the Orbit agent for landing window analysis.
 
 export interface SvsIlluminationEntry {
   time: string;       // e.g. "01 Jan 2026 00:00 UT"
   phase: number;      // illumination phase percentage (0–100)
-  age: number;        // lunar age in days
+  age: number;
   diameter: number;   // apparent diameter in arcseconds
   distance: number;   // Earth–Moon distance in km
   j2000: { ra: number; dec: number };

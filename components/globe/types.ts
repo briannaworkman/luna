@@ -7,6 +7,8 @@ export interface LunarLocation {
   significance: string
   isProposed: boolean
   coords: string
+  region: string
+  namedBy?: string[]
 }
 
 export interface DotState {

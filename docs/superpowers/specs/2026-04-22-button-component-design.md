@@ -62,7 +62,18 @@ In `globals.css`, update the shadcn token bridge inside `.dark`:
 --primary-foreground: 220 56% 7%; /* luna-base (#050C1A) — unchanged */
 ```
 
+## Migration
+
+Replace the four raw `<button>` elements in `LocationPanel.tsx` and `ImageGalleryDialog.tsx` with the new `Button` component as part of this work:
+
+| File | Element | Variant | Size |
+|------|---------|---------|------|
+| `LocationPanel.tsx` | Close (X) panel button | `icon` | — |
+| `LocationPanel.tsx` | "Analyze this location" CTA | `primary` | `md` |
+| `ImageGalleryDialog.tsx` | Close (X) dialog button | `icon` | — |
+| `ImageGalleryDialog.tsx` | "Skip" button | `outline` | `md` |
+| `ImageGalleryDialog.tsx` | "Continue" button | `primary` | `md` |
+
 ## Out of Scope
 
-- Migration of existing raw `<button>` elements in `LocationPanel.tsx` and `ImageGalleryDialog.tsx` — follow-on task.
 - `destructive`, `secondary`, `link` shadcn variants — not needed for V1; leave in place from the shadcn install but unstyled.

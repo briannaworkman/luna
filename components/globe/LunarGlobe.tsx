@@ -19,6 +19,7 @@ const DOT_SURFACE_GAP   = 1.003
 const AUTO_ROT_SPEED    = 0.0838 // radians/second — one full rotation ≈ 75 s
 const ROT_EASE_K        = 6      // exponential ease factor for stop/resume
 const DRAG_THRESHOLD    = 3      // px moved before a mousedown becomes a drag
+const DRAG_SENSITIVITY  = 0.005  // radians per pixel
 const RESUME_DELAY      = 2000   // ms after drag release before auto-rotation resumes
 const CAMERA_FOV        = 45
 const CAMERA_MARGIN     = 0.85
@@ -271,19 +272,19 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
       dragLastX    = e.clientX
     }
 
-    function handleMouseMoveGlobal(e: MouseEvent) {
+    function applyDragMove(clientX: number) {
       if (!pointerDown) return
-      const dx = e.clientX - dragStartX
-      if (!isDragging && Math.abs(dx) > DRAG_THRESHOLD) {
+      if (!isDragging && Math.abs(clientX - dragStartX) > DRAG_THRESHOLD) {
         isDragging = true
         stopRotation()
       }
       if (isDragging) {
-        const delta = e.clientX - dragLastX
-        moonGroup.rotation.y += delta * 0.005
-        dragLastX = e.clientX
+        moonGroup.rotation.y += (clientX - dragLastX) * DRAG_SENSITIVITY
+        dragLastX = clientX
       }
     }
+
+    function handleMouseMoveGlobal(e: MouseEvent) { applyDragMove(e.clientX) }
 
     function handleMouseUpGlobal(e: MouseEvent) {
       if (!pointerDown) return
@@ -292,7 +293,6 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
         isDragging = false
         scheduleResume()
       } else {
-        // Treat as tap
         handleTap(e.clientX, e.clientY)
       }
     }
@@ -308,19 +308,8 @@ export function LunarGlobe({ onLocationSelect }: LunarGlobeProps) {
     }
 
     function handleTouchMoveGlobal(e: TouchEvent) {
-      if (!pointerDown) return
       const t = e.touches[0]
-      if (!t) return
-      const dx = t.clientX - dragStartX
-      if (!isDragging && Math.abs(dx) > DRAG_THRESHOLD) {
-        isDragging = true
-        stopRotation()
-      }
-      if (isDragging) {
-        const delta = t.clientX - dragLastX
-        moonGroup.rotation.y += delta * 0.005
-        dragLastX = t.clientX
-      }
+      if (t) applyDragMove(t.clientX)
     }
 
     function handleTouchEnd(e: TouchEvent) {

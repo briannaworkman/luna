@@ -50,13 +50,6 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-      },
-      fontFamily: {
-        sans:    ["var(--luna-font-body)", "system-ui", "sans-serif"],
-        mono:    ["var(--luna-font-mono)", "monospace"],
-        display: ["var(--luna-font-display)", "system-ui", "sans-serif"],
-      },
-      colors: {
         luna: {
           base:       "var(--luna-base)",
           "base-1":   "var(--luna-base-1)",
@@ -75,6 +68,11 @@ const config: Config = {
           danger:     "var(--luna-danger)",
           violet:     "var(--luna-violet)",
         },
+      },
+      fontFamily: {
+        sans:    ["var(--luna-font-body)", "system-ui", "sans-serif"],
+        mono:    ["var(--luna-font-mono)", "monospace"],
+        display: ["var(--luna-font-display)", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--luna-radius-lg)",

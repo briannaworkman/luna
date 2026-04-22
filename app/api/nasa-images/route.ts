@@ -74,7 +74,7 @@ function normalizeItems(items: NasaApiItem[]): NasaImage[] {
         assetId: meta.nasa_id,
         thumbUrl: thumbLink.href,
         fullUrl: fullLink.href,
-        instrument: extractInstrument(meta.keywords ?? [], meta.center ?? ''),
+        instrument: extractInstrument(meta.keywords ?? []),
         date: meta.date_created,
         nasaUrl: `https://images.nasa.gov/details/${meta.nasa_id}`,
       };

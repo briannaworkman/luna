@@ -56,7 +56,6 @@ async function fetchProducts(
   url.searchParams.set('minlat', String(box.minlat));
   url.searchParams.set('maxlat', String(box.maxlat));
 
-  // fetchJson throws TimeoutError or UpstreamError on failure
   const json = await fetchJson<OdeJson>(url);
   const result = json.ODEResults;
   if (result.Status === 'ERROR') throw new UpstreamError();
@@ -119,8 +118,11 @@ export async function GET(req: NextRequest): Promise<NextResponse<LrocResponse |
       console.error('[lroc] ODE request timed out', { errorType: 'TIMEOUT', lat, lon });
       return NextResponse.json({ error: 'LROC data unavailable', code: 'TIMEOUT', results: [] });
     }
-    const statusCode = err instanceof UpstreamError ? err.statusCode : undefined;
-    console.error('[lroc] ODE upstream error', { errorType: 'UPSTREAM_ERROR', statusCode, lat, lon });
+    if (err instanceof UpstreamError) {
+      console.error('[lroc] ODE upstream error', { errorType: 'UPSTREAM_ERROR', statusCode: err.statusCode, lat, lon });
+    } else {
+      console.error('[lroc] unexpected error', { lat, lon }, err);
+    }
     return NextResponse.json({ error: 'LROC data unavailable', code: 'UPSTREAM_ERROR', results: [] });
   }
 }

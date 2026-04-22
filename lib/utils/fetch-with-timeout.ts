@@ -21,7 +21,7 @@ export async function fetchJson<T>(url: URL | string, timeoutMs = 8000): Promise
     return (await res.json()) as T;
   } catch (err) {
     if (err instanceof UpstreamError) throw err;
-    if (err instanceof DOMException && err.name === 'AbortError') throw new TimeoutError();
+    if (err instanceof Error && err.name === 'AbortError') throw new TimeoutError();
     throw new UpstreamError();
   } finally {
     clearTimeout(timer);

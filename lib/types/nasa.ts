@@ -32,5 +32,5 @@ export interface LrocResponse {
 export interface LrocErrorResponse {
   error: string;
   code: 'TIMEOUT' | 'UPSTREAM_ERROR';
-  results: [];
+  results: LrocProduct[];
 }

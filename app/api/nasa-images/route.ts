@@ -44,7 +44,8 @@ async function searchImages(query: string): Promise<NasaApiItem[]> {
   try {
     const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url);
     return (json.collection?.items ?? []) as NasaApiItem[];
-  } catch {
+  } catch (err) {
+    console.warn('[nasa-images] search failed, returning empty', err);
     return [];
   }
 }

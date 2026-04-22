@@ -16,10 +16,6 @@ export interface NasaImagesResponse {
   limitedCoverage: boolean;
 }
 
-// LROC (Lunar Reconnaissance Orbiter Camera) product types
-// Public API contract read by downstream agents (Foxtrot, Delta).
-// Do not change field names or nullability without flagging as a breaking change.
-
 export interface LrocProduct {
   productId: string;
   resolutionMpp: number;

@@ -2,46 +2,155 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-VariableFont_wght.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-VariableFont_wght.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Italic-VariableFont_wght.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    --radius: 0.3rem;
+    /* ─── Border radius scale ──────────────────────────────────────────────── */
+    --radius: 0.375rem; /* 6px — shadcn key */
+    --luna-radius-xs: 2px;
+    --luna-radius-sm: 4px;
+    --luna-radius:    6px;
+    --luna-radius-md: 8px;
+    --luna-radius-lg: 12px;
+
+    /* ─── Spacing (4px base) ───────────────────────────────────────────────── */
+    --luna-sp-1:  4px;
+    --luna-sp-2:  8px;
+    --luna-sp-3:  12px;
+    --luna-sp-4:  16px;
+    --luna-sp-5:  20px;
+    --luna-sp-6:  24px;
+    --luna-sp-8:  32px;
+    --luna-sp-10: 40px;
+    --luna-sp-12: 48px;
+    --luna-sp-16: 64px;
+    --luna-sp-24: 96px;
+
+    /* ─── Typography ───────────────────────────────────────────────────────── */
+    --luna-font-display: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --luna-font-body:    'Geist', ui-sans-serif, system-ui, sans-serif;
+    --luna-font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+    /* ─── Type scale ───────────────────────────────────────────────────────── */
+    --luna-text-xs:   11px;
+    --luna-text-sm:   13px;
+    --luna-text-base: 15px;
+    --luna-text-md:   17px;
+    --luna-text-lg:   22px;
+    --luna-text-xl:   28px;
+    --luna-text-2xl:  40px;
+    --luna-text-3xl:  56px;
+    --luna-text-4xl:  84px;
+
+    /* ─── Weights ──────────────────────────────────────────────────────────── */
+    --luna-w-regular: 400;
+    --luna-w-medium:  500;
+    --luna-w-semi:    600;
+    --luna-w-bold:    700;
+
+    /* ─── Tracking ─────────────────────────────────────────────────────────── */
+    --luna-tr-display: -0.02em;
+    --luna-tr-tight:   -0.01em;
+    --luna-tr-normal:   0;
+    --luna-tr-mono:     0.02em;
+    --luna-tr-caps:     0.14em;
+
+    /* ─── Leading ──────────────────────────────────────────────────────────── */
+    --luna-lh-tight:  1.08;
+    --luna-lh-snug:   1.25;
+    --luna-lh-normal: 1.5;
+    --luna-lh-loose:  1.7;
+
+    /* ─── Motion ───────────────────────────────────────────────────────────── */
+    --luna-ease:      cubic-bezier(0.22, 0.61, 0.36, 1);
+    --luna-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+    --luna-dur-quick: 120ms;
+    --luna-dur-base:  220ms;
+    --luna-dur-slow:  420ms;
   }
 
-  /* LUNA is dark-only — all tokens live here */
+  /* LUNA is dark-only — all color tokens live here */
   .dark {
-    /* LUNA semantic tokens */
-    --color-base: #050C1A;
-    --color-primary: #E8EDF5;
-    --color-secondary: #7DD3FC;
+    /* ─── Core palette ─────────────────────────────────────────────────────── */
+    --luna-base:       #050C1A;
+    --luna-base-1:     #0A1424;
+    --luna-base-2:     #111E33;
+    --luna-base-3:     #1A2942;
+    --luna-hairline:   #1F2E4A;
+    --luna-hairline-2: #2A3B5C;
 
-    /* shadcn tokens mapped to LUNA values */
-    /* #050C1A → hsl(220 56% 7%) */
-    --background: 220 56% 7%;
-    --card: 220 56% 7%;
-    --popover: 220 56% 7%;
+    /* ─── Foreground ───────────────────────────────────────────────────────── */
+    --luna-fg:   #E8EDF5;
+    --luna-fg-2: #B8C1D1;
+    --luna-fg-3: #7A849A;
+    --luna-fg-4: #4A5368;
 
-    /* #E8EDF5 → hsl(220 43% 94%) */
-    --foreground: 220 43% 94%;
-    --card-foreground: 220 43% 94%;
-    --popover-foreground: 220 43% 94%;
-    --primary: 220 43% 94%;
-    --primary-foreground: 220 56% 7%;
+    /* ─── Accent ───────────────────────────────────────────────────────────── */
+    --luna-cyan:      #7DD3FC;
+    --luna-cyan-dim:  #4FA5CD;
+    --luna-cyan-wash: rgba(125, 211, 252, 0.08);
+    --luna-cyan-edge: rgba(125, 211, 252, 0.32);
+    --luna-cyan-glow: rgba(125, 211, 252, 0.16);
 
-    /* #7DD3FC → hsl(200 95% 74%) */
-    --secondary: 200 95% 74%;
-    --secondary-foreground: 220 56% 7%;
-    --accent: 200 95% 74%;
-    --accent-foreground: 220 56% 7%;
-    --ring: 200 95% 74%;
+    /* ─── Semantic ─────────────────────────────────────────────────────────── */
+    --luna-success: #6EE7B7;
+    --luna-warning: #FCD34D;
+    --luna-danger:  #FB7185;
+    --luna-violet:  #C4B5FD;
 
-    /* Subtle surfaces — slightly lighter than base */
-    --muted: 220 40% 12%;
-    --muted-foreground: 220 20% 60%;
-    --border: 220 30% 18%;
-    --input: 220 30% 18%;
+    /* ─── Shadows ──────────────────────────────────────────────────────────── */
+    --luna-shadow-xs: 0 1px 0 rgba(255,255,255,0.03) inset, 0 1px 2px rgba(0,0,0,0.35);
+    --luna-shadow-sm: 0 1px 0 rgba(255,255,255,0.03) inset, 0 2px 8px rgba(0,0,0,0.45);
+    --luna-shadow:    0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.55);
+    --luna-shadow-lg: 0 1px 0 rgba(255,255,255,0.05) inset, 0 20px 60px rgba(0,0,0,0.7);
+    --luna-glow:      0 0 0 1px var(--luna-cyan-edge), 0 0 24px var(--luna-cyan-glow);
 
-    --destructive: 0 63% 40%;
-    --destructive-foreground: 220 43% 94%;
+    /* ─── Grain overlay ────────────────────────────────────────────────────── */
+    --luna-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.91  0 0 0 0 0.93  0 0 0 0 0.96  0 0 0 0.035 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+
+    /* ─── shadcn token bridge (HSL channels — required by Tailwind config) ─── */
+    /* #050C1A */ --background:             220 56% 7%;
+    /* #111E33 */ --card:                   220 50% 14%;
+    /* #111E33 */ --popover:                220 50% 14%;
+    /* #E8EDF5 */ --foreground:             220 43% 94%;
+                  --card-foreground:        220 43% 94%;
+                  --popover-foreground:     220 43% 94%;
+                  --primary:                220 43% 94%;
+    /* #050C1A */ --primary-foreground:     220 56% 7%;
+    /* #111E33 */ --secondary:              220 50% 14%;
+    /* #E8EDF5 */ --secondary-foreground:   220 43% 94%;
+    /* #1A2942 */ --muted:                  218 44% 18%;
+    /* #7A849A */ --muted-foreground:       220 13% 54%;
+    /* #1A2942 */ --accent:                 218 44% 18%;
+    /* #E8EDF5 */ --accent-foreground:      220 43% 94%;
+    /* #1F2E4A */ --border:                 220 41% 20%;
+    /* #2A3B5C */ --input:                  220 37% 26%;
+    /* #7DD3FC */ --ring:                   200 95% 74%;
+    /* #FB7185 */ --destructive:            351 95% 71%;
+    /* #050C1A */ --destructive-foreground: 220 56% 7%;
   }
 }
 
@@ -51,5 +160,29 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--luna-font-body);
+    font-size: var(--luna-text-base);
+    line-height: var(--luna-lh-normal);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
+}
+
+/* ─── Focus ring ─────────────────────────────────────────────────────────────── */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--luna-base), 0 0 0 4px var(--luna-cyan);
+  border-color: var(--luna-cyan);
+}
+
+/* ─── Agent pulse animation ──────────────────────────────────────────────────── */
+@keyframes luna-pulse {
+  0%   { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2);   opacity: 0; }
+}
+
+/* ─── Text selection ─────────────────────────────────────────────────────────── */
+::selection {
+  background: var(--luna-cyan-edge);
+  color: var(--luna-fg);
 }

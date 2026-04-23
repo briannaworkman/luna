@@ -40,7 +40,8 @@ export function ImageGalleryDialog({
     <div
       onClick={handleBackdropClick}
       className={cn(
-        'fixed inset-0 z-30 flex items-center justify-center',
+        'fixed inset-0 z-30 flex',
+        'max-[767px]:items-start max-[767px]:justify-start items-center justify-center',
         open ? 'pointer-events-auto' : 'pointer-events-none',
       )}
       style={{
@@ -58,15 +59,15 @@ export function ImageGalleryDialog({
       <div
         ref={dialogRef}
         className={cn(
-          // Desktop: 82% viewport; tablet+: 100% (handled via max-w/max-h)
           'relative flex flex-col',
           'bg-luna-base-2 border border-luna-hairline',
-          // Desktop radius; removed at <768px via breakpoint override below
           'rounded-lg max-[767px]:rounded-none',
           'overflow-hidden',
+          // Mobile: full screen; Desktop: 82% viewport with scale animation
+          'max-[767px]:w-screen max-[767px]:h-screen',
         )}
         style={{
-          // 82% viewport on desktop; full screen on mobile
+          // Desktop: 82% viewport; Mobile: full screen (100vw × 100vh) — handled by Tailwind classes above
           width:     'min(82vw, 100vw)',
           height:    'min(82vh, 100vh)',
           maxWidth:  '100vw',
@@ -81,7 +82,7 @@ export function ImageGalleryDialog({
         }}
       >
         {/* ── Header ──────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-luna-hairline shrink-0">
+        <div className="flex items-center justify-between px-8 max-[767px]:px-5 py-5 border-b border-luna-hairline shrink-0">
           <div className="flex flex-col gap-1">
             <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan">
               Image Gallery
@@ -100,7 +101,7 @@ export function ImageGalleryDialog({
         </div>
 
         {/* ── Gallery body — placeholder until Screen 1.5 images land ── */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-8 max-[767px]:p-5">
           <div className="h-full flex flex-col gap-4">
             {/* Hero image placeholder */}
             <div
@@ -130,15 +131,15 @@ export function ImageGalleryDialog({
         </div>
 
         {/* ── Footer ──────────────────────────────────────────────── */}
-        <div className="px-8 py-5 border-t border-luna-hairline shrink-0 flex items-center justify-between gap-4">
-          <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3">
+        <div className="px-8 max-[767px]:px-5 py-5 border-t border-luna-hairline shrink-0 flex items-center justify-between gap-4 max-[767px]:flex-col max-[767px]:items-start">
+          <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3 max-[767px]:order-2 max-[767px]:w-full">
             Select up to 4 images to include in your query
           </span>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex items-center gap-3 max-[767px]:order-1 max-[767px]:w-full max-[767px]:flex-col">
+            <Button variant="outline" onClick={onClose} className="max-[767px]:w-full">
               Skip
             </Button>
-            <Button onClick={() => location && onContinue(location)}>
+            <Button onClick={() => location && onContinue(location)} className="max-[767px]:w-full">
               Continue
             </Button>
           </div>

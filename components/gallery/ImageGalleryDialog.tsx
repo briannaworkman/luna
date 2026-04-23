@@ -8,16 +8,18 @@ import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa'
-import { formatDate } from '@/lib/utils/date'
 import { fetchJson } from '@/lib/utils/fetch-with-timeout'
 import { useDialogDismiss } from '@/lib/hooks/use-dialog-dismiss'
+import { useDelayedFlag } from '@/lib/hooks/use-delayed-flag'
 import {
   continueLabel,
-  canSelectMore,
   toggleSelection,
   removeFromSelection,
   MAX_SELECTION,
 } from '@/lib/gallery/selection'
+import { HeroSkeleton, GridSkeleton } from './GallerySkeleton'
+import { CoverageBanner } from './CoverageBanner'
+import { ImageCaption } from './ImageCaption'
 
 const MAX_IMAGES = 22
 
@@ -150,6 +152,8 @@ export function ImageGalleryDialog({
   const [selectedImages, setSelectedImages] = useState<NasaImage[]>([])
   const [tooltipAssetId, setTooltipAssetId] = useState<string | null>(null)
   const tooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [fetchError, setFetchError] = useState(false)
+  const [limitedCoverage, setLimitedCoverage] = useState(false)
   const handleBackdropClick = useDialogDismiss(dialogRef, open, onClose)
 
   const hero = images[0] ?? null
@@ -158,6 +162,9 @@ export function ImageGalleryDialog({
   const selectedIds = new Set(selectedImages.map((i) => i.assetId))
   const isAtCap = selectedImages.length >= MAX_SELECTION
 
+  // Only show skeletons after 300ms of continuous loading — avoids flash on fast responses
+  const isLoading = useDelayedFlag(loading, 300)
+
   useEffect(() => {
     if (!open || !location) return
     const initial = `${location.name} moon crater`
@@ -165,16 +172,23 @@ export function ImageGalleryDialog({
     setSubmittedQuery(initial)
     setSelectedImages([])
     setTooltipAssetId(null)
+    setFetchError(false)
+    setLimitedCoverage(false)
     if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
   }, [open, location])
 
   useEffect(() => {
-    return () => { if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current) }
+    return () => {
+      if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
+    }
   }, [])
 
   useEffect(() => {
     if (!open || !submittedQuery) return
+
     setImages([])
+    setFetchError(false)
+    setLimitedCoverage(false)
     setLoading(true)
     setHeroImgError(false)
 
@@ -183,13 +197,20 @@ export function ImageGalleryDialog({
     ;(async () => {
       try {
         const data = await fetchJson<NasaImagesResponse>(`/api/nasa-images?${params}`)
-        if (!cancelled) setImages(data.images.slice(0, MAX_IMAGES))
+        if (!cancelled) {
+          setImages(data.images.slice(0, MAX_IMAGES))
+          setLimitedCoverage(data.limitedCoverage)
+        }
       } catch {
-        if (!cancelled) setImages([])
+        if (!cancelled) {
+          setFetchError(true)
+          setImages([])
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
     })()
+
     return () => { cancelled = true }
   }, [submittedQuery, open])
 
@@ -214,41 +235,6 @@ export function ImageGalleryDialog({
     if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
     setTooltipAssetId(assetId)
     tooltipTimerRef.current = setTimeout(() => setTooltipAssetId(null), 2000)
-  }
-
-  function renderHero() {
-    if (loading) {
-      return (
-        <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
-          <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.02em]">Loading…</span>
-        </div>
-      )
-    }
-    if (!hero) {
-      return (
-        <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
-          <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.02em]">No imagery available</span>
-        </div>
-      )
-    }
-    if (heroImgError) {
-      return (
-        <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
-          <span className="font-mono text-[11px] text-luna-fg-3 tracking-[0.02em]">{hero.assetId}</span>
-        </div>
-      )
-    }
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={hero.thumbUrl}
-        alt={`${location?.name ?? 'Location'} — ${hero.instrument}`}
-        className="w-full h-full object-cover"
-        loading="eager"
-        fetchPriority="high"
-        onError={() => setHeroImgError(true)}
-      />
-    )
   }
 
   return (
@@ -332,73 +318,85 @@ export function ImageGalleryDialog({
               </Button>
             </form>
 
-            <div className="w-full shrink-0 flex flex-col gap-2">
-              <div
-                className="relative w-full rounded-md overflow-hidden"
-                style={{
-                  height: 'clamp(280px, 30vh, 320px)',
-                  ...selectionBorderStyle(!!hero && selectedIds.has(hero.assetId)),
-                }}
-              >
-                {renderHero()}
-                {hero && !loading && (
-                  <ToggleButton
-                    image={hero}
-                    isSelected={selectedIds.has(hero.assetId)}
-                    isAtCap={isAtCap}
-                    onToggle={handleToggle}
-                    onAttemptWhenFull={handleAttemptWhenFull}
-                  />
-                )}
-                {hero && tooltipAssetId === hero.assetId && <InlineTooltip />}
-              </div>
+            {isLoading && (
+              <>
+                <HeroSkeleton />
+                <GridSkeleton />
+              </>
+            )}
 
-              {hero && (
-                <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.02em]">
-                    {hero.assetId}
-                  </span>
-                  {hero.instrument && (
-                    <>
-                      <span className="text-luna-fg-4 text-[11px]">·</span>
-                      <span className="font-sans text-[11px] text-luna-fg-3">
-                        {hero.instrument}
-                      </span>
-                    </>
-                  )}
-                  {hero.date && (
-                    <>
-                      <span className="text-luna-fg-4 text-[11px]">·</span>
-                      <span className="font-mono text-[11px] text-luna-fg-3 tracking-[0.02em]">
-                        Last photographed {formatDate(hero.date)}
-                      </span>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+            {!loading && fetchError && <CoverageBanner variant="error" />}
 
-            {thumbnails.length > 0 && (
-              <div className="grid grid-cols-2 min-[768px]:grid-cols-3 gap-3 shrink-0">
-                {thumbnails.map((img) => (
-                  <div
-                    key={img.assetId}
-                    className="relative aspect-square rounded"
-                    style={selectionBorderStyle(selectedIds.has(img.assetId))}
-                  >
-                    <div className="absolute inset-0 rounded overflow-hidden">
-                      <LazyImage src={img.thumbUrl} alt={`${location?.name ?? 'Location'} — ${img.instrument}`} />
+            {!loading && !fetchError && images.length === 0 && (
+              <CoverageBanner variant="zero-results" />
+            )}
+
+            {!fetchError && images.length > 0 && (
+              <div className="flex flex-col gap-2 animate-in fade-in duration-150">
+                {limitedCoverage && <CoverageBanner variant="limited" />}
+
+                {hero && (
+                  <div className="group flex flex-col">
+                    <div
+                      className="relative w-full rounded-md overflow-hidden"
+                      style={{
+                        height: 'clamp(280px, 30vh, 320px)',
+                        ...selectionBorderStyle(selectedIds.has(hero.assetId)),
+                      }}
+                    >
+                      {heroImgError ? (
+                        <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
+                          <span className="font-mono text-[11px] text-luna-fg-3 tracking-[0.02em]">{hero.assetId}</span>
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={hero.thumbUrl}
+                          alt={`${location?.name ?? 'Location'} — ${hero.instrument}`}
+                          className="w-full h-full object-cover"
+                          loading="eager"
+                          fetchPriority="high"
+                          onError={() => setHeroImgError(true)}
+                        />
+                      )}
+                      <ToggleButton
+                        image={hero}
+                        isSelected={selectedIds.has(hero.assetId)}
+                        isAtCap={isAtCap}
+                        onToggle={handleToggle}
+                        onAttemptWhenFull={handleAttemptWhenFull}
+                      />
+                      {tooltipAssetId === hero.assetId && <InlineTooltip />}
                     </div>
-                    <ToggleButton
-                      image={img}
-                      isSelected={selectedIds.has(img.assetId)}
-                      isAtCap={isAtCap}
-                      onToggle={handleToggle}
-                      onAttemptWhenFull={handleAttemptWhenFull}
-                    />
-                    {tooltipAssetId === img.assetId && <InlineTooltip />}
+                    <ImageCaption assetId={hero.assetId} instrument={hero.instrument} date={hero.date} />
                   </div>
-                ))}
+                )}
+
+                {thumbnails.length > 0 && (
+                  <div className="grid grid-cols-2 min-[768px]:grid-cols-3 gap-3">
+                    {thumbnails.map((img) => (
+                      <div key={img.assetId} className="group flex flex-col">
+                        <div
+                          className="relative aspect-square rounded"
+                          style={selectionBorderStyle(selectedIds.has(img.assetId))}
+                        >
+                          <div className="absolute inset-0 rounded overflow-hidden">
+                            <LazyImage src={img.thumbUrl} alt={`${location?.name ?? 'Location'} — ${img.instrument}`} />
+                          </div>
+                          <ToggleButton
+                            image={img}
+                            isSelected={selectedIds.has(img.assetId)}
+                            isAtCap={isAtCap}
+                            onToggle={handleToggle}
+                            onAttemptWhenFull={handleAttemptWhenFull}
+                          />
+                          {tooltipAssetId === img.assetId && <InlineTooltip />}
+                        </div>
+                        <ImageCaption assetId={img.assetId} instrument={img.instrument} date={img.date} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

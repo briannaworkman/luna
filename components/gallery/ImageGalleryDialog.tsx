@@ -10,6 +10,7 @@ import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa'
 import { fetchJson } from '@/lib/utils/fetch-with-timeout'
 import { useDialogDismiss } from '@/lib/hooks/use-dialog-dismiss'
+import { useDelayedFlag } from '@/lib/hooks/use-delayed-flag'
 import {
   continueLabel,
   toggleSelection,
@@ -153,8 +154,6 @@ export function ImageGalleryDialog({
   const tooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [fetchError, setFetchError] = useState(false)
   const [limitedCoverage, setLimitedCoverage] = useState(false)
-  const [showSkeletons, setShowSkeletons] = useState(false)
-  const skeletonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const handleBackdropClick = useDialogDismiss(dialogRef, open, onClose)
 
   const hero = images[0] ?? null
@@ -163,7 +162,8 @@ export function ImageGalleryDialog({
   const selectedIds = new Set(selectedImages.map((i) => i.assetId))
   const isAtCap = selectedImages.length >= MAX_SELECTION
 
-  const isLoading = loading && showSkeletons
+  // Only show skeletons after 300ms of continuous loading — avoids flash on fast responses
+  const isLoading = useDelayedFlag(loading, 300)
 
   useEffect(() => {
     if (!open || !location) return
@@ -174,15 +174,12 @@ export function ImageGalleryDialog({
     setTooltipAssetId(null)
     setFetchError(false)
     setLimitedCoverage(false)
-    setShowSkeletons(false)
     if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
-    if (skeletonTimerRef.current) clearTimeout(skeletonTimerRef.current)
   }, [open, location])
 
   useEffect(() => {
     return () => {
       if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
-      if (skeletonTimerRef.current) clearTimeout(skeletonTimerRef.current)
     }
   }, [])
 
@@ -194,9 +191,6 @@ export function ImageGalleryDialog({
     setLimitedCoverage(false)
     setLoading(true)
     setHeroImgError(false)
-
-    if (skeletonTimerRef.current) clearTimeout(skeletonTimerRef.current)
-    skeletonTimerRef.current = setTimeout(() => setShowSkeletons(true), 300)
 
     let cancelled = false
     const params = new URLSearchParams({ q: submittedQuery })
@@ -213,24 +207,11 @@ export function ImageGalleryDialog({
           setImages([])
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false)
-          if (skeletonTimerRef.current) {
-            clearTimeout(skeletonTimerRef.current)
-            skeletonTimerRef.current = null
-          }
-          setShowSkeletons(false)
-        }
+        if (!cancelled) setLoading(false)
       }
     })()
 
-    return () => {
-      cancelled = true
-      if (skeletonTimerRef.current) {
-        clearTimeout(skeletonTimerRef.current)
-        skeletonTimerRef.current = null
-      }
-    }
+    return () => { cancelled = true }
   }, [submittedQuery, open])
 
   function handleSearch(e: React.FormEvent) {

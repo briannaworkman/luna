@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/utils/date'
 import { formatShortCaption, formatExpandedCaption } from '@/lib/utils/format-gallery-meta'
 
 interface ImageCaptionProps {
@@ -21,7 +20,6 @@ export function ImageCaption({ assetId, instrument, date }: ImageCaptionProps) {
         {short || ' '}
       </p>
       <p
-        aria-label={expanded}
         className={cn(
           'absolute inset-0',
           'font-mono text-[11px] text-luna-fg-2 tracking-[0.02em]',
@@ -32,11 +30,7 @@ export function ImageCaption({ assetId, instrument, date }: ImageCaptionProps) {
           'bg-luna-base-2',
         )}
       >
-        <span className="font-mono">{assetId}</span>
-        {instrument && instrument !== 'Unknown instrument' && (
-          <span className="text-luna-fg-3"> · {instrument}</span>
-        )}
-        {date && <span className="text-luna-fg-3"> · {formatDate(date)}</span>}
+        {expanded}
       </p>
     </div>
   )

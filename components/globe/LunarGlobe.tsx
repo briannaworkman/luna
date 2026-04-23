@@ -423,7 +423,11 @@ export function LunarGlobe({ onLocationSelect, deselectRef }: LunarGlobeProps) {
       for (const m of dotMats) m.dispose()
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // deselectRef is intentionally not in the dependency array: it's written once at setup
+    // to provide the parent with a deselect callback. Changes to the ref after mount should
+    // not re-setup the expensive Three.js scene.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>

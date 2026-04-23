@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { LrocProduct, LrocResponse, LrocErrorResponse } from '@/lib/types/nasa';
 import { fetchJson, TimeoutError, UpstreamError } from '@/lib/utils/fetch-with-timeout';
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache';
+import { rateLimit } from '@/lib/middleware/rate-limit';
+
+const checkRateLimit = rateLimit(60_000, 100);
 
 const ODE_API = 'https://oderest.rsl.wustl.edu/live2/';
 const BOX_HALF_DEG = 0.5;
@@ -90,6 +93,9 @@ function normalizeProducts(raw: OdeProduct[], instrument: string): LrocProduct[]
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse<LrocResponse | LrocErrorResponse>> {
+  const rateLimitResponse = checkRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<LrocResponse | LrocErrorResponse>;
+
   const { searchParams } = req.nextUrl;
   const lat = parseFloat(searchParams.get('lat') ?? '');
   const lon = parseFloat(searchParams.get('lon') ?? '');

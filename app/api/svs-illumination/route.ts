@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { IlluminationWindow, IlluminationWindowsErrorResponse } from '@/lib/types/nasa';
 import { getSvsData } from '@/lib/svs-cache';
+import { rateLimit } from '@/lib/middleware/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+const checkRateLimit = rateLimit(60_000, 100);
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -28,6 +31,9 @@ function parseSvsTime(timeStr: string): Date {
 export async function GET(
   request: NextRequest,
 ): Promise<NextResponse<IlluminationWindow[] | IlluminationWindowsErrorResponse>> {
+  const rateLimitResponse = checkRateLimit(request);
+  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<IlluminationWindow[] | IlluminationWindowsErrorResponse>;
+
   const { searchParams } = request.nextUrl;
   const latStr = searchParams.get('lat');
   const lonStr = searchParams.get('lon');

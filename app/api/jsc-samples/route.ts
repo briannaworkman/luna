@@ -3,6 +3,9 @@ import type { JscSample, JscSamplesResponse, JscSamplesErrorResponse } from '@/l
 import { fetchJson, TimeoutError, UpstreamError } from '@/lib/utils/fetch-with-timeout';
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache';
 import { findNearestStation } from '@/lib/data/apollo-stations';
+import { rateLimit } from '@/lib/middleware/rate-limit';
+
+const checkRateLimit = rateLimit(60_000, 100);
 
 const JSC_API = 'https://curator.jsc.nasa.gov/rest/lunarapi/samples';
 const JSC_CATALOG_URL = 'https://curator.jsc.nasa.gov/lunar/samplecatalog/sampleinfo.cfm';
@@ -55,6 +58,9 @@ function normalizeSamples(raw: JscRawSample[], mission: string, station: string)
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse<JscSamplesResponse | JscSamplesErrorResponse>> {
+  const rateLimitResponse = checkRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<JscSamplesResponse | JscSamplesErrorResponse>;
+
   const { searchParams } = req.nextUrl;
   const lat = parseFloat(searchParams.get('lat') ?? '');
   const lon = parseFloat(searchParams.get('lon') ?? '');

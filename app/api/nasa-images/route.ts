@@ -3,6 +3,9 @@ import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa';
 import { extractInstrument } from '@/lib/utils/extract-instrument';
 import { fetchJson } from '@/lib/utils/fetch-with-timeout';
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache';
+import { rateLimit } from '@/lib/middleware/rate-limit';
+
+const checkRateLimit = rateLimit(60_000, 100);
 
 const NASA_IMAGES_API = 'https://images-api.nasa.gov/search';
 const SPARSE_THRESHOLD = 2;
@@ -79,6 +82,9 @@ function normalizeItems(items: NasaApiItem[]): NasaImage[] {
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResponse>> {
+  const rateLimitResponse = checkRateLimit(req);
+  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<NasaImagesResponse>;
+
   const { searchParams } = req.nextUrl;
   const name = searchParams.get('name')?.trim();
   const lat = parseFloat(searchParams.get('lat') ?? '');

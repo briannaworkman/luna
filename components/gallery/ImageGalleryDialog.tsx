@@ -4,13 +4,14 @@ import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { SearchInput } from '@/components/ui/search-input'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa'
 import { formatDate } from '@/lib/utils/date'
 import { fetchJson } from '@/lib/utils/fetch-with-timeout'
 import { useDialogDismiss } from '@/lib/hooks/use-dialog-dismiss'
 
-const MAX_IMAGES = 4
+const MAX_IMAGES = 22
 
 interface ImageGalleryDialogProps {
   location: LunarLocation | null
@@ -74,27 +75,32 @@ export function ImageGalleryDialog({
   const [images, setImages] = useState<NasaImage[]>([])
   const [loading, setLoading] = useState(false)
   const [heroImgError, setHeroImgError] = useState(false)
+  const [inputValue, setInputValue] = useState('')
+  const [submittedQuery, setSubmittedQuery] = useState('')
   const handleBackdropClick = useDialogDismiss(dialogRef, open, onClose)
 
   const hero = images[0] ?? null
   const thumbnails = images.slice(1, MAX_IMAGES)
 
+  // Reset search to location name each time the dialog opens
   useEffect(() => {
     if (!open || !location) return
+    const initial = `${location.name} moon crater`
+    setInputValue(initial)
+    setSubmittedQuery(initial)
+  }, [open, location])
+
+  // Fetch whenever the committed query changes
+  useEffect(() => {
+    if (!open || !submittedQuery) return
     setImages([])
     setLoading(true)
     setHeroImgError(false)
 
-    const params = new URLSearchParams({
-      name: location.name,
-      lat: String(location.lat),
-      lon: String(location.lon),
-    })
-
+    const params = new URLSearchParams({ q: submittedQuery })
     ;(async () => {
       try {
         const data = await fetchJson<NasaImagesResponse>(`/api/nasa-images?${params}`)
-        // API already returns images sorted reverse-chronologically
         setImages(data.images.slice(0, MAX_IMAGES))
       } catch {
         setImages([])
@@ -102,7 +108,13 @@ export function ImageGalleryDialog({
         setLoading(false)
       }
     })()
-  }, [open, location])
+  }, [submittedQuery, open])
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = inputValue.trim()
+    if (trimmed) setSubmittedQuery(trimmed)
+  }
 
   function renderHero() {
     if (loading) {
@@ -202,6 +214,20 @@ export function ImageGalleryDialog({
 
         <div className="flex-1 overflow-y-auto p-8 max-[767px]:p-5">
           <div className="flex flex-col gap-4">
+            {/* ── Search ── */}
+            <form onSubmit={handleSearch} className="flex items-center gap-2 shrink-0">
+              <SearchInput
+                className="flex-1"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onClear={() => setInputValue('')}
+                placeholder="Search NASA image library…"
+              />
+              <Button type="submit" variant="outline" disabled={loading || !inputValue.trim()}>
+                Search
+              </Button>
+            </form>
+
             {/* ── Hero ── */}
             <div className="w-full shrink-0 flex flex-col gap-2">
               <div

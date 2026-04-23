@@ -38,11 +38,13 @@ interface NasaApiItem {
   }>;
 }
 
-async function searchImages(query: string): Promise<NasaApiItem[]> {
+async function searchImages(params: Record<string, string>): Promise<NasaApiItem[]> {
   const url = new URL(NASA_IMAGES_API);
-  url.searchParams.set('q', query);
   url.searchParams.set('media_type', 'image');
-  url.searchParams.set('page_size', '20');
+  url.searchParams.set('page_size', '30');
+  for (const [k, v] of Object.entries(params)) {
+    url.searchParams.set(k, v);
+  }
 
   try {
     const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url);
@@ -51,6 +53,37 @@ async function searchImages(query: string): Promise<NasaApiItem[]> {
     console.warn('[nasa-images] search failed, returning empty', err);
     return [];
   }
+}
+
+// Merge multiple pre-sorted lists in priority order, deduplicating by assetId.
+function mergeUnique(lists: NasaImage[][]): NasaImage[] {
+  const seen = new Set<string>();
+  const result: NasaImage[] = [];
+  for (const list of lists) {
+    for (const img of list) {
+      if (!seen.has(img.assetId)) {
+        seen.add(img.assetId);
+        result.push(img);
+      }
+    }
+  }
+  return result;
+}
+
+// Apollo sequential frame IDs: as11-40-5931, as16-120-19187, etc.
+// Keep only the first frame per mission+roll to avoid near-duplicate shots.
+const APOLLO_FRAME_RE = /^(as\d+-\d+)-\d+$/i;
+
+function deduplicateSequences(images: NasaImage[]): NasaImage[] {
+  const seenRolls = new Set<string>();
+  return images.filter((img) => {
+    const match = img.assetId.match(APOLLO_FRAME_RE);
+    if (!match) return true;
+    const roll = match[1].toLowerCase();
+    if (seenRolls.has(roll)) return false;
+    seenRolls.add(roll);
+    return true;
+  });
 }
 
 function normalizeItems(items: NasaApiItem[]): NasaImage[] {
@@ -90,6 +123,17 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
   const lat = parseFloat(searchParams.get('lat') ?? '');
   const lon = parseFloat(searchParams.get('lon') ?? '');
 
+  // Direct user search — single query, skip multi-search strategy
+  const q = searchParams.get('q')?.trim();
+  if (q) {
+    const items = await searchImages({ q });
+    const images = deduplicateSequences(normalizeItems(items));
+    return NextResponse.json(
+      { images, limitedCoverage: images.length < SPARSE_THRESHOLD },
+      { headers: { 'Cache-Control': CACHE_CONTROL_1H } }
+    );
+  }
+
   if (!name || isNaN(lat) || isNaN(lon)) {
     return NextResponse.json(
       { images: [], limitedCoverage: true },
@@ -97,19 +141,24 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
     );
   }
 
-  // Run both searches in parallel — name-specific and region-derived
+  // Three parallel searches in priority order:
+  // 1. location= — images NASA tagged as being from this place (most specific)
+  // 2. q=         — free-text name match across all metadata
+  // 3. q=         — regional fallback for sparse locations
   const regionQuery = buildRegionQuery(lat, lon);
-  const [primaryItems, fallbackItems] = await Promise.all([
-    searchImages(`${name} moon lunar`),
-    searchImages(regionQuery),
+  const [locationItems, primaryItems, fallbackItems] = await Promise.all([
+    searchImages({ location: name }),
+    searchImages({ q: `${name} moon lunar` }),
+    searchImages({ q: regionQuery }),
   ]);
 
-  const primaryImages = normalizeItems(primaryItems);
-  const seen = new Set(primaryImages.map((img) => img.assetId));
-  const merged = [
-    ...primaryImages,
-    ...normalizeItems(fallbackItems).filter((img) => !seen.has(img.assetId)),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const merged = deduplicateSequences(
+    mergeUnique([
+      normalizeItems(locationItems),
+      normalizeItems(primaryItems),
+      normalizeItems(fallbackItems),
+    ])
+  );
 
   return NextResponse.json(
     { images: merged, limitedCoverage: merged.length < SPARSE_THRESHOLD },

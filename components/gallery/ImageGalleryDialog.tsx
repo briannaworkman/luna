@@ -26,6 +26,7 @@ const MAX_IMAGES = 22
 interface ImageGalleryDialogProps {
   location: LunarLocation | null
   open: boolean
+  defaultSelectedImages?: NasaImage[]
   onClose: () => void
   onContinue: (location: LunarLocation, selectedImages: NasaImage[]) => void
 }
@@ -140,6 +141,7 @@ function StripItem({ img, onRemove }: { img: NasaImage; onRemove: (id: string) =
 export function ImageGalleryDialog({
   location,
   open,
+  defaultSelectedImages,
   onClose,
   onContinue,
 }: ImageGalleryDialogProps) {
@@ -170,11 +172,14 @@ export function ImageGalleryDialog({
     const initial = `${location.name} moon crater`
     setInputValue(initial)
     setSubmittedQuery(initial)
-    setSelectedImages([])
+    // Seed selection from caller on open; intentionally excluded from deps so
+    // mid-session prop changes don't reset the user's in-progress picks
+    setSelectedImages(defaultSelectedImages ?? [])
     setTooltipAssetId(null)
     setFetchError(false)
     setLimitedCoverage(false)
     if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, location])
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatCoordinates, displayLocationName } from './location'
+import { formatCoordinates, formatLat, formatLon, displayLocationName } from './location'
 import type { LunarLocation } from '@/components/globe/types'
 
 const makeLocation = (overrides: Partial<LunarLocation> & Pick<LunarLocation, 'name' | 'isProposed'>): LunarLocation => ({
@@ -27,6 +27,30 @@ describe('formatCoordinates', () => {
 
   it('formats zero latitude and zero longitude as N and E', () => {
     expect(formatCoordinates(0, 0)).toBe('0°N 0°E')
+  })
+})
+
+describe('formatLat', () => {
+  it('formats positive latitude with N suffix', () => {
+    expect(formatLat(18.84)).toBe('18.84°N')
+  })
+  it('formats negative latitude with S suffix, using absolute value', () => {
+    expect(formatLat(-56)).toBe('56°S')
+  })
+  it('formats zero as N', () => {
+    expect(formatLat(0)).toBe('0°N')
+  })
+})
+
+describe('formatLon', () => {
+  it('formats positive longitude with E suffix', () => {
+    expect(formatLon(62)).toBe('62°E')
+  })
+  it('formats negative longitude with W suffix, using absolute value', () => {
+    expect(formatLon(-86.51)).toBe('86.51°W')
+  })
+  it('formats zero as E', () => {
+    expect(formatLon(0)).toBe('0°E')
   })
 })
 

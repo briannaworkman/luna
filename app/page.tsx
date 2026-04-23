@@ -72,34 +72,41 @@ export default function Home() {
     console.log('[LUNA] Query submitted:', payload)
   }, [])
 
-  if (screen === 'query' && galleryLocation) {
-    return (
-      <QueryComposer
-        location={galleryLocation}
-        defaultImages={selectedImages}
-        onBack={handleQueryBack}
-        onSubmit={handleQuerySubmit}
-      />
-    )
-  }
+  const handleReopenGallery = useCallback(() => {
+    setGalleryOpen(true)
+  }, [])
 
   return (
-    <main className="fixed inset-0 overflow-hidden bg-luna-base">
-      <LunarGlobe
-        onLocationSelect={handleLocationSelect}
-        deselectRef={deselectRef}
-      />
-      <LocationPanel
-        location={selectedLocation}
-        onClose={handlePanelClose}
-        onResearch={handleResearch}
-      />
+    <>
+      {screen === 'query' && galleryLocation ? (
+        <QueryComposer
+          location={galleryLocation}
+          images={selectedImages}
+          onImagesChange={setSelectedImages}
+          onOpenGallery={handleReopenGallery}
+          onBack={handleQueryBack}
+          onSubmit={handleQuerySubmit}
+        />
+      ) : (
+        <main className="fixed inset-0 overflow-hidden bg-luna-base">
+          <LunarGlobe
+            onLocationSelect={handleLocationSelect}
+            deselectRef={deselectRef}
+          />
+          <LocationPanel
+            location={selectedLocation}
+            onClose={handlePanelClose}
+            onResearch={handleResearch}
+          />
+        </main>
+      )}
       <ImageGalleryDialog
         location={galleryLocation}
         open={galleryOpen}
+        defaultSelectedImages={selectedImages}
         onClose={handleGalleryClose}
         onContinue={handleGalleryContinue}
       />
-    </main>
+    </>
   )
 }

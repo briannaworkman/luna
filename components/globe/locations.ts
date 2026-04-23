@@ -185,6 +185,12 @@ export const LOCATIONS: LunarLocation[] = [
     coords: '18.84°N, 86.51°W',
     region: 'FAR SIDE',
     namedBy: ARTEMIS_CREW,
+    citations: ['NASA SVS', 'LROC', 'NASA Image Library'],
+    suggestedQuestions: [
+      'What do we know about the geology of this near/far-side transition zone?',
+      'Which missions have photographed Carroll, and what resolution is available?',
+      'Why did the Artemis II crew propose this name?',
+    ],
   },
   {
     id: 'integrity',
@@ -197,5 +203,11 @@ export const LOCATIONS: LunarLocation[] = [
     coords: '2.66°N, 104.92°W',
     region: 'FAR SIDE',
     namedBy: ARTEMIS_CREW,
+    citations: ['NASA SVS', 'LROC', 'NASA Image Library'],
+    suggestedQuestions: [
+      'What volcanic history exists in this region?',
+      'How does Integrity compare to the adjacent Orientale basin?',
+      'What is the full naming story behind Integrity?',
+    ],
   },
 ]

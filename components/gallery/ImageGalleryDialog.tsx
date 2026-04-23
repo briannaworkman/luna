@@ -6,11 +6,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage } from '@/lib/types/nasa'
-
-function formatAcquisitionDate(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-}
+import { formatDate } from '@/lib/utils/date'
 
 interface ImageGalleryDialogProps {
   location: LunarLocation | null
@@ -189,7 +185,7 @@ export function ImageGalleryDialog({
                     <>
                       <span className="text-luna-fg-4 text-[11px]">·</span>
                       <span className="font-mono text-[11px] text-luna-fg-3 tracking-[0.02em]">
-                        Last photographed {formatAcquisitionDate(hero.date)}
+                        Last photographed {formatDate(hero.date)}
                       </span>
                     </>
                   )}

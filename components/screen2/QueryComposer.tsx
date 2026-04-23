@@ -6,6 +6,7 @@ import { LocationChip } from './LocationChip'
 import { QueryTextarea } from './QueryTextarea'
 import { TemplateChips } from './TemplateChips'
 import { ImageryStrip } from './ImageryStrip'
+import { AgentRail } from '@/components/agent-rail/AgentRail'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage } from '@/lib/types/nasa'
 
@@ -72,47 +73,50 @@ export function QueryComposer({ location, defaultImages, onBack, onSubmit }: Que
   }, [])
 
   return (
-    <main className="fixed inset-0 overflow-y-auto bg-luna-base flex items-start justify-center py-16 px-6">
-      <div className="w-full max-w-2xl flex flex-col gap-6">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 self-start text-luna-fg-3 hover:text-luna-fg transition-colors"
-          aria-label="Back to globe"
-        >
-          <ArrowLeft size={14} strokeWidth={1.5} />
-          <span className="font-mono text-[11px] tracking-[0.14em] uppercase">Locations</span>
-        </button>
+    <div className="fixed inset-0 top-14 flex bg-luna-base">
+      <AgentRail className="h-full" />
+      <main className="flex-1 overflow-y-auto px-10 py-12">
+        <div className="w-full max-w-3xl mx-auto flex flex-col gap-6">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 self-start text-luna-fg-3 hover:text-luna-fg transition-colors"
+            aria-label="Back to globe"
+          >
+            <ArrowLeft size={14} strokeWidth={1.5} />
+            <span className="font-mono text-[11px] tracking-[0.14em] uppercase">Locations</span>
+          </button>
 
-        <div className="flex flex-col gap-2">
-          <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan">
-            Query Composer
-          </span>
-          <h1 className="font-sans font-medium text-[28px] leading-[1.15] tracking-[-0.01em] text-luna-fg m-0">
-            Research this location
-          </h1>
+          <div className="flex flex-col gap-2">
+            <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan">
+              Query Composer
+            </span>
+            <h1 className="font-sans font-medium text-[28px] leading-[1.15] tracking-[-0.01em] text-luna-fg m-0">
+              Research this location
+            </h1>
+          </div>
+
+          <LocationChip location={location} className="self-start" />
+
+          <QueryTextarea
+            ref={textareaRef}
+            value={query}
+            onChange={setQuery}
+            onSubmit={handleSubmit}
+            shaking={shaking}
+            emptyHint={emptyHint}
+          />
+
+          <TemplateChips onSelect={handleTemplateSelect} />
+
+          <ImageryStrip images={images} onRemove={handleRemoveImage} />
+
+          <Button onClick={handleSubmit} className="self-end">
+            Analyze location
+            <ArrowRight size={14} strokeWidth={1.5} className="ml-2" />
+          </Button>
         </div>
-
-        <LocationChip location={location} className="self-start" />
-
-        <QueryTextarea
-          ref={textareaRef}
-          value={query}
-          onChange={setQuery}
-          onSubmit={handleSubmit}
-          shaking={shaking}
-          emptyHint={emptyHint}
-        />
-
-        <TemplateChips onSelect={handleTemplateSelect} />
-
-        <ImageryStrip images={images} onRemove={handleRemoveImage} />
-
-        <Button onClick={handleSubmit} className="self-end">
-          Analyze location
-          <ArrowRight size={14} strokeWidth={1.5} className="ml-2" />
-        </Button>
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }

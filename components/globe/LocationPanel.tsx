@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { X, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/badge'
 import { Button } from '@/components/ui/button'
 import type { LunarLocation } from './types'
+import { useDialogDismiss } from '@/lib/hooks/use-dialog-dismiss'
 
 interface LocationPanelProps {
   location: LunarLocation | null
@@ -16,20 +17,7 @@ interface LocationPanelProps {
 export function LocationPanel({ location, onClose, onResearch }: LocationPanelProps) {
   const open = location !== null
   const panelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && open) onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
-
-  function handleBackdropClick(e: React.MouseEvent) {
-    if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-      onClose()
-    }
-  }
+  const handleBackdropClick = useDialogDismiss(panelRef, open, onClose)
 
   return (
     <div

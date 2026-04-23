@@ -91,7 +91,7 @@ export function QueryComposer({ location, defaultImages, onBack, onSubmit }: Que
             <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan">
               Query Composer
             </span>
-            <h1 className="font-sans font-medium text-[28px] leading-[1.15] tracking-[-0.01em] text-luna-fg m-0">
+            <h1 className="font-sans font-medium text-[32px] leading-[1.1] tracking-[-0.01em] text-luna-fg m-0">
               Research this location
             </h1>
           </div>
@@ -105,16 +105,22 @@ export function QueryComposer({ location, defaultImages, onBack, onSubmit }: Que
             onSubmit={handleSubmit}
             shaking={shaking}
             emptyHint={emptyHint}
+            placeholder={`Ask anything about ${location.name} — geology, landing conditions, mission history…`}
           />
 
           <TemplateChips onSelect={handleTemplateSelect} />
 
           <ImageryStrip images={images} onRemove={handleRemoveImage} />
 
-          <Button onClick={handleSubmit} className="self-end">
-            Analyze location
-            <ArrowRight size={14} strokeWidth={1.5} className="ml-2" />
-          </Button>
+          <div className="flex items-center justify-between gap-4">
+            <span className="font-mono text-[11px] tracking-[0.04em] text-luna-hairline-2 pointer-events-none">
+              ⌘↵ to analyze
+            </span>
+            <Button onClick={handleSubmit}>
+              Analyze location
+              <ArrowRight size={14} strokeWidth={1.5} className="ml-2" />
+            </Button>
+          </div>
         </div>
       </main>
     </div>

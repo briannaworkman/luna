@@ -9,15 +9,16 @@ interface QueryTextareaProps {
   onSubmit: () => void
   shaking: boolean
   emptyHint: boolean
+  placeholder?: string
 }
 
 export const QueryTextarea = forwardRef<HTMLTextAreaElement, QueryTextareaProps>(
-  function QueryTextarea({ value, onChange, onSubmit, shaking, emptyHint }, ref) {
+  function QueryTextarea({ value, onChange, onSubmit, shaking, emptyHint, placeholder }, ref) {
     useLayoutEffect(() => {
       const ta = (ref as React.RefObject<HTMLTextAreaElement | null>)?.current
       if (!ta) return
       ta.style.height = 'auto'
-      ta.style.height = `${Math.min(ta.scrollHeight, 240)}px`
+      ta.style.height = `${Math.max(160, Math.min(ta.scrollHeight, 240))}px`
     }, [value, ref])
 
     function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -42,16 +43,16 @@ export const QueryTextarea = forwardRef<HTMLTextAreaElement, QueryTextareaProps>
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           autoFocus
-          placeholder="Ask anything about this location — geology, landing suitability, mission history..."
+          placeholder={placeholder ?? 'Ask anything about this location — geology, landing suitability, mission history...'}
           className={cn(
-            'w-full resize-none rounded border bg-luna-base-2 px-4 py-3',
+            'w-full resize-none rounded-md bg-luna-base-2 px-4 py-4',
             'font-sans text-[15px] text-luna-fg placeholder:text-luna-fg-4',
             'leading-relaxed',
-            'border-luna-hairline focus:border-luna-cyan focus:outline-none',
+            'border border-luna-hairline-2 focus:border-luna-cyan focus:outline-none',
             'transition-colors duration-[120ms]',
             atLimit && 'border-luna-danger',
           )}
-          style={{ minHeight: '120px' }}
+          style={{ minHeight: '160px' }}
           aria-label="Research query"
           aria-describedby={
             [showCounter && 'query-char-count', emptyHint && 'query-empty-hint']

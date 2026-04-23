@@ -172,13 +172,13 @@ export function ImageGalleryDialog({
     const initial = `${location.name} moon crater`
     setInputValue(initial)
     setSubmittedQuery(initial)
-    // Seed from caller so the attach-button re-open path preserves current selections
+    // Seed selection from caller on open; intentionally excluded from deps so
+    // mid-session prop changes don't reset the user's in-progress picks
     setSelectedImages(defaultSelectedImages ?? [])
     setTooltipAssetId(null)
     setFetchError(false)
     setLimitedCoverage(false)
     if (tooltipTimerRef.current) clearTimeout(tooltipTimerRef.current)
-    // defaultSelectedImages is an open-time seed; intentionally not in deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, location])
 

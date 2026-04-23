@@ -5,10 +5,16 @@ function formatDeg(val: number): string {
   return Number.isInteger(abs) ? abs.toString() : abs.toFixed(2)
 }
 
+export function formatLat(lat: number): string {
+  return `${formatDeg(lat)}°${lat >= 0 ? 'N' : 'S'}`
+}
+
+export function formatLon(lon: number): string {
+  return `${formatDeg(lon)}°${lon >= 0 ? 'E' : 'W'}`
+}
+
 export function formatCoordinates(lat: number, lon: number): string {
-  const latDir = lat >= 0 ? 'N' : 'S'
-  const lonDir = lon >= 0 ? 'E' : 'W'
-  return `${formatDeg(lat)}°${latDir} ${formatDeg(lon)}°${lonDir}`
+  return `${formatLat(lat)} ${formatLon(lon)}`
 }
 
 export function displayLocationName(location: LunarLocation): string {

@@ -2,6 +2,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { ArrowLeft, ArrowRight, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import { LocationHeader } from './LocationHeader'
 import { QueryTextarea } from './QueryTextarea'
 import { TemplateChips } from './TemplateChips'
@@ -82,8 +83,6 @@ export function QueryComposer({
     }
   }, [])
 
-  const suggested = location.suggestedQuestions ?? []
-
   return (
     <div className="fixed inset-0 top-14 flex bg-luna-base">
       <AgentRail className="h-full" />
@@ -96,7 +95,7 @@ export function QueryComposer({
             aria-label="Back to globe"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
-            <span className="font-mono text-[11px] tracking-[0.14em] uppercase">Locations</span>
+            <Eyebrow as="span">Locations</Eyebrow>
           </button>
 
           <LocationHeader location={location} />
@@ -124,14 +123,10 @@ export function QueryComposer({
                 ⌘↵ to analyze
               </span>
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={onOpenGallery}
-                  className="inline-flex items-center gap-2 h-9 px-3 font-sans font-medium text-[13px] text-luna-fg-3 hover:text-luna-fg border border-luna-hairline hover:border-luna-hairline-2 rounded-md transition-colors"
-                >
+                <Button type="button" variant="outline" onClick={onOpenGallery}>
                   <ImagePlus size={14} strokeWidth={1.5} aria-hidden="true" />
                   Attach imagery
-                </button>
+                </Button>
                 <Button onClick={handleSubmit}>
                   Analyze location
                   <ArrowRight size={14} strokeWidth={1.5} className="ml-2" />
@@ -142,7 +137,7 @@ export function QueryComposer({
 
           <SuggestedQuestions
             locationName={location.name}
-            questions={suggested}
+            questions={location.suggestedQuestions ?? []}
             onSelect={handleTemplateSelect}
           />
         </div>

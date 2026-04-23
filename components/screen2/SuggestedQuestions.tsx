@@ -1,5 +1,6 @@
 'use client'
 import { ArrowRight } from 'lucide-react'
+import { Eyebrow } from '@/components/ui/eyebrow'
 
 interface SuggestedQuestionsProps {
   locationName: string
@@ -12,11 +13,11 @@ export function SuggestedQuestions({ locationName, questions, onSelect }: Sugges
 
   return (
     <div className="mt-6 pt-6 border-t border-luna-hairline">
-      <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3 mb-1">
+      <Eyebrow className="text-luna-fg-3 mb-1">
         Suggested for {locationName}
-      </div>
+      </Eyebrow>
       <div className="flex flex-col">
-        {questions.map((q, i) => (
+        {questions.map((q) => (
           <button
             key={q}
             type="button"

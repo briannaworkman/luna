@@ -77,15 +77,16 @@ describe('GET /api/nasa-images', () => {
       expect(ids).toHaveLength(3);
     });
 
-    it('sorts merged results by date descending', async () => {
+    it('front-loads location-tagged results ahead of other results', async () => {
       vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce(nasaResponse([mockItem('old', '2020-01-01T00:00:00Z')]))
-        .mockResolvedValueOnce(nasaResponse([mockItem('new', '2024-01-01T00:00:00Z')]))
+        .mockResolvedValueOnce(nasaResponse([mockItem('location-old', '2020-01-01T00:00:00Z')])) // location=
+        .mockResolvedValueOnce(nasaResponse([mockItem('primary-new', '2024-01-01T00:00:00Z')])) // q= primary
+        .mockResolvedValueOnce(nasaResponse([]))                                                  // q= fallback
       );
 
       const body = await GET(makeRequest(VALID_PARAMS)).then((r) => r.json());
-      expect(body.images[0].assetId).toBe('new');
-      expect(body.images[1].assetId).toBe('old');
+      expect(body.images[0].assetId).toBe('location-old');
+      expect(body.images[1].assetId).toBe('primary-new');
     });
   });
 

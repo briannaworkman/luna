@@ -79,7 +79,7 @@ function deduplicateSequences(images: NasaImage[]): NasaImage[] {
   return images.filter((img) => {
     const match = img.assetId.match(APOLLO_FRAME_RE);
     if (!match) return true;
-    const roll = match[1].toLowerCase();
+    const roll = match[1]!.toLowerCase();
     if (seenRolls.has(roll)) return false;
     seenRolls.add(roll);
     return true;

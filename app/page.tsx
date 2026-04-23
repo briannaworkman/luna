@@ -1,9 +1,11 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { LocationPanel } from '@/components/globe/LocationPanel'
 import { ImageGalleryDialog } from '@/components/gallery/ImageGalleryDialog'
+import { QueryComposer, type QueryPayload } from '@/components/screen2/QueryComposer'
+import { LOCATIONS } from '@/components/globe/locations'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage } from '@/lib/types/nasa'
 
@@ -13,12 +15,26 @@ const LunarGlobe = dynamic(
   { ssr: false },
 )
 
+type AppScreen = 'globe' | 'query'
+
 export default function Home() {
+  const [screen, setScreen] = useState<AppScreen>('globe')
   const [selectedLocation, setSelectedLocation] = useState<LunarLocation | null>(null)
   const [galleryLocation, setGalleryLocation] = useState<LunarLocation | null>(null)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [selectedImages, setSelectedImages] = useState<NasaImage[]>([])
   const deselectRef = useRef<(() => void) | null>(null)
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const first = LOCATIONS[0] ?? null
+    if (params.get('screen') === 'query' && first) {
+      setGalleryLocation(first)
+      setScreen('query')
+    }
+  }, [])
 
   const handleLocationSelect = useCallback((location: LunarLocation | null) => {
     setSelectedLocation(location)
@@ -43,9 +59,30 @@ export default function Home() {
 
   const handleGalleryContinue = useCallback((location: LunarLocation, images: NasaImage[]) => {
     setSelectedImages(images)
+    setGalleryLocation(location)
     setGalleryOpen(false)
-    // TODO: navigate to Screen 2 (Query Input)
+    setScreen('query')
   }, [])
+
+  const handleQueryBack = useCallback(() => {
+    setScreen('globe')
+  }, [])
+
+  const handleQuerySubmit = useCallback((payload: QueryPayload) => {
+    console.log('[LUNA] Query submitted:', payload)
+    // PR 5 will replace this with the orchestrator stream trigger
+  }, [])
+
+  if (screen === 'query' && galleryLocation) {
+    return (
+      <QueryComposer
+        location={galleryLocation}
+        initialImages={selectedImages}
+        onBack={handleQueryBack}
+        onSubmit={handleQuerySubmit}
+      />
+    )
+  }
 
   return (
     <main className="fixed inset-0 overflow-hidden bg-luna-base">

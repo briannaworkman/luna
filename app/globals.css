@@ -181,6 +181,18 @@
   100% { transform: scale(2);   opacity: 0; }
 }
 
+/* ─── Shake animation (empty query validation) ───────────────────────────────── */
+@keyframes luna-shake {
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(-6px); }
+  30%  { transform: translateX(6px); }
+  45%  { transform: translateX(-4px); }
+  60%  { transform: translateX(4px); }
+  75%  { transform: translateX(-2px); }
+  90%  { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
 /* ─── Text selection ─────────────────────────────────────────────────────────── */
 ::selection {
   background: var(--luna-cyan-edge);

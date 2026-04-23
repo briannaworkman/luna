@@ -63,15 +63,11 @@ export function ImageGalleryDialog({
           'bg-luna-base-2 border border-luna-hairline',
           'rounded-lg max-[767px]:rounded-none',
           'overflow-hidden',
-          // Mobile: full screen; Desktop: 82% viewport with scale animation
+          // Mobile (≤767px): full screen; Desktop (≥768px): 82% viewport
           'max-[767px]:w-screen max-[767px]:h-screen',
+          'min-[768px]:w-[82vw] min-[768px]:h-[82vh]',
         )}
         style={{
-          // Desktop: 82% viewport; Mobile: full screen (100vw × 100vh) — handled by Tailwind classes above
-          width:     'min(82vw, 100vw)',
-          height:    'min(82vh, 100vh)',
-          maxWidth:  '100vw',
-          maxHeight: '100vh',
           boxShadow: 'var(--luna-shadow-lg)',
           // Opening: scale 96→100% + opacity 0→1 over 200ms
           transition: open

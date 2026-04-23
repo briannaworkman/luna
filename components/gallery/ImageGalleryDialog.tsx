@@ -1,10 +1,14 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import type { LunarLocation } from '@/components/globe/types'
+import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa'
+import { formatDate } from '@/lib/utils/date'
+import { fetchJson } from '@/lib/utils/fetch-with-timeout'
+import { useDialogDismiss } from '@/lib/hooks/use-dialog-dismiss'
 
 interface ImageGalleryDialogProps {
   location: LunarLocation | null
@@ -20,19 +24,68 @@ export function ImageGalleryDialog({
   onContinue,
 }: ImageGalleryDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
+  const [hero, setHero] = useState<NasaImage | null>(null)
+  const [heroLoading, setHeroLoading] = useState(false)
+  const [heroImgError, setHeroImgError] = useState(false)
+  const handleBackdropClick = useDialogDismiss(dialogRef, open, onClose)
 
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && open) onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
+    if (!open || !location) return
+    setHero(null)
+    setHeroLoading(true)
+    setHeroImgError(false)
 
-  function handleBackdropClick(e: React.MouseEvent) {
-    if (dialogRef.current && !dialogRef.current.contains(e.target as Node)) {
-      onClose()
+    const params = new URLSearchParams({
+      name: location.name,
+      lat: String(location.lat),
+      lon: String(location.lon),
+    })
+
+    ;(async () => {
+      try {
+        const data = await fetchJson<NasaImagesResponse>(`/api/nasa-images?${params}`)
+        setHero(data.images[0] ?? null)
+      } catch {
+        setHero(null)
+      } finally {
+        setHeroLoading(false)
+      }
+    })()
+  }, [open, location])
+
+  function renderHero() {
+    if (heroLoading) {
+      return (
+        <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
+          <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.02em]">Loading…</span>
+        </div>
+      )
     }
+    if (!hero) {
+      return (
+        <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
+          <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.02em]">No imagery available</span>
+        </div>
+      )
+    }
+    if (heroImgError) {
+      return (
+        <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
+          <span className="font-mono text-[11px] text-luna-fg-3 tracking-[0.02em]">{hero.assetId}</span>
+        </div>
+      )
+    }
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img
+        src={hero.thumbUrl}
+        alt={`${location?.name ?? 'Location'} — ${hero.instrument}`}
+        className="w-full h-full object-cover"
+        loading="eager"
+        fetchPriority="high"
+        onError={() => setHeroImgError(true)}
+      />
+    )
   }
 
   return (
@@ -96,20 +149,41 @@ export function ImageGalleryDialog({
           </Button>
         </div>
 
-        {/* ── Gallery body — placeholder until Screen 1.5 images land ── */}
         <div className="flex-1 overflow-y-auto p-8 max-[767px]:p-5">
-          <div className="h-full flex flex-col gap-4">
-            {/* Hero image placeholder */}
-            <div
-              className="w-full rounded-md border border-luna-hairline flex-1 min-h-0 flex items-center justify-center"
-              style={{ background: 'var(--luna-base-3)' }}
-            >
-              <span className="font-mono text-[13px] text-luna-fg-4 tracking-[0.02em]">
-                Hero image
-              </span>
+          <div className="flex flex-col gap-4">
+            <div className="w-full shrink-0 flex flex-col gap-2">
+              <div
+                className="w-full rounded-md border border-luna-hairline overflow-hidden"
+                style={{ height: 'clamp(280px, 30vh, 320px)' }}
+              >
+                {renderHero()}
+              </div>
+
+              {hero && (
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.02em]">
+                    {hero.assetId}
+                  </span>
+                  {hero.instrument && (
+                    <>
+                      <span className="text-luna-fg-4 text-[11px]">·</span>
+                      <span className="font-sans text-[11px] text-luna-fg-3">
+                        {hero.instrument}
+                      </span>
+                    </>
+                  )}
+                  {hero.date && (
+                    <>
+                      <span className="text-luna-fg-4 text-[11px]">·</span>
+                      <span className="font-mono text-[11px] text-luna-fg-3 tracking-[0.02em]">
+                        Last photographed {formatDate(hero.date)}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Thumbnail strip — 4 slots */}
             <div className="grid grid-cols-4 gap-3 shrink-0">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div

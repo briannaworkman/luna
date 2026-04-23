@@ -38,7 +38,9 @@ interface NasaApiItem {
   }>;
 }
 
-async function searchImages(params: Record<string, string>): Promise<NasaApiItem[]> {
+interface SearchParams { q?: string; location?: string }
+
+async function searchImages(params: SearchParams): Promise<NasaApiItem[]> {
   const url = new URL(NASA_IMAGES_API);
   url.searchParams.set('media_type', 'image');
   url.searchParams.set('page_size', '30');
@@ -55,7 +57,6 @@ async function searchImages(params: Record<string, string>): Promise<NasaApiItem
   }
 }
 
-// Merge multiple pre-sorted lists in priority order, deduplicating by assetId.
 function mergeUnique(lists: NasaImage[][]): NasaImage[] {
   const seen = new Set<string>();
   const result: NasaImage[] = [];

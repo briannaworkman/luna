@@ -10,18 +10,6 @@ const checkRateLimit = rateLimit(60_000, 100);
 const NASA_IMAGES_API = 'https://images-api.nasa.gov/search';
 const SPARSE_THRESHOLD = 2;
 
-// Derive region-specific search terms from lat/lon for the fallback query.
-// Selenographic: lon in [-90, 90] = near-side; outside = far-side.
-// Tested terms: "moon far side surface" → 24 hits of actual far-side imagery;
-// "moon south pole lunar surface" → 51 hits; "moon north pole lunar surface" works similarly.
-function buildRegionQuery(lat: number, lon: number): string {
-  const isFarSide = Math.abs(lon) > 90;
-  if (isFarSide) return 'moon far side surface';
-  if (lat > 60) return 'moon north pole lunar surface';
-  if (lat < -60) return 'moon south pole lunar surface';
-  return 'moon lunar surface';
-}
-
 interface NasaApiItem {
   href: string;
   data: Array<{
@@ -38,11 +26,11 @@ interface NasaApiItem {
   }>;
 }
 
-async function searchImages(query: string): Promise<NasaApiItem[]> {
+async function searchImages(q: string): Promise<NasaApiItem[]> {
   const url = new URL(NASA_IMAGES_API);
-  url.searchParams.set('q', query);
   url.searchParams.set('media_type', 'image');
-  url.searchParams.set('page_size', '20');
+  url.searchParams.set('page_size', '30');
+  url.searchParams.set('q', q);
 
   try {
     const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url);
@@ -51,6 +39,22 @@ async function searchImages(query: string): Promise<NasaApiItem[]> {
     console.warn('[nasa-images] search failed, returning empty', err);
     return [];
   }
+}
+
+// Apollo sequential frame IDs: as11-40-5931, as16-120-19187, etc.
+// Keep only the first frame per mission+roll to avoid near-duplicate shots.
+const APOLLO_FRAME_RE = /^(as\d+-\d+)-\d+$/i;
+
+function deduplicateSequences(images: NasaImage[]): NasaImage[] {
+  const seenRolls = new Set<string>();
+  return images.filter((img) => {
+    const match = img.assetId.match(APOLLO_FRAME_RE);
+    if (!match) return true;
+    const roll = match[1]!.toLowerCase();
+    if (seenRolls.has(roll)) return false;
+    seenRolls.add(roll);
+    return true;
+  });
 }
 
 function normalizeItems(items: NasaApiItem[]): NasaImage[] {
@@ -85,34 +89,17 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
   const rateLimitResponse = checkRateLimit(req);
   if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<NasaImagesResponse>;
 
-  const { searchParams } = req.nextUrl;
-  const name = searchParams.get('name')?.trim();
-  const lat = parseFloat(searchParams.get('lat') ?? '');
-  const lon = parseFloat(searchParams.get('lon') ?? '');
-
-  if (!name || isNaN(lat) || isNaN(lon)) {
+  const q = req.nextUrl.searchParams.get('q')?.trim();
+  if (!q) {
     return NextResponse.json(
       { images: [], limitedCoverage: true },
       { status: 400 }
     );
   }
 
-  // Run both searches in parallel — name-specific and region-derived
-  const regionQuery = buildRegionQuery(lat, lon);
-  const [primaryItems, fallbackItems] = await Promise.all([
-    searchImages(`${name} moon lunar`),
-    searchImages(regionQuery),
-  ]);
-
-  const primaryImages = normalizeItems(primaryItems);
-  const seen = new Set(primaryImages.map((img) => img.assetId));
-  const merged = [
-    ...primaryImages,
-    ...normalizeItems(fallbackItems).filter((img) => !seen.has(img.assetId)),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
+  const images = deduplicateSequences(normalizeItems(await searchImages(q)));
   return NextResponse.json(
-    { images: merged, limitedCoverage: merged.length < SPARSE_THRESHOLD },
+    { images, limitedCoverage: images.length < SPARSE_THRESHOLD },
     { headers: { 'Cache-Control': CACHE_CONTROL_1H } }
   );
 }

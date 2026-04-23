@@ -1,20 +1,49 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { SearchInput } from '@/components/ui/search-input'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa'
 import { formatDate } from '@/lib/utils/date'
 import { fetchJson } from '@/lib/utils/fetch-with-timeout'
 import { useDialogDismiss } from '@/lib/hooks/use-dialog-dismiss'
 
+const MAX_IMAGES = 22
+
 interface ImageGalleryDialogProps {
   location: LunarLocation | null
   open: boolean
   onClose: () => void
   onContinue: (location: LunarLocation) => void
+}
+
+function LazyImage({ src, alt }: { src: string; alt: string }) {
+  const [error, setError] = useState(false)
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
+        <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.02em]">—</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        unoptimized
+        className="object-cover"
+        onError={() => setError(true)}
+      />
+    </div>
+  )
 }
 
 export function ImageGalleryDialog({
@@ -24,37 +53,52 @@ export function ImageGalleryDialog({
   onContinue,
 }: ImageGalleryDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
-  const [hero, setHero] = useState<NasaImage | null>(null)
-  const [heroLoading, setHeroLoading] = useState(false)
+  const [images, setImages] = useState<NasaImage[]>([])
+  const [loading, setLoading] = useState(false)
   const [heroImgError, setHeroImgError] = useState(false)
+  const [inputValue, setInputValue] = useState('')
+  const [submittedQuery, setSubmittedQuery] = useState('')
   const handleBackdropClick = useDialogDismiss(dialogRef, open, onClose)
+
+  const hero = images[0] ?? null
+  const thumbnails = images.slice(1, MAX_IMAGES)
 
   useEffect(() => {
     if (!open || !location) return
-    setHero(null)
-    setHeroLoading(true)
+    const initial = `${location.name} moon crater`
+    setInputValue(initial)
+    setSubmittedQuery(initial)
+  }, [open, location])
+
+  useEffect(() => {
+    if (!open || !submittedQuery) return
+    setImages([])
+    setLoading(true)
     setHeroImgError(false)
 
-    const params = new URLSearchParams({
-      name: location.name,
-      lat: String(location.lat),
-      lon: String(location.lon),
-    })
-
+    let cancelled = false
+    const params = new URLSearchParams({ q: submittedQuery })
     ;(async () => {
       try {
         const data = await fetchJson<NasaImagesResponse>(`/api/nasa-images?${params}`)
-        setHero(data.images[0] ?? null)
+        if (!cancelled) setImages(data.images.slice(0, MAX_IMAGES))
       } catch {
-        setHero(null)
+        if (!cancelled) setImages([])
       } finally {
-        setHeroLoading(false)
+        if (!cancelled) setLoading(false)
       }
     })()
-  }, [open, location])
+    return () => { cancelled = true }
+  }, [submittedQuery, open])
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = inputValue.trim()
+    if (trimmed) setSubmittedQuery(trimmed)
+  }
 
   function renderHero() {
-    if (heroLoading) {
+    if (loading) {
       return (
         <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--luna-base-3)' }}>
           <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.02em]">Loading…</span>
@@ -75,8 +119,8 @@ export function ImageGalleryDialog({
         </div>
       )
     }
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={hero.thumbUrl}
         alt={`${location?.name ?? 'Location'} — ${hero.instrument}`}
@@ -151,6 +195,23 @@ export function ImageGalleryDialog({
 
         <div className="flex-1 overflow-y-auto p-8 max-[767px]:p-5">
           <div className="flex flex-col gap-4">
+            <form onSubmit={handleSearch} className="flex items-center gap-2 shrink-0">
+              <SearchInput
+                className="flex-1"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onClear={() => {
+                  const initial = location ? `${location.name} moon crater` : ''
+                  setInputValue(initial)
+                  setSubmittedQuery(initial)
+                }}
+                placeholder="Search NASA image library…"
+              />
+              <Button type="submit" variant="outline" disabled={loading || !inputValue.trim()}>
+                Search
+              </Button>
+            </form>
+
             <div className="w-full shrink-0 flex flex-col gap-2">
               <div
                 className="w-full rounded-md border border-luna-hairline overflow-hidden"
@@ -184,19 +245,21 @@ export function ImageGalleryDialog({
               )}
             </div>
 
-            <div className="grid grid-cols-4 gap-3 shrink-0">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="aspect-square rounded border border-luna-hairline flex items-center justify-center"
-                  style={{ background: 'var(--luna-base-3)' }}
-                >
-                  <span className="font-mono text-[11px] text-luna-fg-4">
-                    {i + 1}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {thumbnails.length > 0 && (
+              <div className="grid grid-cols-2 min-[768px]:grid-cols-3 gap-3 shrink-0">
+                {thumbnails.map((img) => (
+                  <div
+                    key={img.assetId}
+                    className="aspect-square rounded border border-luna-hairline overflow-hidden"
+                  >
+                    <LazyImage
+                      src={img.thumbUrl}
+                      alt={`${location?.name ?? 'Location'} — ${img.instrument}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

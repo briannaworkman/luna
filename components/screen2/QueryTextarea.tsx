@@ -9,7 +9,7 @@ interface QueryTextareaProps {
   onSubmit: () => void
   shaking: boolean
   emptyHint: boolean
-  placeholder?: string
+  placeholder: string
 }
 
 export const QueryTextarea = forwardRef<HTMLTextAreaElement, QueryTextareaProps>(
@@ -17,8 +17,9 @@ export const QueryTextarea = forwardRef<HTMLTextAreaElement, QueryTextareaProps>
     useLayoutEffect(() => {
       const ta = (ref as React.RefObject<HTMLTextAreaElement | null>)?.current
       if (!ta) return
+      // CSS `min-height: 160px` enforces the minimum; JS just handles the auto-grow cap
       ta.style.height = 'auto'
-      ta.style.height = `${Math.max(160, Math.min(ta.scrollHeight, 240))}px`
+      ta.style.height = `${Math.min(ta.scrollHeight, 240)}px`
     }, [value, ref])
 
     function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -43,7 +44,7 @@ export const QueryTextarea = forwardRef<HTMLTextAreaElement, QueryTextareaProps>
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           autoFocus
-          placeholder={placeholder ?? 'Ask anything about this location — geology, landing suitability, mission history...'}
+          placeholder={placeholder}
           className={cn(
             'w-full resize-none rounded-md bg-luna-base-2 px-4 py-4',
             'font-sans text-[15px] text-luna-fg placeholder:text-luna-fg-4',

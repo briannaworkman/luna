@@ -113,7 +113,10 @@ export function QueryComposer({ location, defaultImages, onBack, onSubmit }: Que
           <ImageryStrip images={images} onRemove={handleRemoveImage} />
 
           <div className="flex items-center justify-between gap-4">
-            <span className="font-mono text-[11px] tracking-[0.04em] text-luna-hairline-2 pointer-events-none">
+            <span
+              aria-hidden="true"
+              className="font-mono text-[11px] tracking-[0.04em] text-luna-fg-4"
+            >
               ⌘↵ to analyze
             </span>
             <Button onClick={handleSubmit}>

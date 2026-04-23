@@ -10,6 +10,8 @@ export interface LunarLocation {
   coords: string
   region: string
   namedBy?: string[]
+  citations?: string[]
+  suggestedQuestions?: string[]
 }
 
 export interface DotState {

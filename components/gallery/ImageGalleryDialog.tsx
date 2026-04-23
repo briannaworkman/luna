@@ -106,6 +106,14 @@ function InlineTooltip() {
   )
 }
 
+function selectionBorderStyle(isSelected: boolean): React.CSSProperties {
+  return {
+    border: '2px solid',
+    borderColor: isSelected ? 'var(--luna-cyan)' : 'var(--luna-hairline)',
+    transition: 'border-color 120ms',
+  }
+}
+
 function StripItem({ img, onRemove }: { img: NasaImage; onRemove: (id: string) => void }) {
   return (
     <div className="flex flex-col items-center gap-1 shrink-0">
@@ -192,17 +200,10 @@ export function ImageGalleryDialog({
   }
 
   function handleToggle(image: NasaImage) {
-    // Trigger tooltip based on currently-rendered state when adding at cap
     if (!selectedIds.has(image.assetId) && isAtCap) {
       handleAttemptWhenFull(image.assetId)
     }
-    // Authoritative cap guard lives inside the functional updater so rapid
-    // clicks across separate render passes can't bypass it
-    setSelectedImages((prev) => {
-      const alreadySelected = prev.some((i) => i.assetId === image.assetId)
-      if (!alreadySelected && prev.length >= MAX_SELECTION) return prev
-      return toggleSelection(prev, image)
-    })
+    setSelectedImages((prev) => toggleSelection(prev, image))
   }
 
   function handleRemove(assetId: string) {
@@ -332,14 +333,11 @@ export function ImageGalleryDialog({
             </form>
 
             <div className="w-full shrink-0 flex flex-col gap-2">
-              {/* Hero image with toggle */}
               <div
                 className="relative w-full rounded-md overflow-hidden"
                 style={{
                   height: 'clamp(280px, 30vh, 320px)',
-                  border: '2px solid',
-                  borderColor: hero && selectedIds.has(hero.assetId) ? 'var(--luna-cyan)' : 'var(--luna-hairline)',
-                  transition: 'border-color 120ms',
+                  ...selectionBorderStyle(!!hero && selectedIds.has(hero.assetId)),
                 }}
               >
                 {renderHero()}
@@ -386,11 +384,7 @@ export function ImageGalleryDialog({
                   <div
                     key={img.assetId}
                     className="relative aspect-square rounded"
-                    style={{
-                      border: '2px solid',
-                      borderColor: selectedIds.has(img.assetId) ? 'var(--luna-cyan)' : 'var(--luna-hairline)',
-                      transition: 'border-color 120ms',
-                    }}
+                    style={selectionBorderStyle(selectedIds.has(img.assetId))}
                   >
                     <div className="absolute inset-0 rounded overflow-hidden">
                       <LazyImage src={img.thumbUrl} alt={`${location?.name ?? 'Location'} — ${img.instrument}`} />

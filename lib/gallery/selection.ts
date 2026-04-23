@@ -12,10 +12,10 @@ export function canSelectMore(selected: NasaImage[]): boolean {
   return selected.length < MAX_SELECTION
 }
 
-// Add if absent, remove if present. Caller ensures canSelectMore before add.
 export function toggleSelection(selected: NasaImage[], image: NasaImage): NasaImage[] {
   const idx = selected.findIndex((i) => i.assetId === image.assetId)
   if (idx >= 0) return [...selected.slice(0, idx), ...selected.slice(idx + 1)]
+  if (selected.length >= MAX_SELECTION) return selected
   return [...selected, image]
 }
 

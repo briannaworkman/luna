@@ -73,6 +73,18 @@ describe('toggleSelection', () => {
     const img3 = makeImg('c')
     expect(toggleSelection([img1, img2, img3], img2)).toEqual([img1, img3])
   })
+
+  it('returns the same array reference when attempting to add beyond MAX_SELECTION', () => {
+    const full = [makeImg('a'), makeImg('b'), makeImg('c'), makeImg('d')]
+    const result = toggleSelection(full, makeImg('e'))
+    expect(result).toBe(full)
+  })
+
+  it('still removes an already-selected image when at cap', () => {
+    const img1 = makeImg('a')
+    const full = [img1, makeImg('b'), makeImg('c'), makeImg('d')]
+    expect(toggleSelection(full, img1)).toEqual([makeImg('b'), makeImg('c'), makeImg('d')])
+  })
 })
 
 describe('removeFromSelection', () => {

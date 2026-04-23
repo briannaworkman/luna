@@ -17,22 +17,22 @@ export interface QueryPayload {
 
 interface QueryComposerProps {
   location: LunarLocation
-  initialImages: NasaImage[]
+  defaultImages: NasaImage[]
   onBack: () => void
   onSubmit: (payload: QueryPayload) => void
 }
 
-export function QueryComposer({ location, initialImages, onBack, onSubmit }: QueryComposerProps) {
+export function QueryComposer({ location, defaultImages, onBack, onSubmit }: QueryComposerProps) {
   const [query, setQuery] = useState('')
-  const [images, setImages] = useState<NasaImage[]>(initialImages)
+  const [images, setImages] = useState<NasaImage[]>(defaultImages)
   const [shaking, setShaking] = useState(false)
   const [emptyHint, setEmptyHint] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const shakeRafRef = useRef<number | null>(null)
 
   const handleTemplateSelect = useCallback((text: string) => {
     setQuery(text)
-    // Defer to let React flush the value update before focusing + caret placement
     setTimeout(() => {
       const ta = textareaRef.current
       if (!ta) return
@@ -48,11 +48,12 @@ export function QueryComposer({ location, initialImages, onBack, onSubmit }: Que
   const handleSubmit = useCallback(() => {
     const trimmed = query.trim()
     if (!trimmed) {
-      // Reset shake so rapid empty submits retrigger the animation instead of
-      // stacking timers that race to turn it back off
+      // Rapid empty submits: reset across a frame so the animation class
+      // actually re-triggers instead of React batching into a no-op update
       if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current)
+      if (shakeRafRef.current !== null) cancelAnimationFrame(shakeRafRef.current)
       setShaking(false)
-      requestAnimationFrame(() => {
+      shakeRafRef.current = requestAnimationFrame(() => {
         setShaking(true)
         shakeTimerRef.current = setTimeout(() => setShaking(false), 350)
       })
@@ -60,19 +61,17 @@ export function QueryComposer({ location, initialImages, onBack, onSubmit }: Que
       return
     }
     setEmptyHint(false)
-    const payload: QueryPayload = { location, query: trimmed, images }
-    console.log('[LUNA] Query payload:', payload)
-    onSubmit(payload)
+    onSubmit({ location, query: trimmed, images })
   }, [query, location, images, onSubmit])
 
   useEffect(() => {
     return () => {
       if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current)
+      if (shakeRafRef.current !== null) cancelAnimationFrame(shakeRafRef.current)
     }
   }, [])
 
   return (
-    // TODO PR4: <AgentRail /> mounts as a fixed left column — adjust to 2-col grid when that lands
     <main className="fixed inset-0 overflow-y-auto bg-luna-base flex items-start justify-center py-16 px-6">
       <div className="w-full max-w-2xl flex flex-col gap-6">
         <button

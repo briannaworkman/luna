@@ -27,7 +27,6 @@ export default function Home() {
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return
-    if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
     const first = LOCATIONS[0] ?? null
     if (params.get('screen') === 'query' && first) {
@@ -69,15 +68,15 @@ export default function Home() {
   }, [])
 
   const handleQuerySubmit = useCallback((payload: QueryPayload) => {
-    console.log('[LUNA] Query submitted:', payload)
     // PR 5 will replace this with the orchestrator stream trigger
+    console.log('[LUNA] Query submitted:', payload)
   }, [])
 
   if (screen === 'query' && galleryLocation) {
     return (
       <QueryComposer
         location={galleryLocation}
-        initialImages={selectedImages}
+        defaultImages={selectedImages}
         onBack={handleQueryBack}
         onSubmit={handleQuerySubmit}
       />

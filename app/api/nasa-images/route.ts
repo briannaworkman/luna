@@ -10,18 +10,6 @@ const checkRateLimit = rateLimit(60_000, 100);
 const NASA_IMAGES_API = 'https://images-api.nasa.gov/search';
 const SPARSE_THRESHOLD = 2;
 
-// Derive region-specific search terms from lat/lon for the fallback query.
-// Selenographic: lon in [-90, 90] = near-side; outside = far-side.
-// Tested terms: "moon far side surface" → 24 hits of actual far-side imagery;
-// "moon south pole lunar surface" → 51 hits; "moon north pole lunar surface" works similarly.
-function buildRegionQuery(lat: number, lon: number): string {
-  const isFarSide = Math.abs(lon) > 90;
-  if (isFarSide) return 'moon far side surface';
-  if (lat > 60) return 'moon north pole lunar surface';
-  if (lat < -60) return 'moon south pole lunar surface';
-  return 'moon lunar surface';
-}
-
 interface NasaApiItem {
   href: string;
   data: Array<{
@@ -38,15 +26,11 @@ interface NasaApiItem {
   }>;
 }
 
-interface SearchParams { q?: string; location?: string }
-
-async function searchImages(params: SearchParams): Promise<NasaApiItem[]> {
+async function searchImages(q: string): Promise<NasaApiItem[]> {
   const url = new URL(NASA_IMAGES_API);
   url.searchParams.set('media_type', 'image');
   url.searchParams.set('page_size', '30');
-  for (const [k, v] of Object.entries(params)) {
-    url.searchParams.set(k, v);
-  }
+  url.searchParams.set('q', q);
 
   try {
     const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url);
@@ -55,20 +39,6 @@ async function searchImages(params: SearchParams): Promise<NasaApiItem[]> {
     console.warn('[nasa-images] search failed, returning empty', err);
     return [];
   }
-}
-
-function mergeUnique(lists: NasaImage[][]): NasaImage[] {
-  const seen = new Set<string>();
-  const result: NasaImage[] = [];
-  for (const list of lists) {
-    for (const img of list) {
-      if (!seen.has(img.assetId)) {
-        seen.add(img.assetId);
-        result.push(img);
-      }
-    }
-  }
-  return result;
 }
 
 // Apollo sequential frame IDs: as11-40-5931, as16-120-19187, etc.
@@ -119,50 +89,17 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
   const rateLimitResponse = checkRateLimit(req);
   if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<NasaImagesResponse>;
 
-  const { searchParams } = req.nextUrl;
-  const name = searchParams.get('name')?.trim();
-  const lat = parseFloat(searchParams.get('lat') ?? '');
-  const lon = parseFloat(searchParams.get('lon') ?? '');
-
-  // Direct user search — single query, skip multi-search strategy
-  const q = searchParams.get('q')?.trim();
-  if (q) {
-    const items = await searchImages({ q });
-    const images = deduplicateSequences(normalizeItems(items));
-    return NextResponse.json(
-      { images, limitedCoverage: images.length < SPARSE_THRESHOLD },
-      { headers: { 'Cache-Control': CACHE_CONTROL_1H } }
-    );
-  }
-
-  if (!name || isNaN(lat) || isNaN(lon)) {
+  const q = req.nextUrl.searchParams.get('q')?.trim();
+  if (!q) {
     return NextResponse.json(
       { images: [], limitedCoverage: true },
       { status: 400 }
     );
   }
 
-  // Three parallel searches in priority order:
-  // 1. location= — images NASA tagged as being from this place (most specific)
-  // 2. q=         — free-text name match across all metadata
-  // 3. q=         — regional fallback for sparse locations
-  const regionQuery = buildRegionQuery(lat, lon);
-  const [locationItems, primaryItems, fallbackItems] = await Promise.all([
-    searchImages({ location: name }),
-    searchImages({ q: `${name} moon lunar` }),
-    searchImages({ q: regionQuery }),
-  ]);
-
-  const merged = deduplicateSequences(
-    mergeUnique([
-      normalizeItems(locationItems),
-      normalizeItems(primaryItems),
-      normalizeItems(fallbackItems),
-    ])
-  );
-
+  const images = deduplicateSequences(normalizeItems(await searchImages(q)));
   return NextResponse.json(
-    { images: merged, limitedCoverage: merged.length < SPARSE_THRESHOLD },
+    { images, limitedCoverage: images.length < SPARSE_THRESHOLD },
     { headers: { 'Cache-Control': CACHE_CONTROL_1H } }
   );
 }

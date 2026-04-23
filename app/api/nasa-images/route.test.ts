@@ -23,143 +23,87 @@ function makeRequest(params: Record<string, string>) {
   return new NextRequest(url);
 }
 
-const VALID_PARAMS = { name: 'Tycho', lat: '-43', lon: '-11' };
-
 describe('GET /api/nasa-images', () => {
   beforeEach(() => vi.restoreAllMocks());
 
   describe('parameter validation', () => {
-    it('returns 400 when name is missing', async () => {
-      const res = await GET(makeRequest({ lat: '0', lon: '0' }));
+    it('returns 400 when q is missing', async () => {
+      const res = await GET(makeRequest({}));
       expect(res.status).toBe(400);
       expect(await res.json()).toEqual({ images: [], limitedCoverage: true });
     });
 
-    it('returns 400 when lat is missing', async () => {
-      const res = await GET(makeRequest({ name: 'Tycho', lon: '0' }));
-      expect(res.status).toBe(400);
-    });
-
-    it('returns 400 when lon is missing', async () => {
-      const res = await GET(makeRequest({ name: 'Tycho', lat: '0' }));
-      expect(res.status).toBe(400);
-    });
-
-    it('returns 400 when lat is not a number', async () => {
-      const res = await GET(makeRequest({ name: 'Tycho', lat: 'bad', lon: '0' }));
+    it('returns 400 when q is whitespace only', async () => {
+      const res = await GET(makeRequest({ q: '   ' }));
       expect(res.status).toBe(400);
     });
   });
 
-  describe('merging and deduplication', () => {
-    it('merges name and region results', async () => {
-      vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce(nasaResponse([mockItem('name-001', '2024-02-01T00:00:00Z')]))
-        .mockResolvedValueOnce(nasaResponse([mockItem('region-001', '2023-06-01T00:00:00Z')]))
-      );
+  describe('deduplication', () => {
+    it('deduplicates Apollo sequential frames, keeping the first in a roll', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+        nasaResponse([
+          mockItem('as11-40-5931', '2024-01-01T00:00:00Z'),
+          mockItem('as11-40-5932', '2024-01-01T00:00:00Z'),
+          mockItem('as11-40-5933', '2024-01-01T00:00:00Z'),
+        ])
+      ));
 
-      const body = await GET(makeRequest(VALID_PARAMS)).then((r) => r.json());
-      const ids = body.images.map((img: { assetId: string }) => img.assetId);
-      expect(ids).toContain('name-001');
-      expect(ids).toContain('region-001');
+      const body = await GET(makeRequest({ q: 'Apollo 11' })).then((r) => r.json());
+      expect(body.images).toHaveLength(1);
+      expect(body.images[0].assetId).toBe('as11-40-5931');
     });
 
-    it('deduplicates images that appear in both results', async () => {
-      const shared = mockItem('shared-001', '2024-01-01T00:00:00Z');
-      vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce(nasaResponse([shared, mockItem('name-only', '2024-02-01T00:00:00Z')]))
-        .mockResolvedValueOnce(nasaResponse([shared, mockItem('region-only', '2023-06-01T00:00:00Z')]))
-      );
+    it('keeps non-Apollo images unaffected', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+        nasaResponse([
+          mockItem('lroc-001', '2024-01-01T00:00:00Z'),
+          mockItem('lroc-002', '2023-06-01T00:00:00Z'),
+        ])
+      ));
 
-      const body = await GET(makeRequest(VALID_PARAMS)).then((r) => r.json());
-      const ids = body.images.map((img: { assetId: string }) => img.assetId);
-      expect(ids.filter((id: string) => id === 'shared-001')).toHaveLength(1);
-      expect(ids).toHaveLength(3);
-    });
-
-    it('front-loads location-tagged results ahead of other results', async () => {
-      vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce(nasaResponse([mockItem('location-old', '2020-01-01T00:00:00Z')])) // location=
-        .mockResolvedValueOnce(nasaResponse([mockItem('primary-new', '2024-01-01T00:00:00Z')])) // q= primary
-        .mockResolvedValueOnce(nasaResponse([]))                                                  // q= fallback
-      );
-
-      const body = await GET(makeRequest(VALID_PARAMS)).then((r) => r.json());
-      expect(body.images[0].assetId).toBe('location-old');
-      expect(body.images[1].assetId).toBe('primary-new');
+      const body = await GET(makeRequest({ q: 'Tycho' })).then((r) => r.json());
+      expect(body.images).toHaveLength(2);
     });
   });
 
   describe('limitedCoverage flag', () => {
-    it('returns 200 with empty images and limitedCoverage: true when both searches return nothing', async () => {
+    it('returns 200 with empty images and limitedCoverage: true when search returns nothing', async () => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue(nasaResponse([])));
-      const res = await GET(makeRequest(VALID_PARAMS));
+      const res = await GET(makeRequest({ q: 'Tycho' }));
       expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body).toEqual({ images: [], limitedCoverage: true });
+      expect(await res.json()).toEqual({ images: [], limitedCoverage: true });
     });
 
-    it('is false when 2 or more total results', async () => {
-      vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce(nasaResponse([mockItem('a', '2024-01-01T00:00:00Z'), mockItem('b', '2023-01-01T00:00:00Z')]))
-        .mockResolvedValueOnce(nasaResponse([]))
-      );
+    it('is false when 2 or more results', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+        nasaResponse([mockItem('a', '2024-01-01T00:00:00Z'), mockItem('b', '2023-01-01T00:00:00Z')])
+      ));
 
-      const body = await GET(makeRequest(VALID_PARAMS)).then((r) => r.json());
+      const body = await GET(makeRequest({ q: 'Tycho' })).then((r) => r.json());
       expect(body.limitedCoverage).toBe(false);
     });
 
-    it('is true when fewer than 2 total results', async () => {
-      const item = mockItem('only-one', '2024-01-01T00:00:00Z');
-      vi.stubGlobal('fetch', vi.fn()
-        .mockResolvedValueOnce(nasaResponse([item]))
-        .mockResolvedValueOnce(nasaResponse([item]))
-      );
+    it('is true when fewer than 2 results', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+        nasaResponse([mockItem('only-one', '2024-01-01T00:00:00Z')])
+      ));
 
-      const body = await GET(makeRequest({ name: 'Shackleton', lat: '-89.9', lon: '0' })).then((r) => r.json());
+      const body = await GET(makeRequest({ q: 'Shackleton' })).then((r) => r.json());
       expect(body.limitedCoverage).toBe(true);
-    });
-  });
-
-  describe('region query selection', () => {
-    async function captureQueries(params: Record<string, string>) {
-      const fetchMock = vi.fn().mockResolvedValue(nasaResponse([]));
-      vi.stubGlobal('fetch', fetchMock);
-      await GET(makeRequest(params));
-      return fetchMock.mock.calls.map((c) => new URL(String(c[0])).searchParams.get('q') ?? '');
-    }
-
-    it('uses south-pole query for lat < -60', async () => {
-      const urls = await captureQueries({ name: 'Shackleton', lat: '-89.9', lon: '0' });
-      expect(urls.some((u) => u.includes('moon south pole lunar surface'))).toBe(true);
-    });
-
-    it('uses north-pole query for lat > 60', async () => {
-      const urls = await captureQueries({ name: 'SomeNorthCrater', lat: '75', lon: '0' });
-      expect(urls.some((u) => u.includes('moon north pole lunar surface'))).toBe(true);
-    });
-
-    it('uses far-side query for |lon| > 90', async () => {
-      const urls = await captureQueries({ name: 'Integrity', lat: '2.66', lon: '-104.92' });
-      expect(urls.some((u) => u.includes('moon far side surface'))).toBe(true);
-    });
-
-    it('uses generic lunar query for near-side mid-latitude locations', async () => {
-      const urls = await captureQueries(VALID_PARAMS);
-      expect(urls.some((u) => u.includes('moon lunar surface'))).toBe(true);
     });
   });
 
   describe('error handling', () => {
     it('returns empty images when fetch throws', async () => {
       vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
-      const body = await GET(makeRequest(VALID_PARAMS)).then((r) => r.json());
+      const body = await GET(makeRequest({ q: 'Tycho' })).then((r) => r.json());
       expect(body.images).toEqual([]);
     });
 
     it('returns empty images when API responds with non-ok status', async () => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
-      const body = await GET(makeRequest(VALID_PARAMS)).then((r) => r.json());
+      const body = await GET(makeRequest({ q: 'Tycho' })).then((r) => r.json());
       expect(body.images).toEqual([]);
     });
   });
@@ -167,7 +111,7 @@ describe('GET /api/nasa-images', () => {
   describe('response headers', () => {
     it('sets Cache-Control on success', async () => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue(nasaResponse([mockItem('img-001', '2024-01-01T00:00:00Z')])));
-      const res = await GET(makeRequest(VALID_PARAMS));
+      const res = await GET(makeRequest({ q: 'Tycho' }));
       expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=3600, stale-while-revalidate=86400');
     });
   });

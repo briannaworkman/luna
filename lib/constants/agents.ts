@@ -15,7 +15,6 @@ export interface Agent {
   /**
    * true  — returns placeholder on Screen 3; orchestrator may not activate it.
    * false — fully implemented in V1.
-   * Data flag. Does not affect idle visual rendering.
    */
   isStub: boolean
 }

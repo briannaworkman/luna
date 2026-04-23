@@ -8,8 +8,8 @@ import { AgentRail } from '@/components/agent-rail/AgentRail'
 export default function AgentRailPreview() {
   if (process.env.NODE_ENV === 'production') notFound()
   return (
-    <div className="min-h-screen bg-luna-base flex items-start gap-0 p-12">
-      <div className="border-r border-luna-hairline h-screen pr-0">
+    <div className="min-h-screen bg-luna-base flex items-start p-12">
+      <div className="border-r border-luna-hairline h-screen">
         <AgentRail />
       </div>
       <div className="flex-1 p-8">

@@ -1,22 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import type { OrchestratorEvent } from '@/lib/types/agent'
+import type { OrchestratorEvent, DataContext } from '@/lib/types/agent'
 
 vi.mock('@/lib/middleware/rate-limit', () => ({
   rateLimit: () => () => null,
 }))
 
 vi.mock('@/lib/orchestrator/run', () => ({
-  runOrchestrator: vi.fn().mockResolvedValue({
-    agents: ['data-ingest', 'mineralogy'],
-    rationale: 'test rationale',
-  }),
+  runOrchestrator: vi.fn(),
 }))
 
 import { runOrchestrator } from '@/lib/orchestrator/run'
 import { POST } from './route'
 
 const mockRunOrchestrator = vi.mocked(runOrchestrator)
+
+const fakeDataContext: DataContext = {
+  location: {
+    name: 'Tycho',
+    lat: -43,
+    lon: -11,
+    diameterKm: 85,
+    significanceNote: 'Most prominent young crater',
+    isProposed: false,
+  },
+  nasaImages: [],
+  lrocProducts: [],
+  jscSamples: [],
+  illuminationWindows: [],
+}
 
 function makeRequest(body: unknown) {
   return new NextRequest('http://localhost/api/orchestrate', {
@@ -31,6 +43,7 @@ beforeEach(() => {
   mockRunOrchestrator.mockResolvedValue({
     agents: ['data-ingest', 'mineralogy'],
     rationale: 'test rationale',
+    dataContext: fakeDataContext,
   })
 })
 

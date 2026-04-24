@@ -1,16 +1,38 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { LunarLocation } from '@/components/globe/types'
+import type { DataContext } from '@/lib/types/agent'
 
 vi.mock('@/lib/anthropic', () => ({
   CLAUDE_MODEL: 'claude-opus-4-7',
   getAnthropic: vi.fn(),
 }))
 
+vi.mock('./data-ingest', () => ({
+  runDataIngest: vi.fn(),
+}))
+
 import { getAnthropic } from '@/lib/anthropic'
 import { runOrchestrator } from './run'
 import type { OrchestratorEvent } from '@/lib/types/agent'
+import { runDataIngest } from './data-ingest'
 
 const mockGetAnthropic = vi.mocked(getAnthropic)
+const mockRunDataIngest = vi.mocked(runDataIngest)
+
+const fakeDataContext: DataContext = {
+  location: {
+    name: 'Tycho',
+    lat: -43,
+    lon: -11,
+    diameterKm: 85,
+    significanceNote: 'Most prominent young crater',
+    isProposed: false,
+  },
+  nasaImages: [],
+  lrocProducts: [],
+  jscSamples: [],
+  illuminationWindows: [],
+}
 
 type StreamChunk = {
   type: 'content_block_delta'
@@ -53,6 +75,11 @@ function makeMockClient(chunks: AsyncIterable<StreamChunk>) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockRunDataIngest.mockImplementation(async ({ emit }) => {
+    emit({ type: 'agent-activate', agent: 'data-ingest' })
+    emit({ type: 'agent-complete', agent: 'data-ingest' })
+    return fakeDataContext
+  })
 })
 
 describe('runOrchestrator', () => {
@@ -226,5 +253,61 @@ describe('runOrchestrator', () => {
     })
 
     expect(result.agents).toEqual(['data-ingest', 'mineralogy'])
+  })
+
+  it('integration: full event order — orchestrator-chunk*, orchestrator, agent-activate(data-ingest), agent-complete(data-ingest), agent-activate(specialist)*, agent-complete(specialist)*, done; data-ingest activate appears exactly once', async () => {
+    const rationale = 'Activating mineralogy for this query. '
+    const agentsJson = '["data-ingest","mineralogy","orbit"]'
+
+    mockGetAnthropic.mockReturnValue(
+      makeMockClient(makeStream(rationale, '---AGENTS---\n', agentsJson)) as unknown as ReturnType<typeof getAnthropic>
+    )
+
+    const events: OrchestratorEvent[] = []
+    const result = await runOrchestrator({
+      query: 'What minerals are here?',
+      location: testLocation,
+      hasImages: false,
+      emit: (e) => events.push(e),
+    })
+
+    const types = events.map((e) => e.type)
+
+    const orchestratorChunkIdx = types.findIndex((t) => t === 'orchestrator-chunk')
+    const orchestratorIdx = types.findIndex((t) => t === 'orchestrator')
+    const doneIdx = types.lastIndexOf('done')
+
+    expect(orchestratorChunkIdx).toBeGreaterThanOrEqual(0)
+    expect(orchestratorIdx).toBeGreaterThan(orchestratorChunkIdx)
+
+    const dataIngestActivateEvents = events.filter(
+      (e) => e.type === 'agent-activate' && (e as { type: 'agent-activate'; agent: string }).agent === 'data-ingest'
+    )
+    expect(dataIngestActivateEvents).toHaveLength(1)
+
+    const dataIngestActivateIdx = events.findIndex(
+      (e) => e.type === 'agent-activate' && (e as { type: 'agent-activate'; agent: string }).agent === 'data-ingest'
+    )
+    const dataIngestCompleteIdx = events.findIndex(
+      (e) => e.type === 'agent-complete' && (e as { type: 'agent-complete'; agent: string }).agent === 'data-ingest'
+    )
+
+    expect(dataIngestActivateIdx).toBeGreaterThan(orchestratorIdx)
+    expect(dataIngestCompleteIdx).toBeGreaterThan(dataIngestActivateIdx)
+
+    const specialistActivateEvents = events.filter(
+      (e) => e.type === 'agent-activate' && (e as { type: 'agent-activate'; agent: string }).agent !== 'data-ingest'
+    )
+    const specialistCompleteEvents = events.filter(
+      (e) => e.type === 'agent-complete' && (e as { type: 'agent-complete'; agent: string }).agent !== 'data-ingest'
+    )
+
+    expect(specialistActivateEvents).toHaveLength(2)
+    expect(specialistCompleteEvents).toHaveLength(2)
+
+    expect(doneIdx).toBe(types.length - 1)
+
+    expect(result.dataContext).toEqual(fakeDataContext)
+    expect(result.agents).toEqual(['data-ingest', 'mineralogy', 'orbit'])
   })
 })

@@ -1,9 +1,10 @@
 import type { LunarLocation } from '@/components/globe/types'
-import type { OrchestratorEvent } from '@/lib/types/agent'
+import type { OrchestratorEvent, DataContext } from '@/lib/types/agent'
 import type { AgentId } from '@/lib/constants/agents'
 import { AGENTS } from '@/lib/constants/agents'
 import { getAnthropic, CLAUDE_MODEL } from '@/lib/anthropic'
 import { buildOrchestratorPrompt } from './prompt'
+import { runDataIngest } from './data-ingest'
 
 interface RunOrchestratorInput {
   query: string
@@ -15,6 +16,7 @@ interface RunOrchestratorInput {
 interface RunOrchestratorResult {
   agents: AgentId[]
   rationale: string
+  dataContext: DataContext
 }
 
 const VALID_AGENT_IDS = new Set<string>(AGENTS.map((a) => a.id))
@@ -104,16 +106,21 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
 
   await new Promise<void>((resolve) => setTimeout(resolve, 400))
 
+  const dataContext = await runDataIngest({ location, emit })
+
+  // Activate specialists (skip data-ingest — runDataIngest owns its events)
   for (const agentId of agents) {
+    if (agentId === 'data-ingest') continue
     emit({ type: 'agent-activate', agent: agentId })
   }
 
-  // TODO(PR-3): replace with real specialist dispatch
+  // TODO(PR-5+): invoke real specialist agents with dataContext
   for (const agentId of agents) {
+    if (agentId === 'data-ingest') continue
     emit({ type: 'agent-complete', agent: agentId })
   }
 
   emit({ type: 'done' })
 
-  return { agents, rationale }
+  return { agents, rationale, dataContext }
 }

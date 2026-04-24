@@ -52,17 +52,23 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
     if (!delimiterSeen) {
       const delimIdx = rawBuffer.indexOf(DELIMITER)
       if (delimIdx === -1) {
-        emit({ type: 'orchestrator-chunk', text: chunk })
-        rationaleBuffer += chunk
-        rationaleEmitted = rationaleBuffer.length
+        // Hold back the last (DELIMITER.length - 1) chars in case they are
+        // the start of a split delimiter arriving across chunks.
+        const safeEnd = Math.max(rationaleEmitted, rawBuffer.length - (DELIMITER.length - 1))
+        if (safeEnd > rationaleEmitted) {
+          emit({ type: 'orchestrator-chunk', text: rawBuffer.slice(rationaleEmitted, safeEnd) })
+          rationaleBuffer = rawBuffer.slice(0, safeEnd)
+          rationaleEmitted = safeEnd
+        }
       } else {
         delimiterSeen = true
         const fullRationale = rawBuffer.slice(0, delimIdx)
         const newRationaleText = fullRationale.slice(rationaleEmitted)
         if (newRationaleText.length > 0) {
           emit({ type: 'orchestrator-chunk', text: newRationaleText })
-          rationaleBuffer = fullRationale
         }
+        rationaleBuffer = fullRationale
+        rationaleEmitted = fullRationale.length
         const afterDelimiter = rawBuffer.slice(delimIdx + DELIMITER.length)
         agentJsonBuffer += afterDelimiter
       }
@@ -89,12 +95,7 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
     throw new Error('Orchestrator returned unparseable agent list')
   }
 
-  const validatedIds = parsed.filter(isAgentId)
-  if (validatedIds.length !== parsed.length) {
-    throw new Error('Orchestrator returned unparseable agent list')
-  }
-
-  let agents: AgentId[] = validatedIds
+  let agents: AgentId[] = parsed.filter(isAgentId)
 
   if (!agents.includes('data-ingest')) {
     agents = ['data-ingest', ...agents]

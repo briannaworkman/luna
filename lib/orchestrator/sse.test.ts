@@ -90,7 +90,7 @@ describe('createSseResponse', () => {
 
     const text = await readAllChunks(response)
     expect(text).toContain('"type":"agent-error"')
-    expect(text).toContain('Request timed out after 120 seconds')
+    expect(text).toContain('Request timed out after 0 seconds')
     expect(text).toContain('"type":"done"')
   }, 500)
 

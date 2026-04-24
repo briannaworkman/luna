@@ -41,7 +41,11 @@ export function createSseResponse(
 
       const timeoutPromise = new Promise<void>((resolve) => {
         timeoutId = setTimeout(() => {
-          emitter.emit({ type: 'agent-error', agent: 'data-ingest', message: 'Request timed out after 120 seconds' })
+          emitter.emit({
+            type: 'agent-error',
+            agent: 'data-ingest',
+            message: `Request timed out after ${Math.round(timeoutMs / 1000)} seconds`,
+          })
           emitter.emit({ type: 'done' })
           emitter.close()
           resolve()

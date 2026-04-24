@@ -188,8 +188,43 @@ describe('runOrchestrator', () => {
     const chunkEvents = events.filter((e) => e.type === 'orchestrator-chunk')
     expect(chunkEvents.length).toBeGreaterThanOrEqual(2)
 
-    const texts = chunkEvents.map((e) => (e as { type: 'orchestrator-chunk'; text: string }).text)
-    expect(texts[0]).toBe(chunk1)
-    expect(texts[1]).toBe(chunk2)
+    const combined = chunkEvents.map((e) => (e as { type: 'orchestrator-chunk'; text: string }).text).join('')
+    expect(combined).toBe(chunk1 + chunk2)
+  })
+
+  it('never leaks partial delimiter text into emitted rationale when delimiter splits across chunks', async () => {
+    const rationale = 'Some rationale text '
+    mockGetAnthropic.mockReturnValue(
+      makeMockClient(makeStream(rationale + '---AG', 'ENTS---\n["data-ingest","orbit"]')) as unknown as ReturnType<typeof getAnthropic>
+    )
+
+    const events: OrchestratorEvent[] = []
+    const result = await runOrchestrator({
+      query: 'test',
+      location: testLocation,
+      hasImages: false,
+      emit: (e) => events.push(e),
+    })
+
+    const chunkEvents = events.filter((e) => e.type === 'orchestrator-chunk')
+    const combined = chunkEvents.map((e) => (e as { type: 'orchestrator-chunk'; text: string }).text).join('')
+    expect(combined).toBe(rationale)
+    expect(combined).not.toContain('---')
+    expect(result.agents).toEqual(['data-ingest', 'orbit'])
+  })
+
+  it('silently filters unknown agent IDs instead of throwing', async () => {
+    mockGetAnthropic.mockReturnValue(
+      makeMockClient(makeStream('rationale ', '---AGENTS---\n', '["data-ingest","mineralogy","hallucinated-agent"]')) as unknown as ReturnType<typeof getAnthropic>
+    )
+
+    const result = await runOrchestrator({
+      query: 'test',
+      location: testLocation,
+      hasImages: false,
+      emit: () => {},
+    })
+
+    expect(result.agents).toEqual(['data-ingest', 'mineralogy'])
   })
 })

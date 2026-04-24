@@ -116,29 +116,21 @@ describe('POST /api/orchestrate', () => {
     })
 
     it('passes hasImages:false when imageAssetIds is empty', async () => {
-      await POST(makeRequest({ query: 'test query', locationId: 'tycho', imageAssetIds: [] }))
-
-      await new Promise((resolve) => setTimeout(resolve, 50))
-
-      if (mockRunOrchestrator.mock.calls.length > 0) {
-        const call = mockRunOrchestrator.mock.calls[0]
-        if (call) {
-          expect(call[0].hasImages).toBe(false)
-        }
+      const res = await POST(makeRequest({ query: 'test query', locationId: 'tycho', imageAssetIds: [] }))
+      if (res.body) {
+        const reader = res.body.getReader()
+        while (!(await reader.read()).done) { /* drain */ }
       }
+      expect(mockRunOrchestrator).toHaveBeenCalledWith(expect.objectContaining({ hasImages: false }))
     })
 
     it('passes hasImages:true when imageAssetIds is non-empty', async () => {
-      await POST(makeRequest({ query: 'test query', locationId: 'tycho', imageAssetIds: ['img-001'] }))
-
-      await new Promise((resolve) => setTimeout(resolve, 50))
-
-      if (mockRunOrchestrator.mock.calls.length > 0) {
-        const call = mockRunOrchestrator.mock.calls[0]
-        if (call) {
-          expect(call[0].hasImages).toBe(true)
-        }
+      const res = await POST(makeRequest({ query: 'test query', locationId: 'tycho', imageAssetIds: ['img-001'] }))
+      if (res.body) {
+        const reader = res.body.getReader()
+        while (!(await reader.read()).done) { /* drain */ }
       }
+      expect(mockRunOrchestrator).toHaveBeenCalledWith(expect.objectContaining({ hasImages: true }))
     })
   })
 })

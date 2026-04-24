@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { DataContext, OrchestratorEvent } from '@/lib/types/agent'
+
+vi.mock('./agents/mineralogy', () => ({ runMineralogyAgent: vi.fn() }))
+
 import { runSpecialist } from './specialists'
+import { runMineralogyAgent } from './agents/mineralogy'
+
+const mockRunMineralogyAgent = vi.mocked(runMineralogyAgent)
 
 const fakeDataContext: DataContext = {
   location: {
@@ -58,9 +64,11 @@ describe('runSpecialist', () => {
     }
   })
 
-  it('routes mineralogy (real, TODO) — emits nothing', async () => {
+  it('routes mineralogy — delegates to runMineralogyAgent', async () => {
+    mockRunMineralogyAgent.mockResolvedValue(undefined)
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
     await runSpecialist('mineralogy', fakeDataContext, emit)
+    expect(mockRunMineralogyAgent).toHaveBeenCalledWith({ dataContext: fakeDataContext, emit })
     expect(emit).not.toHaveBeenCalled()
   })
 

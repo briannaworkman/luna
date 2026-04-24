@@ -54,6 +54,12 @@ export interface AgentConfidenceEvent {
   claimId?: string
 }
 
+export interface AgentStatusEvent {
+  type: 'agent-status'
+  agent: AgentId
+  text: string
+}
+
 export interface AgentCompleteEvent {
   type: 'agent-complete'
   agent: AgentId
@@ -73,6 +79,7 @@ export type OrchestratorEvent =
   | OrchestratorActivateEvent
   | OrchestratorChunkEvent
   | AgentActivateEvent
+  | AgentStatusEvent
   | AgentChunkEvent
   | AgentCitationEvent
   | AgentConfidenceEvent

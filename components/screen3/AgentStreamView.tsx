@@ -91,8 +91,13 @@ export function AgentStreamView({
             </div>
           )}
 
-          {/* Orchestrator block */}
-          <OrchestratorBlock text={state.preflight} isDone={state.isDone} />
+          {/* Orchestrator block — hide entirely when a stream error killed the
+              session before any rationale or activation decision arrived, so
+              the UI doesn't show a ghost "Deciding which agents to activate…"
+              placeholder underneath the error banner. */}
+          {!(state.streamError && state.preflight === '' && state.activatedAgents.length === 0) && (
+            <OrchestratorBlock text={state.preflight} isDone={state.isDone} />
+          )}
 
           {/* Per-agent blocks (exclude data-ingest) */}
           {state.activatedAgents
@@ -102,9 +107,8 @@ export function AgentStreamView({
               const label = agentMeta?.label ?? agentId
               const agentState = state.agentStates[agentId] ?? {
                 status: 'active' as const,
-                text: '',
+                body: [],
                 citations: [],
-                confidence: [],
               }
               return (
                 <AgentBlock

@@ -113,14 +113,16 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
 
   const specialistContext: SpecialistContext = { dataContext, imageAssetIds }
 
-  // Activate specialists (skip data-ingest — runDataIngest owns its events)
-  // TODO(PR-6+): consider parallel dispatch once real specialists run long enough to matter
-  for (const agentId of agents) {
-    if (agentId === 'data-ingest') continue
-    emit({ type: 'agent-activate', agent: agentId })
-    await runSpecialist(agentId, specialistContext, emit)
-    emit({ type: 'agent-complete', agent: agentId })
-  }
+  // Activate specialists in parallel (skip data-ingest — runDataIngest owns its events)
+  await Promise.all(
+    agents
+      .filter((agentId) => agentId !== 'data-ingest')
+      .map(async (agentId) => {
+        emit({ type: 'agent-activate', agent: agentId })
+        await runSpecialist(agentId, specialistContext, emit)
+        emit({ type: 'agent-complete', agent: agentId })
+      }),
+  )
 
   emit({ type: 'done' })
 

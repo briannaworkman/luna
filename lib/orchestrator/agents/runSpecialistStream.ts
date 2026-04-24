@@ -6,8 +6,9 @@ import { parseInlineTags, type CitationSource } from './parseInlineTags'
 /**
  * Shared stream consumer for prose-generating specialists (mineralogy,
  * mission-history, orbit). Opens a Claude messages stream, forwards
- * parsed text and inline [CITE:]/[CONFIDENCE:] tags as OrchestratorEvents,
- * and surfaces stream failures as agent-error rather than throwing.
+ * parsed text and inline [CITE:]/[CONFIDENCE:] tags as OrchestratorEvents
+ * in stream order, and surfaces stream failures as agent-error rather
+ * than throwing.
  *
  * Imagery (PR 9) is expected to have a different shape (sequential
  * per-image blocks + synthesis) and is not a target of this helper.
@@ -37,25 +38,23 @@ export async function runSpecialistStream(opts: {
       if (ev.type !== 'content_block_delta') continue
       if (ev.delta.type !== 'text_delta') continue
 
-      const { parsed, carry: newCarry } = parseInlineTags(ev.delta.text, carry, {
+      const { segments, carry: newCarry } = parseInlineTags(ev.delta.text, carry, {
         citationSource,
       })
       carry = newCarry
 
-      if (parsed.text.length > 0) {
-        emit({ type: 'agent-chunk', agent, text: parsed.text })
-      }
-      for (const c of parsed.citations) {
-        emit({ type: 'agent-citation', agent, source: c.source, id: c.id })
-      }
-      if (forwardConfidence) {
-        for (const c of parsed.confidences) {
-          emit({ type: 'agent-confidence', agent, level: c.level })
+      for (const seg of segments) {
+        if (seg.kind === 'text') {
+          emit({ type: 'agent-chunk', agent, text: seg.text })
+        } else if (seg.kind === 'citation') {
+          emit({ type: 'agent-citation', agent, source: seg.source, id: seg.id })
+        } else if (seg.kind === 'confidence' && forwardConfidence) {
+          emit({ type: 'agent-confidence', agent, level: seg.level })
         }
+        // When forwardConfidence is false, any [CONFIDENCE:] tags the model
+        // emits despite the system prompt instruction are still stripped
+        // from segments by parseInlineTags — we simply drop them here.
       }
-      // When forwardConfidence is false, any [CONFIDENCE:] tags the model
-      // emits despite the system prompt instruction are still stripped
-      // from text by parseInlineTags — we simply drop the parsed events.
     }
 
     // Flush any trailing carry (prose tail with no closing tag)

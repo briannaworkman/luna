@@ -25,19 +25,20 @@ async function consumeStreamWithTagParsing(
     if (ev.type !== 'content_block_delta') continue
     if (ev.delta.type !== 'text_delta') continue
 
-    const { parsed, carry: newCarry } = parseInlineTags(ev.delta.text, carry, {
+    const { segments, carry: newCarry } = parseInlineTags(ev.delta.text, carry, {
       citationSource: 'nasa-image',
     })
     carry = newCarry
 
-    if (parsed.text.length > 0) {
-      emit({ type: 'agent-chunk', agent: 'imagery', text: parsed.text })
+    for (const seg of segments) {
+      if (seg.kind === 'text') {
+        emit({ type: 'agent-chunk', agent: 'imagery', text: seg.text })
+      } else if (seg.kind === 'citation') {
+        emit({ type: 'agent-citation', agent: 'imagery', source: seg.source, id: seg.id })
+      }
+      // Confidence segments are stripped by parseInlineTags and never
+      // forwarded from the imagery agent.
     }
-    for (const c of parsed.citations) {
-      emit({ type: 'agent-citation', agent: 'imagery', source: c.source, id: c.id })
-    }
-    // Confidence tags are stripped by parseInlineTags but never forwarded
-    // from the imagery agent.
   }
 
   // Flush trailing carry

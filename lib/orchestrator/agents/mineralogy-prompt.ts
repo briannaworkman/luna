@@ -62,8 +62,6 @@ export function buildMineralogyPrompt(input: {
 }): { system: string; user: string } {
   const { location, jscSamples } = input.dataContext
   const nearest = findNearestStation(location.lat, location.lon)
-  const hasStation = nearest !== null && nearest.distanceKm <= MAX_JSC_DISTANCE_KM
-  const hasSamples = jscSamples !== null && jscSamples.length > 0
 
   let user = `LOCATION
 Name: ${location.name}${location.isProposed ? ' (proposed name, pending IAU approval)' : ''}
@@ -74,17 +72,19 @@ Significance: ${location.significanceNote}
 NEAREST APOLLO STATION
 `
 
-  if (hasStation && nearest) {
+  if (nearest !== null && nearest.distanceKm <= MAX_JSC_DISTANCE_KM) {
     user += `Mission: ${nearest.mission}
 Station: ${nearest.station}
 Distance from this location: ${Math.round(nearest.distanceKm)} km
 
 `
-  } else if (nearest) {
+  } else if (nearest !== null) {
     user += `No Apollo station within ${MAX_JSC_DISTANCE_KM} km — sample data is unavailable. Closest station on record: Apollo ${nearest.mission}, station ${nearest.station}, approximately ${Math.round(nearest.distanceKm)} km away. Proceed with general regional geological knowledge.
 
 `
   } else {
+    // Unreachable with current hardcoded APOLLO_STATIONS (non-empty),
+    // but kept as a defensive fallback if the data set ever becomes empty.
     user += `No Apollo station data available. Proceed with general regional geological knowledge.
 
 `
@@ -92,7 +92,7 @@ Distance from this location: ${Math.round(nearest.distanceKm)} km
 
   user += `APOLLO SAMPLES (top 10 from JSC database for nearest station)
 `
-  if (hasSamples && jscSamples) {
+  if (jscSamples !== null && jscSamples.length > 0) {
     const compact = jscSamples.map((s) => ({
       id: s.sampleId,
       mission: s.mission,

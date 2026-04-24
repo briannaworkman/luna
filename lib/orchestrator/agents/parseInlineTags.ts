@@ -44,7 +44,9 @@ export function parseInlineTags(
     .replace(/\[CITE:\s*[^\]]*\]/g, '')
     .replace(/\[CONFIDENCE:\s*[^\]]*\]/gi, '')
 
-  // Carry detection: find the last '[' with no closing ']' after it
+  // Carry detection: find the last '[' with no closing ']' after it.
+  // Scan cleanText (post-strip) so already-stripped tags don't shadow a
+  // genuinely dangling bracket further right in the buffer.
   const lastOpen = cleanText.lastIndexOf('[')
   let carry = ''
   if (lastOpen !== -1 && !cleanText.includes(']', lastOpen)) {

@@ -13,7 +13,7 @@ function StatusGlyph({ status }: { status: SingleAgentState['status'] }) {
     return (
       <span className="relative inline-flex items-center justify-center w-4 h-4" aria-hidden="true">
         <span
-          className="absolute inset-0 rounded-full bg-luna-cyan animate-[luna-pulse_2.4s_infinite_cubic-bezier(0.16,1,0.3,1)]"
+          className="absolute inset-0 rounded-full bg-luna-cyan animate-luna-pulse"
         />
         <span className="relative font-mono text-[14px] text-luna-cyan leading-none">◉</span>
       </span>

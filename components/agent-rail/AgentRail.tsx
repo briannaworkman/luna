@@ -40,7 +40,7 @@ function AgentRow({
       <span className="shrink-0 w-2.5 text-center font-mono text-[14px] leading-none select-none">
         {isActive && (
           <span className="relative inline-flex items-center justify-center w-3.5 h-3.5" aria-hidden="true">
-            <span className="absolute inset-0 rounded-full bg-luna-cyan animate-[luna-pulse_2.4s_infinite_cubic-bezier(0.16,1,0.3,1)]" />
+            <span className="absolute inset-0 rounded-full bg-luna-cyan animate-luna-pulse" />
             <span className="relative text-luna-cyan">◉</span>
           </span>
         )}

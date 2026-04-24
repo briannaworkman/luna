@@ -6,7 +6,7 @@ import type { OrchestratorEvent } from '@/lib/types/agent'
 import { parseSseStream } from './parseSseStream'
 
 export interface SingleAgentState {
-  status: 'idle' | 'active' | 'complete' | 'error'
+  status: 'active' | 'complete' | 'error'
   text: string
   citations: Array<{ source: 'nasa-image' | 'jsc-sample' | 'lroc' | 'svs'; id: string }>
   confidence: Array<{ level: 'high' | 'medium' | 'low'; claimId?: string }>
@@ -187,8 +187,9 @@ export function useAgentStream(input: {
             message = String((body as Record<string, unknown>)['error'])
           }
         } catch {
-          // ignore
+          // ignore — parsing the error body is best-effort
         }
+        if (controller.signal.aborted) return
         dispatch({ kind: 'stream-error', message })
         return
       }

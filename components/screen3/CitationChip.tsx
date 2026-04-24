@@ -1,26 +1,13 @@
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { resolveUrl } from '@/lib/citations/resolveUrl'
+import { INSTRUMENT_LABELS, SOURCE_DESCRIPTIONS } from '@/lib/citations/labels'
 import type { CitationSource } from '@/lib/orchestrator/agents/parseInlineTags'
 
 interface CitationChipProps {
   source: CitationSource
   id: string
   className?: string
-}
-
-export const INSTRUMENT_LABELS: Record<CitationChipProps['source'], string> = {
-  'nasa-image': 'NASA',
-  'jsc-sample': 'JSC',
-  'lroc': 'LROC',
-  'svs': 'SVS',
-}
-
-const SOURCE_DESCRIPTIONS: Record<CitationChipProps['source'], string> = {
-  'nasa-image': 'NASA Image & Video Library asset',
-  'jsc-sample': 'Apollo sample from the JSC Lunar Sample Database',
-  'lroc': 'Lunar Reconnaissance Orbiter Camera product',
-  'svs': 'NASA Scientific Visualization Studio dataset',
 }
 
 export function CitationChip({ source, id, className }: CitationChipProps) {

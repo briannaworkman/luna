@@ -1,5 +1,5 @@
 import { ExternalLink } from 'lucide-react'
-import { INSTRUMENT_LABELS } from '@/components/screen3/CitationChip'
+import { INSTRUMENT_LABELS } from '@/lib/citations/labels'
 import type { AgentStreamState } from '@/components/screen3/useAgentStream'
 
 interface SourceDockProps {

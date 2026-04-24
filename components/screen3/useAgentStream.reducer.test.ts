@@ -281,12 +281,17 @@ describe('agent-citation — global dedup', () => {
     expect(state.globalCitations[0]!.url).toBeNull()
   })
 
-  it('nasa-image happy path url matches expected pattern', () => {
-    const state = agentStreamReducer(initialAgentStreamState, {
+  it('dedupes case-insensitively on id (PIA12345 vs pia12345)', () => {
+    const s1 = agentStreamReducer(initialAgentStreamState, {
       kind: 'sse',
       event: { type: 'agent-citation', agent: 'imagery', source: 'nasa-image', id: 'PIA12345' },
     })
-    expect(state.globalCitations[0]!.url).toBe('https://images.nasa.gov/details/PIA12345')
+    const s2 = agentStreamReducer(s1, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'imagery', source: 'nasa-image', id: 'pia12345' },
+    })
+    expect(s2.globalCitations).toHaveLength(1)
+    expect(s2.globalCitations[0]!.id).toBe('PIA12345')
   })
 
   it('svs with SVS- prefix url matches expected pattern', () => {

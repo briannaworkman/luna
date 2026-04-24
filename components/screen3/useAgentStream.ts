@@ -14,7 +14,7 @@ export type BodySegment =
 export interface SingleAgentState {
   status: 'active' | 'complete' | 'error'
   body: BodySegment[]
-  citations: Array<{ source: 'nasa-image' | 'jsc-sample' | 'lroc' | 'svs'; id: string }>
+  citations: Array<{ source: CitationSource; id: string }>
   statusText?: string
   errorMessage?: string
 }
@@ -111,8 +111,9 @@ export function agentStreamReducer(
       }
 
     case 'agent-citation': {
+      const incomingId = event.id.toLowerCase()
       const alreadyInGlobal = state.globalCitations.some(
-        (c) => c.source === event.source && c.id === event.id,
+        (c) => c.source === event.source && c.id.toLowerCase() === incomingId,
       )
       const nextGlobalCitations = alreadyInGlobal
         ? state.globalCitations

@@ -54,6 +54,6 @@ export async function POST(req: NextRequest): Promise<Response> {
   const hasImages = imageAssetIds.length > 0
 
   return createSseResponse(async (emitter) => {
-    await runOrchestrator({ query, location, hasImages, emit: (e) => emitter.emit(e) })
+    await runOrchestrator({ query, location, hasImages, imageAssetIds, emit: (e) => emitter.emit(e) })
   }, 120_000)
 }

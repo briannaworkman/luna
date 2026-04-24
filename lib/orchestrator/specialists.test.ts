@@ -4,15 +4,18 @@ import type { DataContext, OrchestratorEvent } from '@/lib/types/agent'
 vi.mock('./agents/mineralogy', () => ({ runMineralogyAgent: vi.fn() }))
 vi.mock('./agents/mission-history', () => ({ runMissionHistoryAgent: vi.fn() }))
 vi.mock('./agents/orbit', () => ({ runOrbitAgent: vi.fn() }))
+vi.mock('./agents/imagery', () => ({ runImageryAgent: vi.fn() }))
 
 import { runSpecialist } from './specialists'
 import { runMineralogyAgent } from './agents/mineralogy'
 import { runMissionHistoryAgent } from './agents/mission-history'
 import { runOrbitAgent } from './agents/orbit'
+import { runImageryAgent } from './agents/imagery'
 
 const mockRunMineralogyAgent = vi.mocked(runMineralogyAgent)
 const mockRunMissionHistoryAgent = vi.mocked(runMissionHistoryAgent)
 const mockRunOrbitAgent = vi.mocked(runOrbitAgent)
+const mockRunImageryAgent = vi.mocked(runImageryAgent)
 
 const fakeDataContext: DataContext = {
   location: {
@@ -32,7 +35,7 @@ const fakeDataContext: DataContext = {
 describe('runSpecialist', () => {
   it('routes thermal (stub) — emits a stub chunk', async () => {
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
-    await runSpecialist('thermal', fakeDataContext, emit)
+    await runSpecialist('thermal', { dataContext: fakeDataContext, imageAssetIds: [] }, emit)
     expect(emit).toHaveBeenCalledTimes(1)
     const call = emit.mock.calls[0]?.[0]
     expect(call).toBeDefined()
@@ -46,7 +49,7 @@ describe('runSpecialist', () => {
 
   it('routes topography (stub) — emits a stub chunk', async () => {
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
-    await runSpecialist('topography', fakeDataContext, emit)
+    await runSpecialist('topography', { dataContext: fakeDataContext, imageAssetIds: [] }, emit)
     expect(emit).toHaveBeenCalledTimes(1)
     const call = emit.mock.calls[0]?.[0]
     if (call && call.type === 'agent-chunk') {
@@ -59,7 +62,7 @@ describe('runSpecialist', () => {
 
   it('routes hazards (stub) — emits a stub chunk', async () => {
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
-    await runSpecialist('hazards', fakeDataContext, emit)
+    await runSpecialist('hazards', { dataContext: fakeDataContext, imageAssetIds: [] }, emit)
     expect(emit).toHaveBeenCalledTimes(1)
     const call = emit.mock.calls[0]?.[0]
     if (call && call.type === 'agent-chunk') {
@@ -73,7 +76,7 @@ describe('runSpecialist', () => {
   it('routes mineralogy — delegates to runMineralogyAgent', async () => {
     mockRunMineralogyAgent.mockResolvedValue(undefined)
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
-    await runSpecialist('mineralogy', fakeDataContext, emit)
+    await runSpecialist('mineralogy', { dataContext: fakeDataContext, imageAssetIds: [] }, emit)
     expect(mockRunMineralogyAgent).toHaveBeenCalledWith({ dataContext: fakeDataContext, emit })
     expect(emit).not.toHaveBeenCalled()
   })
@@ -81,7 +84,7 @@ describe('runSpecialist', () => {
   it('routes mission-history — delegates to runMissionHistoryAgent', async () => {
     mockRunMissionHistoryAgent.mockResolvedValue(undefined)
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
-    await runSpecialist('mission-history', fakeDataContext, emit)
+    await runSpecialist('mission-history', { dataContext: fakeDataContext, imageAssetIds: [] }, emit)
     expect(mockRunMissionHistoryAgent).toHaveBeenCalledWith({ dataContext: fakeDataContext, emit })
     expect(emit).not.toHaveBeenCalled()
   })
@@ -89,15 +92,27 @@ describe('runSpecialist', () => {
   it('routes orbit — delegates to runOrbitAgent', async () => {
     mockRunOrbitAgent.mockResolvedValue(undefined)
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
-    await runSpecialist('orbit', fakeDataContext, emit)
+    await runSpecialist('orbit', { dataContext: fakeDataContext, imageAssetIds: [] }, emit)
     expect(mockRunOrbitAgent).toHaveBeenCalledWith({ dataContext: fakeDataContext, emit })
+    expect(emit).not.toHaveBeenCalled()
+  })
+
+  it('routes imagery — delegates to runImageryAgent with imageAssetIds', async () => {
+    mockRunImageryAgent.mockResolvedValue(undefined)
+    const emit = vi.fn<(event: OrchestratorEvent) => void>()
+    await runSpecialist('imagery', { dataContext: fakeDataContext, imageAssetIds: ['AS16-M-0273'] }, emit)
+    expect(mockRunImageryAgent).toHaveBeenCalledWith({
+      dataContext: fakeDataContext,
+      imageAssetIds: ['AS16-M-0273'],
+      emit,
+    })
     expect(emit).not.toHaveBeenCalled()
   })
 
   it('unknown agentId — emits nothing and does not throw', async () => {
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
     // Cast to satisfy TypeScript — testing the runtime guard
-    await runSpecialist('unknown-agent' as Parameters<typeof runSpecialist>[0], fakeDataContext, emit)
+    await runSpecialist('unknown-agent' as Parameters<typeof runSpecialist>[0], { dataContext: fakeDataContext, imageAssetIds: [] }, emit)
     expect(emit).not.toHaveBeenCalled()
   })
 })

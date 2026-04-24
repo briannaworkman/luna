@@ -6,11 +6,13 @@ import { getAnthropic, CLAUDE_MODEL } from '@/lib/anthropic'
 import { buildOrchestratorPrompt } from './prompt'
 import { runDataIngest } from './data-ingest'
 import { runSpecialist } from './specialists'
+import type { SpecialistContext } from './specialists'
 
 interface RunOrchestratorInput {
   query: string
   location: LunarLocation
   hasImages: boolean
+  imageAssetIds: string[]
   emit: (event: OrchestratorEvent) => void
 }
 
@@ -27,7 +29,7 @@ function isAgentId(value: string): value is AgentId {
 }
 
 export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunOrchestratorResult> {
-  const { query, location, hasImages, emit } = input
+  const { query, location, hasImages, imageAssetIds, emit } = input
   const { system, user } = buildOrchestratorPrompt({ location, hasImages, query })
 
   const stream = getAnthropic().messages.stream({
@@ -109,12 +111,14 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
 
   const dataContext = await runDataIngest({ location, emit })
 
+  const specialistContext: SpecialistContext = { dataContext, imageAssetIds }
+
   // Activate specialists (skip data-ingest — runDataIngest owns its events)
   // TODO(PR-6+): consider parallel dispatch once real specialists run long enough to matter
   for (const agentId of agents) {
     if (agentId === 'data-ingest') continue
     emit({ type: 'agent-activate', agent: agentId })
-    await runSpecialist(agentId, dataContext, emit)
+    await runSpecialist(agentId, specialistContext, emit)
     emit({ type: 'agent-complete', agent: agentId })
   }
 

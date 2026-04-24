@@ -25,25 +25,21 @@ const SOURCE_DESCRIPTIONS: Record<CitationChipProps['source'], string> = {
 
 export function CitationChip({ source, id, className }: CitationChipProps) {
   const url = resolveUrl(source, id)
+  const badge = (
+    <Badge variant="default" className={className}>
+      {INSTRUMENT_LABELS[source]} · {id}
+    </Badge>
+  )
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         {url !== null ? (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7DD3FC] focus-visible:ring-offset-1 focus-visible:ring-offset-[#050C1A] rounded-sm"
-          >
-            <Badge variant="default" className={className}>
-              {INSTRUMENT_LABELS[source]} · {id}
-            </Badge>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-sm">
+            {badge}
           </a>
         ) : (
-          <Badge variant="default" className={className}>
-            {INSTRUMENT_LABELS[source]} · {id}
-          </Badge>
+          badge
         )}
       </TooltipTrigger>
       <TooltipContent>

@@ -12,7 +12,9 @@ export async function runSpecialist(
   if (!agent) return
 
   if (agent.isStub) {
-    runStubAgent(agentId, emit)
+    // runStubAgent is intentionally synchronous — mark void so a future
+    // async refactor can't silently drop events on the floor.
+    void runStubAgent(agentId, emit)
     return
   }
 

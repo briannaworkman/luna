@@ -316,6 +316,8 @@ describe('runOrchestrator', () => {
 
     // runSpecialist is called once per non-data-ingest agent (mineralogy + orbit)
     expect(mockRunSpecialist).toHaveBeenCalledTimes(2)
+    expect(mockRunSpecialist).toHaveBeenCalledWith('mineralogy', fakeDataContext, expect.any(Function))
+    expect(mockRunSpecialist).toHaveBeenCalledWith('orbit', fakeDataContext, expect.any(Function))
 
     expect(result.dataContext).toEqual(fakeDataContext)
     expect(result.agents).toEqual(['data-ingest', 'mineralogy', 'orbit'])

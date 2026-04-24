@@ -32,6 +32,32 @@ describe('runSpecialist', () => {
     }
   })
 
+  it('routes topography (stub) — emits a stub chunk', async () => {
+    const emit = vi.fn<(event: OrchestratorEvent) => void>()
+    await runSpecialist('topography', fakeDataContext, emit)
+    expect(emit).toHaveBeenCalledTimes(1)
+    const call = emit.mock.calls[0]?.[0]
+    if (call && call.type === 'agent-chunk') {
+      expect(call.agent).toBe('topography')
+      expect(call.text).toContain('Topography analysis (V2)')
+    } else {
+      expect(call?.type).toBe('agent-chunk')
+    }
+  })
+
+  it('routes hazards (stub) — emits a stub chunk', async () => {
+    const emit = vi.fn<(event: OrchestratorEvent) => void>()
+    await runSpecialist('hazards', fakeDataContext, emit)
+    expect(emit).toHaveBeenCalledTimes(1)
+    const call = emit.mock.calls[0]?.[0]
+    if (call && call.type === 'agent-chunk') {
+      expect(call.agent).toBe('hazards')
+      expect(call.text).toContain('Hazards analysis (V2)')
+    } else {
+      expect(call?.type).toBe('agent-chunk')
+    }
+  })
+
   it('routes mineralogy (real, TODO) — emits nothing', async () => {
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
     await runSpecialist('mineralogy', fakeDataContext, emit)

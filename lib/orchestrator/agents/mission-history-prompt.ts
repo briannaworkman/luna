@@ -2,6 +2,7 @@ import type { DataContext } from '@/lib/types/agent'
 import { LOCATIONS } from '@/components/globe/locations'
 import { findNearestStation } from '@/lib/data/apollo-stations'
 import { MAX_JSC_DISTANCE_KM } from '@/lib/data-sources/fetch-jsc-samples'
+import { buildLocationHeader } from './buildLocationHeader'
 
 export const MISSION_HISTORY_SYSTEM_PROMPT = `You are the Mission History specialist agent for LUNA (Lunar Unified Navigation & Analysis), a multi-agent lunar research system. Your audience is science journalists, space creators, and undergraduate planetary science students — curious, intelligent non-specialists who want real analysis without jargon walls.
 
@@ -91,12 +92,7 @@ export function buildMissionHistoryPrompt(input: {
   const namingStory = lookup?.namingStory
   const nearest = findNearestStation(location.lat, location.lon)
 
-  let user = `LOCATION
-Name: ${location.name}${location.isProposed ? ' (proposed name, pending IAU approval)' : ''}
-Coordinates: ${location.lat}°, ${location.lon}°
-Diameter: ${location.diameterKm !== null ? location.diameterKm + ' km' : 'unknown'}
-Significance: ${location.significanceNote}
-
+  let user = `${buildLocationHeader(location)}
 `
 
   if (namingStory) {

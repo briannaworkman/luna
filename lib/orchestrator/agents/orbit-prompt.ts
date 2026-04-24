@@ -1,4 +1,5 @@
 import type { DataContext } from '@/lib/types/agent'
+import { buildLocationHeader } from './buildLocationHeader'
 
 export const ORBIT_SYSTEM_PROMPT = `You are the Orbit specialist agent for LUNA (Lunar Unified Navigation & Analysis), a multi-agent lunar research system. Your audience is science journalists, space creators, and undergraduate planetary science students — curious, intelligent non-specialists who want real analysis without jargon walls.
 
@@ -64,12 +65,7 @@ export function buildOrbitPrompt(input: {
 }): { system: string; user: string } {
   const { location, illuminationWindows } = input.dataContext
 
-  let user = `LOCATION
-Name: ${location.name}${location.isProposed ? ' (proposed name, pending IAU approval)' : ''}
-Coordinates: ${location.lat}°, ${location.lon}°
-Diameter: ${location.diameterKm !== null ? location.diameterKm + ' km' : 'unknown'}
-Significance: ${location.significanceNote}
-
+  let user = `${buildLocationHeader(location)}
 ILLUMINATION_WINDOWS (30-day forecast, compact JSON)
 `
 

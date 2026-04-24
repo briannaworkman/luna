@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 describe('getAnthropic', () => {
   beforeEach(() => {
     vi.resetModules()
+    vi.unstubAllEnvs()
   })
 
   it('throws when ANTHROPIC_API_KEY is not set', async () => {

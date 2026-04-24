@@ -24,6 +24,11 @@ export interface OrchestratorActivateEvent {
   rationale: string
 }
 
+export interface OrchestratorChunkEvent {
+  type: 'orchestrator-chunk'
+  text: string
+}
+
 export interface AgentActivateEvent {
   type: 'agent-activate'
   agent: AgentId
@@ -66,6 +71,7 @@ export interface DoneEvent {
 
 export type OrchestratorEvent =
   | OrchestratorActivateEvent
+  | OrchestratorChunkEvent
   | AgentActivateEvent
   | AgentChunkEvent
   | AgentCitationEvent

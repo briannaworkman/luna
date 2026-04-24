@@ -41,6 +41,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!Array.isArray(b['imageAssetIds']) || !b['imageAssetIds'].every((item): item is string => typeof item === 'string')) {
     return NextResponse.json({ error: 'imageAssetIds must be an array of strings' }, { status: 400 })
   }
+  if (b['imageAssetIds'].length > 4) {
+    return NextResponse.json({ error: 'imageAssetIds must contain 4 or fewer entries' }, { status: 400 })
+  }
 
   const query = b['query']
   const locationId = b['locationId']
@@ -54,6 +57,6 @@ export async function POST(req: NextRequest): Promise<Response> {
   const hasImages = imageAssetIds.length > 0
 
   return createSseResponse(async (emitter) => {
-    await runOrchestrator({ query, location, hasImages, emit: (e) => emitter.emit(e) })
+    await runOrchestrator({ query, location, hasImages, imageAssetIds, emit: (e) => emitter.emit(e) })
   }, 120_000)
 }

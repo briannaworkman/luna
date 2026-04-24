@@ -103,6 +103,7 @@ describe('runOrchestrator', () => {
       query: 'What minerals exist here?',
       location: testLocation,
       hasImages: false,
+      imageAssetIds: [],
       emit: (e) => events.push(e),
     })
 
@@ -144,6 +145,7 @@ describe('runOrchestrator', () => {
       query: 'When can we land?',
       location: testLocation,
       hasImages: false,
+      imageAssetIds: [],
       emit: (e) => events.push(e),
     })
 
@@ -163,6 +165,7 @@ describe('runOrchestrator', () => {
       query: 'What is the composition?',
       location: testLocation,
       hasImages: false,
+      imageAssetIds: [],
       emit: (e) => events.push(e),
     })
 
@@ -180,6 +183,7 @@ describe('runOrchestrator', () => {
         query: 'test',
         location: testLocation,
         hasImages: false,
+        imageAssetIds: [],
         emit: () => {},
       })
     ).rejects.toThrow('Orchestrator returned unparseable agent list')
@@ -194,6 +198,7 @@ describe('runOrchestrator', () => {
       query: 'test',
       location: testLocation,
       hasImages: false,
+      imageAssetIds: [],
       emit: () => {},
     })
 
@@ -216,6 +221,7 @@ describe('runOrchestrator', () => {
       query: 'landing windows?',
       location: testLocation,
       hasImages: false,
+      imageAssetIds: [],
       emit: (e) => events.push(e),
     })
 
@@ -237,6 +243,7 @@ describe('runOrchestrator', () => {
       query: 'test',
       location: testLocation,
       hasImages: false,
+      imageAssetIds: [],
       emit: (e) => events.push(e),
     })
 
@@ -256,6 +263,7 @@ describe('runOrchestrator', () => {
       query: 'test',
       location: testLocation,
       hasImages: false,
+      imageAssetIds: [],
       emit: () => {},
     })
 
@@ -275,6 +283,7 @@ describe('runOrchestrator', () => {
       query: 'What minerals are here?',
       location: testLocation,
       hasImages: false,
+      imageAssetIds: [],
       emit: (e) => events.push(e),
     })
 
@@ -316,8 +325,16 @@ describe('runOrchestrator', () => {
 
     // runSpecialist is called once per non-data-ingest agent (mineralogy + orbit)
     expect(mockRunSpecialist).toHaveBeenCalledTimes(2)
-    expect(mockRunSpecialist).toHaveBeenCalledWith('mineralogy', fakeDataContext, expect.any(Function))
-    expect(mockRunSpecialist).toHaveBeenCalledWith('orbit', fakeDataContext, expect.any(Function))
+    expect(mockRunSpecialist).toHaveBeenCalledWith(
+      'mineralogy',
+      { dataContext: fakeDataContext, imageAssetIds: [] },
+      expect.any(Function)
+    )
+    expect(mockRunSpecialist).toHaveBeenCalledWith(
+      'orbit',
+      { dataContext: fakeDataContext, imageAssetIds: [] },
+      expect.any(Function)
+    )
 
     expect(result.dataContext).toEqual(fakeDataContext)
     expect(result.agents).toEqual(['data-ingest', 'mineralogy', 'orbit'])

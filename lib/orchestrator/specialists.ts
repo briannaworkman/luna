@@ -5,12 +5,20 @@ import { runStubAgent } from './stub-agents'
 import { runMineralogyAgent } from './agents/mineralogy'
 import { runMissionHistoryAgent } from './agents/mission-history'
 import { runOrbitAgent } from './agents/orbit'
+import { runImageryAgent } from './agents/imagery'
+
+export interface SpecialistContext {
+  dataContext: DataContext
+  imageAssetIds: string[]
+}
 
 export async function runSpecialist(
   agentId: AgentId,
-  dataContext: DataContext,
+  context: SpecialistContext,
   emit: (event: OrchestratorEvent) => void,
 ): Promise<void> {
+  const { dataContext, imageAssetIds } = context
+
   const agent = AGENTS.find((a) => a.id === agentId)
   if (!agent) return
 
@@ -36,7 +44,8 @@ export async function runSpecialist(
     return
   }
 
-  // TODO(PR-9): imagery
-  // Placeholder: specialist emits nothing; agent-complete still fires
-  // from the orchestrator after this function returns.
+  if (agentId === 'imagery') {
+    await runImageryAgent({ dataContext, imageAssetIds, emit })
+    return
+  }
 }

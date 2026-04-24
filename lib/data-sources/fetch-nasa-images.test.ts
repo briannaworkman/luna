@@ -46,22 +46,19 @@ describe('fetchNasaImages', () => {
     expect(result).toEqual([])
   })
 
-  it('returns [] on timeout (fetch throws AbortError)', async () => {
+  it('throws on timeout (fetch throws AbortError)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new DOMException('aborted', 'AbortError')))
-    const result = await fetchNasaImages('Tycho lunar crater Moon')
-    expect(result).toEqual([])
+    await expect(fetchNasaImages('Tycho lunar crater Moon')).rejects.toThrow()
   })
 
-  it('returns [] on upstream error (non-ok response)', async () => {
+  it('throws on upstream error (non-ok response)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }))
-    const result = await fetchNasaImages('Shackleton crater Moon')
-    expect(result).toEqual([])
+    await expect(fetchNasaImages('Shackleton crater Moon')).rejects.toThrow()
   })
 
-  it('returns [] on network error', async () => {
+  it('throws on network error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network failure')))
-    const result = await fetchNasaImages('Aristarchus crater Moon')
-    expect(result).toEqual([])
+    await expect(fetchNasaImages('Aristarchus crater Moon')).rejects.toThrow()
   })
 
   it('deduplicates Apollo sequential frames', async () => {

@@ -20,7 +20,12 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
     )
   }
 
-  const images = await fetchNasaImages(q)
+  let images: Awaited<ReturnType<typeof fetchNasaImages>> = []
+  try {
+    images = await fetchNasaImages(q)
+  } catch (err) {
+    console.warn('[nasa-images] fetch failed, returning empty', err)
+  }
   return NextResponse.json(
     { images, limitedCoverage: images.length < SPARSE_THRESHOLD },
     { headers: { 'Cache-Control': CACHE_CONTROL_1H } }

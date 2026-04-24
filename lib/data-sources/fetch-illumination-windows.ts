@@ -68,6 +68,8 @@ export async function fetchIlluminationWindows(lat: number, lon: number): Promis
       date,
       sunriseUtc: day.firstIlluminated?.toISOString() ?? null,
       sunsetUtc: day.lastIlluminated?.toISOString() ?? null,
+      // SVS 2026 dataset is hourly, so illuminatedCount === illuminated hours.
+      // Revisit this mapping if NASA ships a non-hourly cadence.
       illuminatedHours: day.illuminatedCount,
       solarElevationDeg: parseFloat(day.maxElevation.toFixed(2)),
       permanentlyShadowed: day.illuminatedCount === 0,

@@ -4,11 +4,9 @@ import { TimeoutError, UpstreamError } from '@/lib/utils/fetch-with-timeout'
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache'
 import { findNearestStation } from '@/lib/data/apollo-stations'
 import { rateLimit } from '@/lib/middleware/rate-limit'
-import { fetchJscSamples } from '@/lib/data-sources'
+import { fetchJscSamples, MAX_JSC_DISTANCE_KM } from '@/lib/data-sources/fetch-jsc-samples'
 
 const checkRateLimit = rateLimit(60_000, 100)
-
-const MAX_DISTANCE_KM = 500
 
 export async function GET(req: NextRequest): Promise<NextResponse<JscSamplesResponse | JscSamplesErrorResponse>> {
   const rateLimitResponse = checkRateLimit(req)
@@ -24,7 +22,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<JscSamplesResp
 
   const nearest = findNearestStation(lat, lon)
 
-  if (!nearest || nearest.distanceKm > MAX_DISTANCE_KM) {
+  if (!nearest || nearest.distanceKm > MAX_JSC_DISTANCE_KM) {
     return NextResponse.json(
       { results: [], nearestMission: null },
       { headers: { 'Cache-Control': CACHE_CONTROL_1H } }

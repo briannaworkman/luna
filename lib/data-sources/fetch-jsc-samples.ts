@@ -4,7 +4,7 @@ import { findNearestStation } from '@/lib/data/apollo-stations'
 
 const JSC_API = 'https://curator.jsc.nasa.gov/rest/lunarapi/samples'
 const JSC_CATALOG_URL = 'https://curator.jsc.nasa.gov/lunar/samplecatalog/sampleinfo.cfm'
-const MAX_DISTANCE_KM = 500
+export const MAX_JSC_DISTANCE_KM = 500
 const MAX_RESULTS = 10
 
 interface JscRawSample {
@@ -54,7 +54,7 @@ function normalizeSamples(raw: JscRawSample[], mission: string, station: string)
 export async function fetchJscSamples(lat: number, lon: number): Promise<JscSample[]> {
   const nearest = findNearestStation(lat, lon)
 
-  if (!nearest || nearest.distanceKm > MAX_DISTANCE_KM) {
+  if (!nearest || nearest.distanceKm > MAX_JSC_DISTANCE_KM) {
     return []
   }
 

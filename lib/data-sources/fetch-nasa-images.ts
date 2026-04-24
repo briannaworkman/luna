@@ -26,13 +26,8 @@ async function searchImages(q: string): Promise<NasaApiItem[]> {
   url.searchParams.set('page_size', '30')
   url.searchParams.set('q', q)
 
-  try {
-    const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url)
-    return (json.collection?.items ?? []) as NasaApiItem[]
-  } catch (err) {
-    console.warn('[nasa-images] search failed, returning empty', err)
-    return []
-  }
+  const json = await fetchJson<{ collection: { items: NasaApiItem[] } }>(url)
+  return (json.collection?.items ?? []) as NasaApiItem[]
 }
 
 // Apollo sequential frame IDs: as11-40-5931, as16-120-19187, etc.

@@ -78,6 +78,13 @@ describe('GET /api/nasa-images', () => {
       const body = await GET(makeRequest({ q: 'Tycho' })).then((r) => r.json())
       expect(body.limitedCoverage).toBe(false)
     })
+
+    it('returns empty-with-limited-coverage when helper throws', async () => {
+      mockFetchNasaImages.mockRejectedValue(new Error('upstream failed'))
+      const res = await GET(makeRequest({ q: 'Tycho' }))
+      expect(res.status).toBe(200)
+      expect(await res.json()).toEqual({ images: [], limitedCoverage: true })
+    })
   })
 
   describe('response headers', () => {

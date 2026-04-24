@@ -5,6 +5,7 @@ import { TimeoutError, UpstreamError } from '@/lib/utils/fetch-with-timeout'
 
 vi.mock('@/lib/data-sources/fetch-jsc-samples', () => ({
   fetchJscSamples: vi.fn(),
+  MAX_JSC_DISTANCE_KM: 500,
 }))
 
 import { fetchJscSamples } from '@/lib/data-sources/fetch-jsc-samples'

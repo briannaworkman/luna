@@ -1,8 +1,10 @@
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { resolveUrl } from '@/lib/citations/resolveUrl'
+import type { CitationSource } from '@/lib/orchestrator/agents/parseInlineTags'
 
 interface CitationChipProps {
-  source: 'nasa-image' | 'jsc-sample' | 'lroc' | 'svs'
+  source: CitationSource
   id: string
   className?: string
 }
@@ -22,12 +24,23 @@ const SOURCE_DESCRIPTIONS: Record<CitationChipProps['source'], string> = {
 }
 
 export function CitationChip({ source, id, className }: CitationChipProps) {
+  const url = resolveUrl(source, id)
+  const badge = (
+    <Badge variant="default" className={className}>
+      {INSTRUMENT_LABELS[source]} · {id}
+    </Badge>
+  )
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge variant="default" className={className}>
-          {INSTRUMENT_LABELS[source]} · {id}
-        </Badge>
+        {url !== null ? (
+          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-sm">
+            {badge}
+          </a>
+        ) : (
+          badge
+        )}
       </TooltipTrigger>
       <TooltipContent>
         <div className="text-luna-fg">{SOURCE_DESCRIPTIONS[source]}</div>

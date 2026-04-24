@@ -1,6 +1,7 @@
 import { CitationChip } from './CitationChip'
 import { ConfidenceBadge } from './ConfidenceBadge'
 import { AgentStatusGlyph } from '@/components/agent-rail/AgentStatusGlyph'
+import { Badge } from '@/components/badge'
 import { AGENTS } from '@/lib/constants/agents'
 import type { SingleAgentState } from './useAgentStream'
 
@@ -23,9 +24,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
         <span className="flex items-center font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
           {label}
           {isStub && (
-            <span className="font-mono text-[9px] tracking-[0.12em] uppercase text-luna-warning bg-luna-warning/10 px-1 py-0 rounded-sm ml-2">
-              V2
-            </span>
+            <Badge variant="warning" className="ml-2">V2</Badge>
           )}
         </span>
         <AgentStatusGlyph status={state.status} />

@@ -6,8 +6,6 @@ export interface ParsedChunk {
   confidences: Array<{ level: 'high' | 'medium' | 'low' }>
 }
 
-const VALID_SOURCES: ReadonlySet<CitationSource> = new Set<CitationSource>(['nasa-image', 'jsc-sample', 'lroc', 'svs'])
-
 export function parseInlineTags(
   rawChunk: string,
   prevCarry: string,
@@ -18,19 +16,22 @@ export function parseInlineTags(
   const citations: Array<{ source: CitationSource; id: string }> = []
   const confidences: Array<{ level: 'high' | 'medium' | 'low' }> = []
 
+  // The source alternation constrains group 1 to the four valid sources;
+  // any other prefix (e.g. [CITE:unknown-source:foo]) falls through to
+  // group 2 as a single opaque id that happens to contain a colon.
   const CITE_RE = /\[CITE:\s*(?:(nasa-image|jsc-sample|lroc|svs):)?([^\]]+)\]/g
   let match: RegExpExecArray | null
   while ((match = CITE_RE.exec(working)) !== null) {
-    const maybeSource = match[1]
+    const maybeSource = match[1] as CitationSource | undefined
     const rawId = match[2]?.trim() ?? ''
     if (rawId.length === 0) continue
     if (maybeSource !== undefined) {
-      // Regex already constrained to valid sources, but defensive re-check:
-      if (!VALID_SOURCES.has(maybeSource as CitationSource)) continue
-      citations.push({ source: maybeSource as CitationSource, id: rawId })
+      citations.push({ source: maybeSource, id: rawId })
     } else {
-      // No explicit source prefix matched. A colon in the id means the
-      // input was [CITE:unknown-source:foo] — strip silently.
+      // No explicit source prefix. A colon in the id means the input was
+      // [CITE:<unrecognized-source>:foo] — the regex rejected the prefix
+      // and captured the whole tail. Drop it silently rather than
+      // attributing an unknown source to opts.citationSource.
       if (rawId.includes(':')) continue
       citations.push({ source: opts.citationSource, id: rawId })
     }

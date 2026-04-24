@@ -41,21 +41,16 @@ export async function runDataIngest(input: {
   settled = true
   clearTimeout(timeoutHandle)
 
-  const nasaImages = imagesResult.status === 'fulfilled'
-    ? imagesResult.value
-    : (console.warn('[data-ingest] fetchNasaImages failed:', imagesResult.reason), null)
+  function valueOrNull<T>(result: PromiseSettledResult<T>, label: string): T | null {
+    if (result.status === 'fulfilled') return result.value
+    console.warn(`[data-ingest] ${label} failed:`, result.reason)
+    return null
+  }
 
-  const lrocProducts = lrocResult.status === 'fulfilled'
-    ? lrocResult.value
-    : (console.warn('[data-ingest] fetchLrocProducts failed:', lrocResult.reason), null)
-
-  const jscSamples = samplesResult.status === 'fulfilled'
-    ? samplesResult.value
-    : (console.warn('[data-ingest] fetchJscSamples failed:', samplesResult.reason), null)
-
-  const illuminationWindows = illuminationResult.status === 'fulfilled'
-    ? illuminationResult.value
-    : (console.warn('[data-ingest] fetchIlluminationWindows failed:', illuminationResult.reason), null)
+  const nasaImages = valueOrNull(imagesResult, 'fetchNasaImages')
+  const lrocProducts = valueOrNull(lrocResult, 'fetchLrocProducts')
+  const jscSamples = valueOrNull(samplesResult, 'fetchJscSamples')
+  const illuminationWindows = valueOrNull(illuminationResult, 'fetchIlluminationWindows')
 
   emit({ type: 'agent-complete', agent: 'data-ingest' })
 

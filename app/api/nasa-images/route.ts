@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { NasaImagesResponse } from '@/lib/types/nasa'
+import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa'
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache'
 import { rateLimit } from '@/lib/middleware/rate-limit'
 import { fetchNasaImages } from '@/lib/data-sources'
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
     )
   }
 
-  let images: Awaited<ReturnType<typeof fetchNasaImages>> = []
+  let images: NasaImage[] = []
   try {
     images = await fetchNasaImages(q)
   } catch (err) {

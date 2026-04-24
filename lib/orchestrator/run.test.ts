@@ -11,13 +11,19 @@ vi.mock('./data-ingest', () => ({
   runDataIngest: vi.fn(),
 }))
 
+vi.mock('./specialists', () => ({
+  runSpecialist: vi.fn(),
+}))
+
 import { getAnthropic } from '@/lib/anthropic'
 import { runOrchestrator } from './run'
 import type { OrchestratorEvent } from '@/lib/types/agent'
 import { runDataIngest } from './data-ingest'
+import { runSpecialist } from './specialists'
 
 const mockGetAnthropic = vi.mocked(getAnthropic)
 const mockRunDataIngest = vi.mocked(runDataIngest)
+const mockRunSpecialist = vi.mocked(runSpecialist)
 
 const fakeDataContext: DataContext = {
   location: {
@@ -80,6 +86,7 @@ beforeEach(() => {
     emit({ type: 'agent-complete', agent: 'data-ingest' })
     return fakeDataContext
   })
+  mockRunSpecialist.mockResolvedValue(undefined)
 })
 
 describe('runOrchestrator', () => {
@@ -306,6 +313,9 @@ describe('runOrchestrator', () => {
     expect(specialistCompleteEvents).toHaveLength(2)
 
     expect(doneIdx).toBe(types.length - 1)
+
+    // runSpecialist is called once per non-data-ingest agent (mineralogy + orbit)
+    expect(mockRunSpecialist).toHaveBeenCalledTimes(2)
 
     expect(result.dataContext).toEqual(fakeDataContext)
     expect(result.agents).toEqual(['data-ingest', 'mineralogy', 'orbit'])

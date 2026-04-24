@@ -5,6 +5,7 @@ import { AGENTS } from '@/lib/constants/agents'
 import { getAnthropic, CLAUDE_MODEL } from '@/lib/anthropic'
 import { buildOrchestratorPrompt } from './prompt'
 import { runDataIngest } from './data-ingest'
+import { runSpecialist } from './specialists'
 
 interface RunOrchestratorInput {
   query: string
@@ -109,14 +110,11 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
   const dataContext = await runDataIngest({ location, emit })
 
   // Activate specialists (skip data-ingest — runDataIngest owns its events)
+  // TODO(PR-6+): consider parallel dispatch once real specialists run long enough to matter
   for (const agentId of agents) {
     if (agentId === 'data-ingest') continue
     emit({ type: 'agent-activate', agent: agentId })
-  }
-
-  // TODO(PR-5+): invoke real specialist agents with dataContext
-  for (const agentId of agents) {
-    if (agentId === 'data-ingest') continue
+    await runSpecialist(agentId, dataContext, emit)
     emit({ type: 'agent-complete', agent: agentId })
   }
 

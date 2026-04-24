@@ -29,12 +29,9 @@ export function parseInlineTags(
       if (!VALID_SOURCES.has(maybeSource as CitationSource)) continue
       citations.push({ source: maybeSource as CitationSource, id: rawId })
     } else {
-      // No explicit source prefix matched. Check if rawId looks like an
-      // unknown source prefix (contains a colon), which means the input was
-      // [CITE:unknown-source:foo] — strip silently, no citation event.
-      if (maybeSource === undefined && rawId.includes(':')) {
-        continue
-      }
+      // No explicit source prefix matched. A colon in the id means the
+      // input was [CITE:unknown-source:foo] — strip silently.
+      if (rawId.includes(':')) continue
       citations.push({ source: opts.citationSource, id: rawId })
     }
   }

@@ -286,7 +286,10 @@ describe('buildMissionHistoryPrompt', () => {
     const { user } = buildMissionHistoryPrompt({ dataContext: carrollContext })
     expect(user).toContain('NAMING_STORY')
     expect(user).toContain('Carroll Taylor Wiseman')
-    expect(user).toContain('pending IAU')
+    // Assert on text unique to the NAMING_STORY block — "pending IAU" already
+    // appears in the location line for any proposed location and would
+    // pass vacuously.
+    expect(user).toContain('bright spot on the moon')
   })
 
   // Integrity → user msg contains naming story + "distance record"
@@ -309,7 +312,9 @@ describe('buildMissionHistoryPrompt', () => {
     const { user } = buildMissionHistoryPrompt({ dataContext: integrityContext })
     expect(user).toContain('NAMING_STORY')
     expect(user).toContain('distance record')
-    expect(user).toContain('pending IAU')
+    // Assert on text unique to the NAMING_STORY block rather than "pending IAU",
+    // which is already in the location line for any proposed location.
+    expect(user).toContain('Orion spacecraft')
   })
 
   // Non-proposed location → no NAMING_STORY block

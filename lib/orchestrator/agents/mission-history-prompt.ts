@@ -108,11 +108,15 @@ ${namingStory}
 
   user += `APOLLO CONTEXT
 `
-  if (nearest !== null && nearest.distanceKm <= MAX_JSC_DISTANCE_KM && jscSamples !== null && jscSamples.length > 0) {
+  if (nearest !== null && nearest.distanceKm <= MAX_JSC_DISTANCE_KM) {
     user += `Mission: ${nearest.mission}
 Station: ${nearest.station}
-Sample count from this station: ${jscSamples.length}
-
+`
+    if (jscSamples !== null && jscSamples.length > 0) {
+      user += `Sample count from this station: ${jscSamples.length}
+`
+    }
+    user += `
 `
   } else {
     user += `No Apollo station within ${MAX_JSC_DISTANCE_KM} km.

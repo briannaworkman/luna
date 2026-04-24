@@ -1,5 +1,6 @@
 import type { DataContext, OrchestratorEvent } from '@/lib/types/agent'
 import type { NasaImage } from '@/lib/types/agent'
+import type { MessageStream } from '@anthropic-ai/sdk/lib/MessageStream'
 import { getAnthropic, CLAUDE_MODEL } from '@/lib/anthropic'
 import { parseInlineTags } from './parseInlineTags'
 import { fetchImageBase64 } from './fetchImageBase64'
@@ -8,6 +9,42 @@ import {
   buildSynthesisPrompt,
   IMAGERY_SYNTHESIS_SYSTEM_PROMPT,
 } from './imagery-prompt'
+
+/**
+ * Consume a streaming Anthropic response, parse inline [CITE]/[CONFIDENCE] tags,
+ * and emit chunks + citations to the orchestrator. Shared between per-image
+ * analysis and synthesis — both have identical stream shapes (text_delta with
+ * nasa-image citations, confidence tags stripped).
+ */
+async function consumeStreamWithTagParsing(
+  stream: MessageStream,
+  emit: (event: OrchestratorEvent) => void,
+): Promise<void> {
+  let carry = ''
+  for await (const ev of stream) {
+    if (ev.type !== 'content_block_delta') continue
+    if (ev.delta.type !== 'text_delta') continue
+
+    const { parsed, carry: newCarry } = parseInlineTags(ev.delta.text, carry, {
+      citationSource: 'nasa-image',
+    })
+    carry = newCarry
+
+    if (parsed.text.length > 0) {
+      emit({ type: 'agent-chunk', agent: 'imagery', text: parsed.text })
+    }
+    for (const c of parsed.citations) {
+      emit({ type: 'agent-citation', agent: 'imagery', source: c.source, id: c.id })
+    }
+    // Confidence tags are stripped by parseInlineTags but never forwarded
+    // from the imagery agent.
+  }
+
+  // Flush trailing carry
+  if (carry.length > 0) {
+    emit({ type: 'agent-chunk', agent: 'imagery', text: carry })
+  }
+}
 
 export async function runImageryAgent(input: {
   dataContext: DataContext
@@ -107,30 +144,7 @@ export async function runImageryAgent(input: {
         ],
       })
 
-      let carry = ''
-      for await (const ev of stream) {
-        if (ev.type !== 'content_block_delta') continue
-        if (ev.delta.type !== 'text_delta') continue
-
-        const { parsed, carry: newCarry } = parseInlineTags(ev.delta.text, carry, {
-          citationSource: 'nasa-image',
-        })
-        carry = newCarry
-
-        if (parsed.text.length > 0) {
-          emit({ type: 'agent-chunk', agent: 'imagery', text: parsed.text })
-        }
-        for (const c of parsed.citations) {
-          emit({ type: 'agent-citation', agent: 'imagery', source: c.source, id: c.id })
-        }
-        // Confidence tags are stripped by parseInlineTags but never forwarded
-        // from the imagery agent.
-      }
-
-      // Flush trailing carry
-      if (carry.length > 0) {
-        emit({ type: 'agent-chunk', agent: 'imagery', text: carry })
-      }
+      await consumeStreamWithTagParsing(stream, emit)
       streamSucceeded = true
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
@@ -183,29 +197,7 @@ export async function runImageryAgent(input: {
         messages: [{ role: 'user', content }],
       })
 
-      let carry = ''
-      for await (const ev of synthStream) {
-        if (ev.type !== 'content_block_delta') continue
-        if (ev.delta.type !== 'text_delta') continue
-
-        const { parsed, carry: newCarry } = parseInlineTags(ev.delta.text, carry, {
-          citationSource: 'nasa-image',
-        })
-        carry = newCarry
-
-        if (parsed.text.length > 0) {
-          emit({ type: 'agent-chunk', agent: 'imagery', text: parsed.text })
-        }
-        for (const c of parsed.citations) {
-          emit({ type: 'agent-citation', agent: 'imagery', source: c.source, id: c.id })
-        }
-        // Confidence tags stripped, never forwarded
-      }
-
-      // Flush trailing carry
-      if (carry.length > 0) {
-        emit({ type: 'agent-chunk', agent: 'imagery', text: carry })
-      }
+      await consumeStreamWithTagParsing(synthStream, emit)
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       emit({ type: 'agent-error', agent: 'imagery', message })

@@ -1,39 +1,62 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { X } from 'lucide-react'
 import { LocationPanel } from '@/components/globe/LocationPanel'
-import { ImageGalleryDialog } from '@/components/gallery/ImageGalleryDialog'
-import { QueryComposer, type QueryPayload } from '@/components/screen2/QueryComposer'
-import { LOCATIONS } from '@/components/globe/locations'
+import { useOpenGallery } from '@/providers/LocationSelectionProvider'
 import type { LunarLocation } from '@/components/globe/types'
-import type { NasaImage } from '@/lib/types/nasa'
 
-// Three.js creates a WebGL context — must be client-only, no SSR
 const LunarGlobe = dynamic(
   () => import('@/components/globe/LunarGlobe').then((m) => m.LunarGlobe),
   { ssr: false },
 )
 
-type AppScreen = 'globe' | 'query'
+const HINT_MESSAGES: Record<string, string> = {
+  'select-location': 'Select a location to begin.',
+}
 
-export default function Home() {
-  const [screen, setScreen] = useState<AppScreen>('globe')
-  const [selectedLocation, setSelectedLocation] = useState<LunarLocation | null>(null)
-  const [galleryLocation, setGalleryLocation] = useState<LunarLocation | null>(null)
-  const [galleryOpen, setGalleryOpen] = useState(false)
-  const [selectedImages, setSelectedImages] = useState<NasaImage[]>([])
-  const deselectRef = useRef<(() => void) | null>(null)
+function HintBanner() {
+  const router = useRouter()
+  const search = useSearchParams()
+  const hint = search.get('hint')
+  const message = hint ? HINT_MESSAGES[hint] : null
+
+  const dismiss = useCallback(() => {
+    router.replace('/')
+  }, [router])
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return
-    const params = new URLSearchParams(window.location.search)
-    const first = LOCATIONS[0] ?? null
-    if (params.get('screen') === 'query' && first) {
-      setGalleryLocation(first)
-      setScreen('query')
-    }
-  }, [])
+    if (!message) return
+    const t = setTimeout(dismiss, 4500)
+    return () => clearTimeout(t)
+  }, [message, dismiss])
+
+  if (!message) return null
+
+  return (
+    <div
+      role="status"
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-4 py-2 rounded bg-luna-base-2 border border-luna-hairline font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan shadow-lg"
+    >
+      <span>{message}</span>
+      <button
+        type="button"
+        onClick={dismiss}
+        aria-label="Dismiss hint"
+        className="text-luna-fg-3 hover:text-luna-fg transition-colors"
+      >
+        <X size={12} strokeWidth={1.5} />
+      </button>
+    </div>
+  )
+}
+
+export default function Home() {
+  const [selectedLocation, setSelectedLocation] = useState<LunarLocation | null>(null)
+  const deselectRef = useRef<(() => void) | null>(null)
+  const openGallery = useOpenGallery()
 
   const handleLocationSelect = useCallback((location: LunarLocation | null) => {
     setSelectedLocation(location)
@@ -44,69 +67,26 @@ export default function Home() {
     setSelectedLocation(null)
   }, [])
 
-  const handleResearch = useCallback((location: LunarLocation) => {
-    // Clear prior selections so a dismissed-then-reopened gallery can't
-    // leak stale context from an earlier location into Screen 2
-    setSelectedImages([])
-    setGalleryLocation(location)
-    setGalleryOpen(true)
-  }, [])
-
-  const handleGalleryClose = useCallback(() => {
-    setGalleryOpen(false)
-  }, [])
-
-  const handleGalleryContinue = useCallback((location: LunarLocation, images: NasaImage[]) => {
-    setSelectedImages(images)
-    setGalleryLocation(location)
-    setGalleryOpen(false)
-    setScreen('query')
-  }, [])
-
-  const handleQueryBack = useCallback(() => {
-    setScreen('globe')
-  }, [])
-
-  const handleQuerySubmit = useCallback((payload: QueryPayload) => {
-    // PR 5 will replace this with the orchestrator stream trigger
-    console.log('[LUNA] Query submitted:', payload)
-  }, [])
-
-  const handleReopenGallery = useCallback(() => {
-    setGalleryOpen(true)
-  }, [])
+  const handleResearch = useCallback(
+    (location: LunarLocation) => {
+      openGallery(location, 'navigate')
+    },
+    [openGallery],
+  )
 
   return (
     <>
-      {screen === 'query' && galleryLocation ? (
-        <QueryComposer
-          location={galleryLocation}
-          images={selectedImages}
-          onImagesChange={setSelectedImages}
-          onOpenGallery={handleReopenGallery}
-          onBack={handleQueryBack}
-          onSubmit={handleQuerySubmit}
+      <Suspense fallback={null}>
+        <HintBanner />
+      </Suspense>
+      <main className="fixed inset-0 overflow-hidden bg-luna-base">
+        <LunarGlobe onLocationSelect={handleLocationSelect} deselectRef={deselectRef} />
+        <LocationPanel
+          location={selectedLocation}
+          onClose={handlePanelClose}
+          onResearch={handleResearch}
         />
-      ) : (
-        <main className="fixed inset-0 overflow-hidden bg-luna-base">
-          <LunarGlobe
-            onLocationSelect={handleLocationSelect}
-            deselectRef={deselectRef}
-          />
-          <LocationPanel
-            location={selectedLocation}
-            onClose={handlePanelClose}
-            onResearch={handleResearch}
-          />
-        </main>
-      )}
-      <ImageGalleryDialog
-        location={galleryLocation}
-        open={galleryOpen}
-        defaultSelectedImages={selectedImages}
-        onClose={handleGalleryClose}
-        onContinue={handleGalleryContinue}
-      />
+      </main>
     </>
   )
 }

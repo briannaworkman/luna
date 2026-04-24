@@ -211,3 +211,7 @@ export const LOCATIONS: LunarLocation[] = [
     ],
   },
 ]
+
+export function getLocationById(id: string): LunarLocation | null {
+  return LOCATIONS.find((l) => l.id === id) ?? null
+}

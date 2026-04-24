@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
@@ -9,6 +10,7 @@ import { TemplateChips } from './TemplateChips'
 import { SuggestedQuestions } from './SuggestedQuestions'
 import { ImageryStrip } from './ImageryStrip'
 import { AgentRail } from '@/components/agent-rail/AgentRail'
+import { useOpenGallery, useSelectedImages } from '@/providers/LocationSelectionProvider'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage } from '@/lib/types/nasa'
 
@@ -20,21 +22,13 @@ export interface QueryPayload {
 
 interface QueryComposerProps {
   location: LunarLocation
-  images: NasaImage[]
-  onImagesChange: (images: NasaImage[]) => void
-  onOpenGallery: () => void
-  onBack: () => void
   onSubmit: (payload: QueryPayload) => void
 }
 
-export function QueryComposer({
-  location,
-  images,
-  onImagesChange,
-  onOpenGallery,
-  onBack,
-  onSubmit,
-}: QueryComposerProps) {
+export function QueryComposer({ location, onSubmit }: QueryComposerProps) {
+  const router = useRouter()
+  const [images, setImages] = useSelectedImages()
+  const openGallery = useOpenGallery()
   const [query, setQuery] = useState('')
   const [shaking, setShaking] = useState(false)
   const [emptyHint, setEmptyHint] = useState(false)
@@ -54,10 +48,18 @@ export function QueryComposer({
 
   const handleRemoveImage = useCallback(
     (assetId: string) => {
-      onImagesChange(images.filter((i) => i.assetId !== assetId))
+      setImages(images.filter((i) => i.assetId !== assetId))
     },
-    [images, onImagesChange],
+    [images, setImages],
   )
+
+  const handleBack = useCallback(() => {
+    router.push('/')
+  }, [router])
+
+  const handleOpenGallery = useCallback(() => {
+    openGallery(location, 'attach')
+  }, [openGallery, location])
 
   const handleSubmit = useCallback(() => {
     const trimmed = query.trim()
@@ -90,7 +92,7 @@ export function QueryComposer({
         <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-8">
           <button
             type="button"
-            onClick={onBack}
+            onClick={handleBack}
             className="inline-flex items-center gap-1.5 self-start text-luna-fg-3 hover:text-luna-fg transition-colors"
             aria-label="Back to globe"
           >
@@ -116,14 +118,11 @@ export function QueryComposer({
             <ImageryStrip images={images} onRemove={handleRemoveImage} />
 
             <div className="flex items-center justify-between gap-4">
-              <span
-                aria-hidden="true"
-                className="font-mono text-[11px] tracking-[0.04em] text-luna-fg-4"
-              >
+              <span aria-hidden="true" className="font-mono text-[11px] tracking-[0.04em] text-luna-fg-4">
                 ⌘↵ to analyze
               </span>
               <div className="flex items-center gap-3">
-                <Button type="button" variant="outline" onClick={onOpenGallery}>
+                <Button type="button" variant="outline" onClick={handleOpenGallery}>
                   <ImagePlus size={14} strokeWidth={1.5} aria-hidden="true" />
                   Attach imagery
                 </Button>

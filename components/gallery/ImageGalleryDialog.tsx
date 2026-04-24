@@ -242,21 +242,23 @@ export function ImageGalleryDialog({
     tooltipTimerRef.current = setTimeout(() => setTooltipAssetId(null), 2000)
   }
 
+  // Nothing to render when closed. Keeping an invisible `fixed inset-0 z-30`
+  // backdrop in the tree was a click-trap for anything beneath it — even with
+  // `pointer-events: none`, descendants with `group-hover:pointer-events-auto`
+  // (ImageCaption) could re-enable hit-testing and eat clicks on sibling screens.
+  if (!open) return null
+
   return (
-    // Backdrop — #050C1A at ~82% opacity; pointer-events controlled by open state
     <div
       onClick={handleBackdropClick}
       className={cn(
         'fixed inset-0 z-30 flex',
         'max-[767px]:items-start max-[767px]:justify-start items-center justify-center',
-        open ? 'pointer-events-auto' : 'pointer-events-none',
       )}
       style={{
         backgroundColor: 'rgba(5, 12, 26, 0.82)',
-        transition: open
-          ? 'opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)'
-          : 'opacity 150ms cubic-bezier(0.22, 0.61, 0.36, 1)',
-        opacity: open ? 1 : 0,
+        transition: 'opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        opacity: 1,
       }}
       aria-modal="true"
       role="dialog"
@@ -276,12 +278,9 @@ export function ImageGalleryDialog({
         )}
         style={{
           boxShadow: 'var(--luna-shadow-lg)',
-          // Opening: scale 96→100% + opacity 0→1 over 200ms
-          transition: open
-            ? 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'transform 150ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 150ms cubic-bezier(0.22, 0.61, 0.36, 1)',
-          transform: open ? 'scale(1)' : 'scale(0.96)',
-          opacity:   open ? 1 : 0,
+          transition: 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+          transform: 'scale(1)',
+          opacity: 1,
         }}
       >
         {/* ── Header ──────────────────────────────────────────────── */}

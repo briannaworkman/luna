@@ -3,6 +3,7 @@ import type { AgentId } from '@/lib/constants/agents'
 import { AGENTS } from '@/lib/constants/agents'
 import { runStubAgent } from './stub-agents'
 import { runMineralogyAgent } from './agents/mineralogy'
+import { runMissionHistoryAgent } from './agents/mission-history'
 
 export async function runSpecialist(
   agentId: AgentId,
@@ -24,7 +25,12 @@ export async function runSpecialist(
     return
   }
 
-  // TODO(PR-7+): mission-history, orbit, imagery
+  if (agentId === 'mission-history') {
+    await runMissionHistoryAgent({ dataContext, emit })
+    return
+  }
+
+  // TODO(PR-8+): orbit, imagery
   // Placeholder: specialist emits nothing; agent-complete still fires
   // from the orchestrator after this function returns.
 }

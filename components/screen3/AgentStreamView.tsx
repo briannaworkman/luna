@@ -7,7 +7,7 @@ import { OrchestratorBlock } from './OrchestratorBlock'
 import { AgentBlock } from './AgentBlock'
 import { useAgentStream, type SingleAgentState } from './useAgentStream'
 import { SourceDock } from './SourceDock'
-import { AGENTS } from '@/lib/constants/agents'
+import { AGENTS, isMainPanelAgent } from '@/lib/constants/agents'
 import type { AgentId } from '@/lib/constants/agents'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage } from '@/lib/types/nasa'
@@ -44,6 +44,8 @@ export function AgentStreamView({
 
     return { activeAgents: active, completedAgents: complete, errorAgents: error, statusTexts: texts }
   }, [state.agentStates])
+
+  const visibleAgents = state.activatedAgents.filter(isMainPanelAgent)
 
   return (
     <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
@@ -101,9 +103,7 @@ export function AgentStreamView({
           )}
 
           {/* Per-agent blocks (exclude data-ingest) */}
-          {state.activatedAgents
-            .filter((agentId) => agentId !== 'data-ingest')
-            .map((agentId) => {
+          {visibleAgents.map((agentId) => {
               const agentMeta = AGENTS.find((a) => a.id === agentId)
               const label = agentMeta?.label ?? agentId
               const agentState = state.agentStates[agentId] ?? {
@@ -125,7 +125,7 @@ export function AgentStreamView({
 
       <SourceDock
         citations={state.globalCitations}
-        activatedAgentCount={state.activatedAgents.filter((id) => id !== 'data-ingest').length}
+        activatedAgentCount={visibleAgents.length}
       />
     </div>
   )

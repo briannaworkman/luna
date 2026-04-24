@@ -29,3 +29,13 @@ export const AGENTS: readonly Agent[] = [
   { id: 'topography',      label: 'Topography',      isStub: true  },
   { id: 'hazards',         label: 'Hazards',         isStub: true  },
 ] as const
+
+/**
+ * Data-ingest activates on every query but produces no stream output;
+ * it appears in the agent rail but never gets a main-panel block or a
+ * citation row. Use this to filter activatedAgents lists before they
+ * drive any UI that represents specialist output.
+ */
+export function isMainPanelAgent(id: AgentId): boolean {
+  return id !== 'data-ingest'
+}

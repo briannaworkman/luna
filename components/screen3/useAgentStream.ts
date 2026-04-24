@@ -3,8 +3,8 @@ import { useReducer, useEffect } from 'react'
 import type { LunarLocation } from '@/components/globe/types'
 import type { AgentId } from '@/lib/constants/agents'
 import type { OrchestratorEvent } from '@/lib/types/agent'
-import type { CitationSource } from '@/lib/orchestrator/agents/parseInlineTags'
 import { resolveUrl } from '@/lib/citations/resolveUrl'
+import { citationKey, type Citation, type ResolvedCitation } from '@/lib/citations/types'
 import { parseSseStream } from './parseSseStream'
 
 export type BodySegment =
@@ -14,7 +14,7 @@ export type BodySegment =
 export interface SingleAgentState {
   status: 'active' | 'complete' | 'error'
   body: BodySegment[]
-  citations: Array<{ source: CitationSource; id: string }>
+  citations: Citation[]
   statusText?: string
   errorMessage?: string
 }
@@ -24,7 +24,7 @@ export interface AgentStreamState {
   activatedAgents: AgentId[]
   rationale: string
   agentStates: Partial<Record<AgentId, SingleAgentState>>
-  globalCitations: Array<{ source: CitationSource; id: string; url: string | null }>
+  globalCitations: ResolvedCitation[]
   isDone: boolean
   streamError?: string
 }
@@ -111,9 +111,9 @@ export function agentStreamReducer(
       }
 
     case 'agent-citation': {
-      const incomingId = event.id.toLowerCase()
+      const incomingKey = citationKey({ source: event.source, id: event.id })
       const alreadyInGlobal = state.globalCitations.some(
-        (c) => c.source === event.source && c.id.toLowerCase() === incomingId,
+        (c) => citationKey(c) === incomingKey,
       )
       const nextGlobalCitations = alreadyInGlobal
         ? state.globalCitations

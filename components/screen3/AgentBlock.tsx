@@ -7,6 +7,7 @@ import { AgentStatusGlyph } from '@/components/agent-rail/AgentStatusGlyph'
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { AGENTS } from '@/lib/constants/agents'
+import { citationKey } from '@/lib/citations/types'
 import type { SingleAgentState } from './useAgentStream'
 
 interface AgentBlockProps {
@@ -22,10 +23,9 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
   const isActive = state.status === 'active'
   const canCollapse = !isActive
 
-  // Dedupe citations by source:id at render time
   const seen = new Set<string>()
   const uniqueCitations = state.citations.filter((c) => {
-    const key = `${c.source}:${c.id}`
+    const key = citationKey(c)
     if (seen.has(key)) return false
     seen.add(key)
     return true

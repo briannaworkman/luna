@@ -5,6 +5,7 @@ import { CitationChip } from './CitationChip'
 import { ConfidenceBadge } from './ConfidenceBadge'
 import { AgentStatusGlyph } from '@/components/agent-rail/AgentStatusGlyph'
 import { Badge } from '@/components/badge'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { AGENTS } from '@/lib/constants/agents'
 import type { SingleAgentState } from './useAgentStream'
 
@@ -51,7 +52,17 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
           <span className="flex items-center font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
             {label}
             {isStub && (
-              <Badge variant="warning" className="ml-2">V2</Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="warning" className="ml-2">V2</Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="text-luna-fg">Placeholder output</div>
+                  <div className="text-luna-fg-3 mt-0.5">
+                    Full analysis for this agent ships in V2.
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             )}
           </span>
           <span className="flex items-center gap-1.5">
@@ -68,7 +79,17 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
           <span className="flex items-center font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
             {label}
             {isStub && (
-              <Badge variant="warning" className="ml-2">V2</Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="warning" className="ml-2">V2</Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="text-luna-fg">Placeholder output</div>
+                  <div className="text-luna-fg-3 mt-0.5">
+                    Full analysis for this agent ships in V2.
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             )}
           </span>
           <AgentStatusGlyph status={state.status} />

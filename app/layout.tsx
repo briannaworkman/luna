@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { GrainOverlay } from "@/components/grain-overlay";
 import { TopBar } from "@/components/top-bar/TopBar";
 import { LocationSelectionProvider } from "@/providers/LocationSelectionProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,7 +24,9 @@ export default function RootLayout({
         <GrainOverlay />
         <TopBar />
         <LocationSelectionProvider>
-          {children}
+          <TooltipProvider delayDuration={200}>
+            {children}
+          </TooltipProvider>
         </LocationSelectionProvider>
       </body>
     </html>

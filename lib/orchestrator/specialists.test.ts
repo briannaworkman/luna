@@ -3,13 +3,16 @@ import type { DataContext, OrchestratorEvent } from '@/lib/types/agent'
 
 vi.mock('./agents/mineralogy', () => ({ runMineralogyAgent: vi.fn() }))
 vi.mock('./agents/mission-history', () => ({ runMissionHistoryAgent: vi.fn() }))
+vi.mock('./agents/orbit', () => ({ runOrbitAgent: vi.fn() }))
 
 import { runSpecialist } from './specialists'
 import { runMineralogyAgent } from './agents/mineralogy'
 import { runMissionHistoryAgent } from './agents/mission-history'
+import { runOrbitAgent } from './agents/orbit'
 
 const mockRunMineralogyAgent = vi.mocked(runMineralogyAgent)
 const mockRunMissionHistoryAgent = vi.mocked(runMissionHistoryAgent)
+const mockRunOrbitAgent = vi.mocked(runOrbitAgent)
 
 const fakeDataContext: DataContext = {
   location: {
@@ -80,6 +83,14 @@ describe('runSpecialist', () => {
     const emit = vi.fn<(event: OrchestratorEvent) => void>()
     await runSpecialist('mission-history', fakeDataContext, emit)
     expect(mockRunMissionHistoryAgent).toHaveBeenCalledWith({ dataContext: fakeDataContext, emit })
+    expect(emit).not.toHaveBeenCalled()
+  })
+
+  it('routes orbit — delegates to runOrbitAgent', async () => {
+    mockRunOrbitAgent.mockResolvedValue(undefined)
+    const emit = vi.fn<(event: OrchestratorEvent) => void>()
+    await runSpecialist('orbit', fakeDataContext, emit)
+    expect(mockRunOrbitAgent).toHaveBeenCalledWith({ dataContext: fakeDataContext, emit })
     expect(emit).not.toHaveBeenCalled()
   })
 

@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { AGENTS } from '@/lib/constants/agents'
 import type { Agent, AgentId } from '@/lib/constants/agents'
+import { AgentStatusGlyph, type AgentStatus } from './AgentStatusGlyph'
 
 interface AgentRailProps {
   className?: string
@@ -25,6 +26,13 @@ function AgentRow({
   statusText?: string
 }) {
   const hasStatus = Boolean(statusText)
+  const status: AgentStatus = isActive
+    ? 'active'
+    : isComplete
+      ? 'complete'
+      : isError
+        ? 'error'
+        : 'idle'
   const rowClass = cn(
     'px-4 flex items-center gap-3 border-b border-luna-hairline font-sans font-normal text-[13px] transition-colors',
     hasStatus ? 'min-h-11 h-auto py-2' : 'h-11',
@@ -37,22 +45,8 @@ function AgentRow({
   return (
     <div className={rowClass}>
       {/* Status glyph */}
-      <span className="shrink-0 w-2.5 text-center font-mono text-[14px] leading-none select-none">
-        {isActive && (
-          <span className="relative inline-flex items-center justify-center w-3.5 h-3.5" aria-hidden="true">
-            <span className="absolute inset-0 rounded-full bg-luna-cyan animate-luna-pulse" />
-            <span className="relative text-luna-cyan">◉</span>
-          </span>
-        )}
-        {isComplete && (
-          <span className="text-luna-success" aria-hidden="true">✓</span>
-        )}
-        {isError && (
-          <span className="text-luna-danger" aria-hidden="true">✗</span>
-        )}
-        {!isActive && !isComplete && !isError && (
-          <span className="text-luna-hairline-2" aria-hidden="true">○</span>
-        )}
+      <span className="shrink-0 w-2.5 text-center leading-none select-none">
+        <AgentStatusGlyph status={status} size={3.5} />
       </span>
 
       {/* Label + optional status text */}

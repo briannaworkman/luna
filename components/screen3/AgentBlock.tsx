@@ -1,42 +1,12 @@
 import { CitationChip } from './CitationChip'
 import { ConfidenceBadge } from './ConfidenceBadge'
+import { AgentStatusGlyph } from '@/components/agent-rail/AgentStatusGlyph'
 import type { SingleAgentState } from './useAgentStream'
 
 interface AgentBlockProps {
   agentId: string
   label: string
   state: SingleAgentState
-}
-
-function StatusGlyph({ status }: { status: SingleAgentState['status'] }) {
-  if (status === 'active') {
-    return (
-      <span className="relative inline-flex items-center justify-center w-4 h-4" aria-hidden="true">
-        <span
-          className="absolute inset-0 rounded-full bg-luna-cyan animate-luna-pulse"
-        />
-        <span className="relative font-mono text-[14px] text-luna-cyan leading-none">◉</span>
-      </span>
-    )
-  }
-
-  if (status === 'complete') {
-    return (
-      <span className="font-mono text-[14px] text-luna-success leading-none" aria-hidden="true">
-        ✓
-      </span>
-    )
-  }
-
-  if (status === 'error') {
-    return (
-      <span className="font-mono text-[14px] text-luna-danger leading-none" aria-hidden="true">
-        ✗
-      </span>
-    )
-  }
-
-  return null
 }
 
 export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
@@ -50,7 +20,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
         <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
           {label}
         </span>
-        <StatusGlyph status={state.status} />
+        <AgentStatusGlyph status={state.status} />
       </div>
 
       {/* Body */}

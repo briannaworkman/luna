@@ -1,4 +1,5 @@
 'use client'
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { AgentRail } from '@/components/agent-rail/AgentRail'
 import { LocationHeader } from '@/components/screen2/LocationHeader'
@@ -26,18 +27,22 @@ export function AgentStreamView({
   const imageAssetIds = images.map((img) => img.assetId)
   const state = useAgentStream({ location, query, imageAssetIds })
 
-  // Derive sets for AgentRail
-  const activeAgents = new Set<AgentId>()
-  const completedAgents = new Set<AgentId>()
-  const errorAgents = new Set<AgentId>()
-  const statusTexts: Partial<Record<AgentId, string>> = {}
+  // Derive sets for AgentRail — recomputed only when agentStates changes
+  const { activeAgents, completedAgents, errorAgents, statusTexts } = useMemo(() => {
+    const active = new Set<AgentId>()
+    const complete = new Set<AgentId>()
+    const error = new Set<AgentId>()
+    const texts: Partial<Record<AgentId, string>> = {}
 
-  for (const [id, s] of Object.entries(state.agentStates) as Array<[AgentId, SingleAgentState]>) {
-    if (s.status === 'active') activeAgents.add(id)
-    if (s.status === 'complete') completedAgents.add(id)
-    if (s.status === 'error') errorAgents.add(id)
-    if (s.statusText) statusTexts[id] = s.statusText
-  }
+    for (const [id, s] of Object.entries(state.agentStates) as Array<[AgentId, SingleAgentState]>) {
+      if (s.status === 'active') active.add(id)
+      if (s.status === 'complete') complete.add(id)
+      if (s.status === 'error') error.add(id)
+      if (s.statusText) texts[id] = s.statusText
+    }
+
+    return { activeAgents: active, completedAgents: complete, errorAgents: error, statusTexts: texts }
+  }, [state.agentStates])
 
   return (
     <div className="fixed inset-0 top-14 flex bg-luna-base">

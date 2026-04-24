@@ -45,4 +45,14 @@ describe('resolveUrl', () => {
     expect(url).not.toBeNull()
     expect(url).toContain('72135')
   })
+
+  it('nasa-image id with spaces is percent-encoded', () => {
+    expect(resolveUrl('nasa-image', 'foo bar')).toBe('https://images.nasa.gov/details/foo%20bar')
+  })
+
+  it('jsc-sample id with query-injection payload is percent-encoded', () => {
+    expect(resolveUrl('jsc-sample', '72135&evil=1')).toBe(
+      'https://curator.jsc.nasa.gov/lunar/samplecatalog/sampleinfo.cfm?sample=72135%26evil%3D1',
+    )
+  })
 })

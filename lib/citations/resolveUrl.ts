@@ -11,10 +11,10 @@ export function resolveUrl(source: CitationSource, id: string): string | null {
 
   switch (source) {
     case 'nasa-image':
-      return `https://images.nasa.gov/details/${trimmed}`
+      return `https://images.nasa.gov/details/${encodeURIComponent(trimmed)}`
 
     case 'jsc-sample':
-      return `https://curator.jsc.nasa.gov/lunar/samplecatalog/sampleinfo.cfm?sample=${trimmed}`
+      return `https://curator.jsc.nasa.gov/lunar/samplecatalog/sampleinfo.cfm?sample=${encodeURIComponent(trimmed)}`
 
     case 'svs': {
       const numeric = trimmed.replace(/^SVS-/i, '')

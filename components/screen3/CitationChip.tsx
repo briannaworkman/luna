@@ -1,9 +1,10 @@
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { resolveUrl } from '@/lib/citations/resolveUrl'
+import type { CitationSource } from '@/lib/orchestrator/agents/parseInlineTags'
 
 interface CitationChipProps {
-  source: 'nasa-image' | 'jsc-sample' | 'lroc' | 'svs'
+  source: CitationSource
   id: string
   className?: string
 }
@@ -33,7 +34,7 @@ export function CitationChip({ source, id, className }: CitationChipProps) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7DD3FC] focus-visible:ring-offset-1 rounded-sm"
+            className="inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7DD3FC] focus-visible:ring-offset-1 focus-visible:ring-offset-[#050C1A] rounded-sm"
           >
             <Badge variant="default" className={className}>
               {INSTRUMENT_LABELS[source]} · {id}

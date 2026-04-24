@@ -66,12 +66,11 @@ describe('parseInlineTags', () => {
     expect(carry).toBe('')
   })
 
-  it('malformed [CONFIDENCE: Unknown] — not matched, but text is untouched beyond full bracket pair', () => {
-    // The regex only matches High|Medium|Low — Unknown won't match
+  it('malformed [CONFIDENCE: Unknown] — stripped from text, no confidence event', () => {
     const { parsed, carry } = parseInlineTags('text [CONFIDENCE: Unknown] more', '', defaultOpts)
     expect(parsed.confidences).toHaveLength(0)
-    // The tag remains in text since our regex only strips matched patterns
-    // But carry should be empty since the bracket pair is closed
+    expect(parsed.text).not.toContain('[CONFIDENCE:')
+    expect(parsed.text).toBe('text  more')
     expect(carry).toBe('')
   })
 

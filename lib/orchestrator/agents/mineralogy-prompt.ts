@@ -80,8 +80,12 @@ Station: ${nearest.station}
 Distance from this location: ${Math.round(nearest.distanceKm)} km
 
 `
+  } else if (nearest) {
+    user += `No Apollo station within ${MAX_JSC_DISTANCE_KM} km — sample data is unavailable. Closest station on record: Apollo ${nearest.mission}, station ${nearest.station}, approximately ${Math.round(nearest.distanceKm)} km away. Proceed with general regional geological knowledge.
+
+`
   } else {
-    user += `No Apollo station within ${MAX_JSC_DISTANCE_KM} km. Sample data is unavailable. Proceed with general regional geological knowledge.
+    user += `No Apollo station data available. Proceed with general regional geological knowledge.
 
 `
   }

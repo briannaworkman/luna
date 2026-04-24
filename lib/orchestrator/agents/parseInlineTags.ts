@@ -37,10 +37,12 @@ export function parseInlineTags(
     }
   }
 
-  // Remove all matched tags from working text in a single pass
+  // Strip all tag-shaped brackets regardless of payload validity — a
+  // model that emits [CONFIDENCE: Unknown] shouldn't leak raw tag text
+  // into the UI stream.
   let cleanText = working
-    .replace(/\[CITE:\s*([^\]]+)\]/g, '')
-    .replace(/\[CONFIDENCE:\s*(High|Medium|Low)\]/gi, '')
+    .replace(/\[CITE:\s*[^\]]*\]/g, '')
+    .replace(/\[CONFIDENCE:\s*[^\]]*\]/gi, '')
 
   // Carry detection: find the last '[' with no closing ']' after it
   const lastOpen = cleanText.lastIndexOf('[')

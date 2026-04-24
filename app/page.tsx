@@ -100,13 +100,15 @@ export default function Home() {
           />
         </main>
       )}
-      <ImageGalleryDialog
-        location={galleryLocation}
-        open={galleryOpen}
-        defaultSelectedImages={selectedImages}
-        onClose={handleGalleryClose}
-        onContinue={handleGalleryContinue}
-      />
+      {galleryOpen && (
+        <ImageGalleryDialog
+          location={galleryLocation}
+          open={galleryOpen}
+          defaultSelectedImages={selectedImages}
+          onClose={handleGalleryClose}
+          onContinue={handleGalleryContinue}
+        />
+      )}
     </>
   )
 }

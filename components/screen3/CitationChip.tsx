@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { Badge } from '@/components/badge'
 
 interface CitationChipProps {
   source: 'nasa-image' | 'jsc-sample' | 'lroc' | 'svs'
@@ -14,15 +14,9 @@ const INSTRUMENT_LABELS: Record<CitationChipProps['source'], string> = {
 }
 
 export function CitationChip({ source, id, className }: CitationChipProps) {
-  const label = INSTRUMENT_LABELS[source]
   return (
-    <span
-      className={cn(
-        'font-mono text-[11px] text-luna-fg-3 bg-luna-base-2 border border-luna-hairline rounded-sm px-1.5 py-0.5',
-        className,
-      )}
-    >
-      {label} · {id}
-    </span>
+    <Badge variant="default" className={className}>
+      {INSTRUMENT_LABELS[source]} · {id}
+    </Badge>
   )
 }

@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
 import { GrainOverlay } from "@/components/grain-overlay";
 import { TopBar } from "@/components/top-bar/TopBar";
+import { LocationSelectionProvider } from "@/providers/LocationSelectionProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function RootLayout({
       <body className={cn("antialiased font-sans")}>
         <GrainOverlay />
         <TopBar />
-        {children}
+        <LocationSelectionProvider>
+          {children}
+        </LocationSelectionProvider>
       </body>
     </html>
   );

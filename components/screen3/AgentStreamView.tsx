@@ -6,6 +6,7 @@ import { LocationHeader } from '@/components/screen2/LocationHeader'
 import { OrchestratorBlock } from './OrchestratorBlock'
 import { AgentBlock } from './AgentBlock'
 import { useAgentStream, type SingleAgentState } from './useAgentStream'
+import { SourceDock } from './SourceDock'
 import { AGENTS } from '@/lib/constants/agents'
 import type { AgentId } from '@/lib/constants/agents'
 import type { LunarLocation } from '@/components/globe/types'
@@ -45,7 +46,7 @@ export function AgentStreamView({
   }, [state.agentStates])
 
   return (
-    <div className="fixed inset-0 top-14 flex bg-luna-base">
+    <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
       <AgentRail
         className="h-full"
         activeAgents={activeAgents}
@@ -55,7 +56,7 @@ export function AgentStreamView({
         footerActiveCount={activeAgents.size}
       />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto min-w-0">
         <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-6">
           {/* Header row */}
           <div className="flex items-start justify-between gap-4">
@@ -121,6 +122,11 @@ export function AgentStreamView({
             })}
         </div>
       </main>
+
+      <SourceDock
+        citations={state.globalCitations}
+        activatedAgentCount={state.activatedAgents.filter((id) => id !== 'data-ingest').length}
+      />
     </div>
   )
 }

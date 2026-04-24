@@ -9,7 +9,7 @@ interface CitationChipProps {
   className?: string
 }
 
-const INSTRUMENT_LABELS: Record<CitationChipProps['source'], string> = {
+export const INSTRUMENT_LABELS: Record<CitationChipProps['source'], string> = {
   'nasa-image': 'NASA',
   'jsc-sample': 'JSC',
   'lroc': 'LROC',

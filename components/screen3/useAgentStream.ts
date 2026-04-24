@@ -3,6 +3,8 @@ import { useReducer, useEffect } from 'react'
 import type { LunarLocation } from '@/components/globe/types'
 import type { AgentId } from '@/lib/constants/agents'
 import type { OrchestratorEvent } from '@/lib/types/agent'
+import type { CitationSource } from '@/lib/orchestrator/agents/parseInlineTags'
+import { resolveUrl } from '@/lib/citations/resolveUrl'
 import { parseSseStream } from './parseSseStream'
 
 export type BodySegment =
@@ -22,6 +24,7 @@ export interface AgentStreamState {
   activatedAgents: AgentId[]
   rationale: string
   agentStates: Partial<Record<AgentId, SingleAgentState>>
+  globalCitations: Array<{ source: CitationSource; id: string; url: string | null }>
   isDone: boolean
   streamError?: string
 }
@@ -35,6 +38,7 @@ export const initialAgentStreamState: AgentStreamState = {
   activatedAgents: [],
   rationale: '',
   agentStates: {},
+  globalCitations: [],
   isDone: false,
 }
 
@@ -106,14 +110,25 @@ export function agentStreamReducer(
         }),
       }
 
-    case 'agent-citation':
+    case 'agent-citation': {
+      const alreadyInGlobal = state.globalCitations.some(
+        (c) => c.source === event.source && c.id === event.id,
+      )
+      const nextGlobalCitations = alreadyInGlobal
+        ? state.globalCitations
+        : [
+            ...state.globalCitations,
+            { source: event.source, id: event.id, url: resolveUrl(event.source, event.id) },
+          ]
       return {
         ...state,
         agentStates: upsertAgent(state.agentStates, event.agent, (prev) => ({
           ...prev,
           citations: [...prev.citations, { source: event.source, id: event.id }],
         })),
+        globalCitations: nextGlobalCitations,
       }
+    }
 
     case 'agent-confidence':
       return {

@@ -104,12 +104,17 @@ const config: Config = {
           "90%":  { transform: "translateX(2px)" },
           "100%": { transform: "translateX(0)" },
         },
+        "dock-row-in": {
+          from: { opacity: "0", transform: "translateX(10px)" },
+          to:   { opacity: "1", transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up":   "accordion-up 0.2s ease-out",
         "luna-pulse":     "luna-pulse 2.4s infinite cubic-bezier(0.16, 1, 0.3, 1)",
         "luna-shake":     "luna-shake 300ms cubic-bezier(0.22, 0.61, 0.36, 1)",
+        "dock-row-in":    "dock-row-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },

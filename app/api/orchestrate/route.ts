@@ -41,6 +41,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!Array.isArray(b['imageAssetIds']) || !b['imageAssetIds'].every((item): item is string => typeof item === 'string')) {
     return NextResponse.json({ error: 'imageAssetIds must be an array of strings' }, { status: 400 })
   }
+  if (b['imageAssetIds'].length > 4) {
+    return NextResponse.json({ error: 'imageAssetIds must contain 4 or fewer entries' }, { status: 400 })
+  }
 
   const query = b['query']
   const locationId = b['locationId']

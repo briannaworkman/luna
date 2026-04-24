@@ -102,6 +102,18 @@ describe('POST /api/orchestrate', () => {
       expect(res.status).toBe(400)
     })
 
+    it('returns 400 when imageAssetIds exceeds 4 entries', async () => {
+      const res = await POST(makeRequest({ query: 'test query', locationId: 'tycho', imageAssetIds: ['a', 'b', 'c', 'd', 'e'] }))
+      expect(res.status).toBe(400)
+      const json = await res.json() as { error: string }
+      expect(json.error).toMatch(/4 or fewer/i)
+    })
+
+    it('accepts imageAssetIds of exactly 4 entries', async () => {
+      const res = await POST(makeRequest({ query: 'test query', locationId: 'tycho', imageAssetIds: ['a', 'b', 'c', 'd'] }))
+      expect(res.status).not.toBe(400)
+    })
+
     it('returns 400 for unknown locationId', async () => {
       const res = await POST(makeRequest({ query: 'test query', locationId: 'unknown-location-xyz', imageAssetIds: [] }))
       expect(res.status).toBe(400)

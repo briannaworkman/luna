@@ -275,9 +275,10 @@ describe('runImageryAgent', () => {
       expect(errEvent.message).toContain('Stream error')
     }
 
-    // Second image was also processed; synthesis fires because both fetches succeeded
-    // (stream throw is isolated to per-image analysis, not the fetch step)
-    expect(mockStream).toHaveBeenCalledTimes(3)
+    // Second image was also processed, but synthesis does NOT fire because
+    // only one image streamed successfully. A failed stream means no analysis
+    // was produced for that image — it shouldn't be re-fed into synthesis.
+    expect(mockStream).toHaveBeenCalledTimes(2)
   })
 
   it('synthesis stream throws — agent-error emitted; per-image blocks already in event log', async () => {

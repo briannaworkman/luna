@@ -74,8 +74,6 @@ export async function runImageryAgent(input: {
       continue
     }
 
-    fetched.push({ image, data: fetchedData, mediaType: fetchedMediaType })
-
     const { system, userText, headerLine } = buildPerImagePrompt({
       location: dataContext.location,
       image,
@@ -85,6 +83,7 @@ export async function runImageryAgent(input: {
 
     emit({ type: 'agent-chunk', agent: 'imagery', text: headerLine })
 
+    let streamSucceeded = false
     try {
       const stream = getAnthropic().messages.stream({
         model: CLAUDE_MODEL,
@@ -132,10 +131,18 @@ export async function runImageryAgent(input: {
       if (carry.length > 0) {
         emit({ type: 'agent-chunk', agent: 'imagery', text: carry })
       }
+      streamSucceeded = true
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       emit({ type: 'agent-error', agent: 'imagery', message })
       // Continue to next image — stream error is isolated per-image
+    }
+
+    // Only images whose per-image analysis completed count toward synthesis.
+    // Fetch+emit without successful streaming doesn't produce useful output
+    // for the synthesis model to reason over.
+    if (streamSucceeded) {
+      fetched.push({ image, data: fetchedData, mediaType: fetchedMediaType })
     }
 
     emit({ type: 'agent-chunk', agent: 'imagery', text: '\n\n---\n\n' })

@@ -5,11 +5,14 @@ import type { AgentId } from '@/lib/constants/agents'
 import type { OrchestratorEvent } from '@/lib/types/agent'
 import { parseSseStream } from './parseSseStream'
 
+export type BodySegment =
+  | { kind: 'text'; text: string }
+  | { kind: 'confidence'; level: 'high' | 'medium' | 'low' }
+
 export interface SingleAgentState {
   status: 'active' | 'complete' | 'error'
-  text: string
+  body: BodySegment[]
   citations: Array<{ source: 'nasa-image' | 'jsc-sample' | 'lroc' | 'svs'; id: string }>
-  confidence: Array<{ level: 'high' | 'medium' | 'low'; claimId?: string }>
   statusText?: string
   errorMessage?: string
 }
@@ -36,7 +39,7 @@ export const initialAgentStreamState: AgentStreamState = {
 }
 
 function makeDefaultAgentState(): SingleAgentState {
-  return { status: 'active', text: '', citations: [], confidence: [] }
+  return { status: 'active', body: [], citations: [] }
 }
 
 function upsertAgent(
@@ -70,10 +73,7 @@ export function agentStreamReducer(
       }
 
     case 'agent-activate': {
-      const existing = state.agentStates[event.agent]
-      const updated: SingleAgentState = existing
-        ? { ...existing, status: 'active' }
-        : { status: 'active', text: '', citations: [], confidence: [] }
+      const updated: SingleAgentState = { status: 'active', body: [], citations: [] }
       return {
         ...state,
         agentStates: { ...state.agentStates, [event.agent]: updated },
@@ -92,10 +92,18 @@ export function agentStreamReducer(
     case 'agent-chunk':
       return {
         ...state,
-        agentStates: upsertAgent(state.agentStates, event.agent, (prev) => ({
-          ...prev,
-          text: prev.text + event.text,
-        })),
+        agentStates: upsertAgent(state.agentStates, event.agent, (prev) => {
+          const lastSeg = prev.body[prev.body.length - 1]
+          if (lastSeg !== undefined && lastSeg.kind === 'text') {
+            // Merge with existing trailing text segment
+            const newBody: BodySegment[] = [
+              ...prev.body.slice(0, prev.body.length - 1),
+              { kind: 'text', text: lastSeg.text + event.text },
+            ]
+            return { ...prev, body: newBody }
+          }
+          return { ...prev, body: [...prev.body, { kind: 'text', text: event.text }] }
+        }),
       }
 
     case 'agent-citation':
@@ -112,10 +120,7 @@ export function agentStreamReducer(
         ...state,
         agentStates: upsertAgent(state.agentStates, event.agent, (prev) => ({
           ...prev,
-          confidence: [
-            ...prev.confidence,
-            { level: event.level, claimId: event.claimId },
-          ],
+          body: [...prev.body, { kind: 'confidence', level: event.level }],
         })),
       }
 

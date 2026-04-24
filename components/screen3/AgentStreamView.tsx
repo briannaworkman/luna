@@ -102,9 +102,8 @@ export function AgentStreamView({
               const label = agentMeta?.label ?? agentId
               const agentState = state.agentStates[agentId] ?? {
                 status: 'active' as const,
-                text: '',
+                body: [],
                 citations: [],
-                confidence: [],
               }
               return (
                 <AgentBlock

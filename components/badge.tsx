@@ -1,12 +1,14 @@
+import { forwardRef } from 'react'
+import type { HTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
-interface BadgeProps {
-  children: React.ReactNode
-  variant?: 'default' | 'cyan' | 'success' | 'warning' | 'danger'
-  className?: string
+type BadgeVariant = 'default' | 'cyan' | 'success' | 'warning' | 'danger'
+
+interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  variant?: BadgeVariant
 }
 
-const variantClasses: Record<NonNullable<BadgeProps['variant']>, string> = {
+const variantClasses: Record<BadgeVariant, string> = {
   default: 'bg-luna-base-3 text-luna-fg-2',
   cyan:    'bg-luna-base-3 text-luna-cyan',
   success: 'bg-luna-base-3 text-luna-success',
@@ -14,17 +16,20 @@ const variantClasses: Record<NonNullable<BadgeProps['variant']>, string> = {
   danger:  'bg-luna-base-3 text-luna-danger',
 }
 
-export function Badge({ children, variant = 'cyan', className }: BadgeProps) {
-  return (
+export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
+  ({ children, variant = 'cyan', className, ...props }, ref) => (
     <span
+      ref={ref}
       className={cn(
         'inline-flex items-center h-5 px-1.5 rounded-xs',
         'font-mono text-[10px] tracking-[0.08em] font-medium',
         variantClasses[variant],
         className,
       )}
+      {...props}
     >
       {children}
     </span>
-  )
-}
+  ),
+)
+Badge.displayName = 'Badge'

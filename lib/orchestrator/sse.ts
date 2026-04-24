@@ -37,27 +37,20 @@ export function createSseResponse(
     start(controller) {
       const emitter = new SseEmitter(controller)
 
-      let timeoutId: ReturnType<typeof setTimeout> | undefined
+      const timeoutId = setTimeout(() => {
+        emitter.emit({
+          type: 'agent-error',
+          agent: 'data-ingest',
+          message: `Request timed out after ${Math.round(timeoutMs / 1000)} seconds`,
+        })
+        emitter.emit({ type: 'done' })
+        emitter.close()
+      }, timeoutMs)
 
-      const timeoutPromise = new Promise<void>((resolve) => {
-        timeoutId = setTimeout(() => {
-          emitter.emit({
-            type: 'agent-error',
-            agent: 'data-ingest',
-            message: `Request timed out after ${Math.round(timeoutMs / 1000)} seconds`,
-          })
-          emitter.emit({ type: 'done' })
-          emitter.close()
-          resolve()
-        }, timeoutMs)
-      })
-
-      const handlerPromise = handler(emitter)
+      handler(emitter)
         .then(() => {
           clearTimeout(timeoutId)
-          if (!emitter.closed) {
-            emitter.close()
-          }
+          emitter.close()
         })
         .catch((err: unknown) => {
           clearTimeout(timeoutId)
@@ -66,10 +59,6 @@ export function createSseResponse(
           emitter.emit({ type: 'done' })
           emitter.close()
         })
-
-      Promise.race([handlerPromise, timeoutPromise]).catch(() => {
-        // errors already handled in .catch above
-      })
     },
   })
 

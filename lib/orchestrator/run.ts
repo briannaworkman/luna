@@ -35,10 +35,10 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
   })
 
   let rawBuffer = ''
-  let rationaleBuffer = ''
   let agentJsonBuffer = ''
   let delimiterSeen = false
   let rationaleEmitted = 0
+  let rationaleEnd = 0
 
   const DELIMITER = '---AGENTS---'
 
@@ -57,20 +57,17 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
         const safeEnd = Math.max(rationaleEmitted, rawBuffer.length - (DELIMITER.length - 1))
         if (safeEnd > rationaleEmitted) {
           emit({ type: 'orchestrator-chunk', text: rawBuffer.slice(rationaleEmitted, safeEnd) })
-          rationaleBuffer = rawBuffer.slice(0, safeEnd)
           rationaleEmitted = safeEnd
         }
       } else {
         delimiterSeen = true
-        const fullRationale = rawBuffer.slice(0, delimIdx)
-        const newRationaleText = fullRationale.slice(rationaleEmitted)
+        rationaleEnd = delimIdx
+        const newRationaleText = rawBuffer.slice(rationaleEmitted, delimIdx)
         if (newRationaleText.length > 0) {
           emit({ type: 'orchestrator-chunk', text: newRationaleText })
         }
-        rationaleBuffer = fullRationale
-        rationaleEmitted = fullRationale.length
-        const afterDelimiter = rawBuffer.slice(delimIdx + DELIMITER.length)
-        agentJsonBuffer += afterDelimiter
+        rationaleEmitted = delimIdx
+        agentJsonBuffer += rawBuffer.slice(delimIdx + DELIMITER.length)
       }
     } else {
       agentJsonBuffer += chunk
@@ -95,19 +92,13 @@ export async function runOrchestrator(input: RunOrchestratorInput): Promise<RunO
     throw new Error('Orchestrator returned unparseable agent list')
   }
 
-  let agents: AgentId[] = parsed.filter(isAgentId)
-
-  if (!agents.includes('data-ingest')) {
-    agents = ['data-ingest', ...agents]
-  } else if (agents[0] !== 'data-ingest') {
-    agents = ['data-ingest', ...agents.filter((id) => id !== 'data-ingest')]
-  }
+  let agents: AgentId[] = ['data-ingest', ...parsed.filter(isAgentId).filter((id) => id !== 'data-ingest')]
 
   if (!hasImages) {
     agents = agents.filter((id) => id !== 'imagery')
   }
 
-  const rationale = rationaleBuffer.trim()
+  const rationale = (delimiterSeen ? rawBuffer.slice(0, rationaleEnd) : rawBuffer).trim()
 
   emit({ type: 'orchestrator', agents, rationale })
 

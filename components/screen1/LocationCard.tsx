@@ -31,6 +31,7 @@ function TypeBadge({ location }: { location: LunarLocation }) {
     crater: 'Crater',
     apollo: 'Apollo',
     robotic: 'Robotic',
+    feature: 'Feature',
   }
   return (
     <span className="font-mono text-[10px] tracking-[0.08em] uppercase px-1.5 py-0.5 rounded-sm bg-luna-base-3 text-luna-fg-3 border border-luna-hairline">

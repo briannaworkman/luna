@@ -15,6 +15,7 @@ const TABS: { label: string; value: LocationFilter }[] = [
   { label: 'Craters & Basins', value: 'crater' },
   { label: 'Apollo', value: 'apollo' },
   { label: 'Robotic Landers', value: 'robotic' },
+  { label: 'Features', value: 'feature' },
   { label: 'Proposed', value: 'proposed' },
 ]
 

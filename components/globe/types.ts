@@ -1,4 +1,4 @@
-export type LocationType = 'crater' | 'apollo' | 'robotic' | 'proposed'
+export type LocationType = 'crater' | 'apollo' | 'robotic' | 'proposed' | 'feature'
 
 export interface LunarLocation {
   id: string

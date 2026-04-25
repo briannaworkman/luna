@@ -43,7 +43,7 @@ function HintBanner() {
   return (
     <div
       role="status"
-      className="fixed top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-4 py-2 rounded bg-luna-base-2 border border-luna-hairline font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan shadow-lg"
+      className="fixed top-28 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-4 py-2 rounded bg-luna-base-2 border border-luna-hairline font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan shadow-lg"
     >
       <span>{message}</span>
       <button
@@ -77,14 +77,7 @@ export default function Home() {
     setSelectedLocation(null)
   }, [])
 
-  const handleResearch = useCallback(
-    (location: LunarLocation) => {
-      openGallery(location, 'navigate')
-    },
-    [openGallery],
-  )
-
-  const handleCardSelect = useCallback(
+  const handleOpenGallery = useCallback(
     (location: LunarLocation) => {
       openGallery(location, 'navigate')
     },
@@ -114,7 +107,7 @@ export default function Home() {
         {view === 'list' ? (
           <LocationListView
             locations={filteredLocations}
-            onLocationSelect={handleCardSelect}
+            onLocationSelect={handleOpenGallery}
           />
         ) : (
           <div className="flex-1 relative">
@@ -126,7 +119,7 @@ export default function Home() {
             <LocationPanel
               location={selectedLocation}
               onClose={handlePanelClose}
-              onResearch={handleResearch}
+              onResearch={handleOpenGallery}
             />
           </div>
         )}

@@ -23,13 +23,14 @@ export interface QueryPayload {
 interface QueryComposerProps {
   location: LunarLocation
   onSubmit: (payload: QueryPayload) => void
+  initialQuery?: string
 }
 
-export function QueryComposer({ location, onSubmit }: QueryComposerProps) {
+export function QueryComposer({ location, onSubmit, initialQuery }: QueryComposerProps) {
   const router = useRouter()
   const [images, setImages] = useSelectedImages()
   const openGallery = useOpenGallery()
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery ?? '')
   const [shaking, setShaking] = useState(false)
   const [emptyHint, setEmptyHint] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)

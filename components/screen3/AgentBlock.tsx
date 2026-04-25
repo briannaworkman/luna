@@ -36,7 +36,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
   const controlsId = `agent-block-body-${agentId}`
 
   const headerClass =
-    'sticky top-0 z-[1] -mx-5 px-5 -mt-4 pt-4 pb-3 bg-luna-base-1 border-b border-luna-hairline rounded-t-md flex items-center justify-between gap-2 w-full text-left'
+    'sticky top-0 z-[1] -mx-5 px-5 -mt-4 pt-4 pb-3 bg-luna-base-1 border-b border-luna-hairline rounded-t-md flex items-center justify-between gap-2 w-[calc(100%+2.5rem)] text-left'
 
   return (
     <div

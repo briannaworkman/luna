@@ -1,44 +1,35 @@
-'use client'
-import { ArrowRight } from 'lucide-react'
-import { Eyebrow } from '@/components/ui/eyebrow'
-
 interface SuggestedQuestionsProps {
-  locationName: string
   questions: string[]
   onSelect: (question: string) => void
 }
 
-export function SuggestedQuestions({ locationName, questions, onSelect }: SuggestedQuestionsProps) {
+export function SuggestedQuestions({ questions, onSelect }: SuggestedQuestionsProps) {
   if (questions.length === 0) return null
 
   return (
-    <div className="mt-6 pt-6 border-t border-luna-hairline">
-      <Eyebrow className="text-luna-fg-3 mb-1">
-        Suggested for {locationName}
-      </Eyebrow>
-      <div className="flex flex-col">
-        {questions.map((q) => (
+    <section aria-label="Start here" className="flex flex-col gap-3 mt-8">
+      <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
+        Start here
+      </div>
+      <div className="flex flex-col gap-2 w-full">
+        {questions.map((question) => (
           <button
-            key={q}
+            key={question}
             type="button"
-            onClick={() => onSelect(q)}
-            className="group h-9 w-full flex items-center gap-2.5 px-2 -mx-2 border-b border-luna-hairline last:border-b-0 text-left transition-colors duration-[120ms] hover:bg-luna-base-2"
+            onClick={() => onSelect(question)}
+            className={[
+              'w-full text-left px-4 py-3 rounded-md',
+              'bg-transparent border border-luna-hairline',
+              'font-sans text-[13px] leading-[1.55] text-luna-fg-2',
+              'hover:border-luna-fg-3 hover:text-luna-fg hover:bg-luna-base-1',
+              'transition-colors duration-[120ms] ease-out',
+              'cursor-pointer',
+            ].join(' ')}
           >
-            <span aria-hidden="true" className="w-2 text-center font-mono text-[13px] leading-none text-luna-hairline-2">
-              ·
-            </span>
-            <span className="flex-1 font-sans font-normal text-[13px] text-luna-fg-2 group-hover:text-luna-fg">
-              {q}
-            </span>
-            <ArrowRight
-              size={14}
-              strokeWidth={1.5}
-              className="text-luna-fg-4 group-hover:text-luna-cyan transition-colors"
-              aria-hidden="true"
-            />
+            {question}
           </button>
         ))}
       </div>
-    </div>
+    </section>
   )
 }

@@ -25,6 +25,7 @@ const testLocation: LunarLocation = {
   diameter: '85 km',
   significance: 'Most prominent young crater visible from Earth',
   isProposed: false,
+  type: 'crater',
   coords: '43.3°S, 11.4°W',
   region: 'NEAR SIDE',
 }
@@ -216,6 +217,7 @@ describe('runDataIngest', () => {
         lon: 0,
         significance: 'Permanently shadowed south pole crater',
         isProposed: false,
+        type: 'crater',
         coords: '89.9°S, 0°E',
         region: 'NEAR SIDE',
       }

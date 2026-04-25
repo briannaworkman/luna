@@ -67,6 +67,7 @@ const testLocation: LunarLocation = {
   lon: -11,
   significance: 'Most prominent young crater',
   isProposed: false,
+  type: 'crater',
   coords: '43°S, 11°W',
   region: 'NEAR SIDE',
 }

@@ -17,6 +17,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '~2,500 km',
     significance: 'Largest, deepest, oldest known impact basin on the Moon; far side',
     isProposed: false,
+    type: 'crater',
     coords: '56°S, 180°W',
     region: 'FAR SIDE',
     suggestedQuestions: [
@@ -33,6 +34,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '~900 km',
     significance: '"Bullseye" crater with 3 concentric rings; seen by human eyes for the first time by Artemis II crew',
     isProposed: false,
+    type: 'crater',
     coords: '19°S, 95°W',
     region: 'FAR SIDE',
     suggestedQuestions: [
@@ -49,6 +51,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '85 km',
     significance: 'Most prominent young crater; bright ray system visible from Earth with naked eye',
     isProposed: false,
+    type: 'crater',
     coords: '43°S, 11°W',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -65,6 +68,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '93 km',
     significance: '"Monarch of the Moon"; famous ray system and terraced walls',
     isProposed: false,
+    type: 'crater',
     coords: '10°N, 20°W',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -81,6 +85,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '231 km',
     significance: 'One of the largest near-side craters; famous chain of smaller craters within it',
     isProposed: false,
+    type: 'crater',
     coords: '58°S, 14°W',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -97,6 +102,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '301 km',
     significance: 'One of the largest craters on the near side; heavily degraded ancient basin',
     isProposed: false,
+    type: 'crater',
     coords: '67°S, 69°W',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -113,6 +119,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '184 km',
     significance: 'Prominent central peak; massive floor fracture (rille) radiating from center',
     isProposed: false,
+    type: 'crater',
     coords: '25°S, 61°E',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -129,6 +136,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '132 km',
     significance: 'Well-preserved; complex terraced walls and bright central peak',
     isProposed: false,
+    type: 'crater',
     coords: '9°S, 61°E',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -145,6 +153,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '199 km',
     significance: 'Near the eastern limb; known for distinctive floor fractures',
     isProposed: false,
+    type: 'crater',
     coords: '27°S, 81°E',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -161,6 +170,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '201 km',
     significance: 'Ancient, heavily eroded highland crater on the southeastern near side',
     isProposed: false,
+    type: 'crater',
     coords: '45°S, 41°E',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -177,6 +187,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '212 km',
     significance: 'Large walled plain near the Moon\'s southwestern limb',
     isProposed: false,
+    type: 'crater',
     coords: '44°S, 55°W',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -193,6 +204,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '130 km',
     significance: 'Southern highlands; heavily overlapped by subsequent impacts',
     isProposed: false,
+    type: 'crater',
     coords: '41°S, 6°E',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -209,6 +221,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '156 km',
     significance: 'Ancient, worn crater in the rugged southern highlands',
     isProposed: false,
+    type: 'crater',
     coords: '50°S, 6°W',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -225,6 +238,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '146 km',
     significance: 'Large old crater southwest of Tycho',
     isProposed: false,
+    type: 'crater',
     coords: '50°S, 21°W',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -241,6 +255,7 @@ export const LOCATIONS: LunarLocation[] = [
     diameter: '141 km',
     significance: 'Ancient crater on the edge of Mare Fecunditatis',
     isProposed: false,
+    type: 'crater',
     coords: '16°S, 62°E',
     region: 'NEAR SIDE',
     suggestedQuestions: [
@@ -257,6 +272,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Sits near the near/far side boundary — visible from Earth at certain libration angles.',
     namingStory: 'Named for Carroll Taylor Wiseman, late wife of commander Reid Wiseman, who died in 2020. Described by the crew as "a bright spot on the moon."',
     isProposed: true,
+    type: 'proposed',
     coords: '18.84°N, 86.51°W',
     region: 'FAR SIDE',
     namedBy: ARTEMIS_CREW,
@@ -275,6 +291,7 @@ export const LOCATIONS: LunarLocation[] = [
     significance: 'Located just northwest of Orientale basin on the far side of the Moon — never visible from Earth.',
     namingStory: 'Named for the Orion spacecraft on April 6, 2026, moments after the Artemis II crew broke the human distance record from Earth — the furthest any human has traveled from our planet.',
     isProposed: true,
+    type: 'proposed',
     coords: '2.66°N, 104.92°W',
     region: 'FAR SIDE',
     namedBy: ARTEMIS_CREW,

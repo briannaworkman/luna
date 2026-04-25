@@ -86,3 +86,31 @@ export interface IlluminationWindowsErrorResponse {
   error: string;
   code: 'FETCH_FAILED' | 'INVALID_PARAMS';
 }
+
+export interface LampProduct {
+  productId: string;
+  resolutionMpp: number;
+  acquisitionDate: string;
+  downloadUrl: string;
+}
+
+export interface PsrSummary {
+  locationId: string;
+  locationName: string;
+  iceConfidence: 'confirmed' | 'probable' | 'candidate';
+  detectionMethods: string[];
+  estimatedIcePct: string;
+  notes: string;
+}
+
+export interface PsrDataResponse {
+  lampProducts: LampProduct[];
+  psrSummary: PsrSummary | null;
+}
+
+export interface PsrDataErrorResponse {
+  error: string;
+  code: 'TIMEOUT' | 'UPSTREAM_ERROR' | 'INVALID_PARAMS';
+  lampProducts: LampProduct[];
+  psrSummary: PsrSummary | null;
+}

@@ -89,9 +89,12 @@ interface LunarGlobeProps {
   onLocationSelect?: (location: LunarLocation | null) => void
   /** Populated by the component — call to programmatically deselect and resume rotation */
   deselectRef?: React.MutableRefObject<(() => void) | null>
+  /** Filtered location set to render — defaults to all LOCATIONS */
+  locations?: LunarLocation[]
 }
 
-export function LunarGlobe({ onLocationSelect, deselectRef }: LunarGlobeProps) {
+export function LunarGlobe({ onLocationSelect, deselectRef, locations: locationsProp }: LunarGlobeProps) {
+  const locations = locationsProp ?? LOCATIONS
   const mountRef = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const onSelectRef = useRef(onLocationSelect)
@@ -143,8 +146,8 @@ export function LunarGlobe({ onLocationSelect, deselectRef }: LunarGlobeProps) {
     const dotMats:   THREE.MeshBasicMaterial[] = []
     const hitMeshes: THREE.Mesh[] = []
 
-    for (let i = 0; i < LOCATIONS.length; i++) {
-      const loc = LOCATIONS[i]!
+    for (let i = 0; i < locations.length; i++) {
+      const loc = locations[i]!
       const pos = latLonToVec3(loc.lat, loc.lon, DOT_SURFACE_GAP)
 
       const mat = new THREE.MeshBasicMaterial({
@@ -274,7 +277,7 @@ export function LunarGlobe({ onLocationSelect, deselectRef }: LunarGlobeProps) {
           const rect = mount.getBoundingClientRect()
           tooltip.style.left = `${e.clientX - rect.left + 14}px`
           tooltip.style.top = `${e.clientY - rect.top - 36}px`
-          tooltip.textContent = LOCATIONS[hoveredIdx]!.name
+          tooltip.textContent = locations[hoveredIdx]!.name
           tooltip.style.display = 'block'
         } else {
           tooltip.style.display = 'none'
@@ -295,7 +298,7 @@ export function LunarGlobe({ onLocationSelect, deselectRef }: LunarGlobeProps) {
         const idx = hits[0]!.object.userData.dotIdx as number
         selectedIdx = idx
         stopRotation()
-        onSelectRef.current?.(LOCATIONS[idx] ?? null)
+        onSelectRef.current?.(locations[idx] ?? null)
       } else if (selectedIdx !== -1) {
         selectedIdx = -1
         onSelectRef.current?.(null)
@@ -427,7 +430,7 @@ export function LunarGlobe({ onLocationSelect, deselectRef }: LunarGlobeProps) {
     // to provide the parent with a deselect callback. Changes to the ref after mount should
     // not re-setup the expensive Three.js scene.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [locations])
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>

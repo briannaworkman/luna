@@ -14,7 +14,7 @@ function RegionBadge({ region }: { region: string }) {
           : 'bg-luna-violet/10 text-luna-violet',
       )}
     >
-      {isNear ? 'Near' : 'Far side'}
+      {isNear ? 'Near side' : 'Far side'}
     </span>
   )
 }

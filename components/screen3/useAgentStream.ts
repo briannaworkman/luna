@@ -3,6 +3,8 @@ import { useReducer, useEffect } from 'react'
 import type { LunarLocation } from '@/components/globe/types'
 import type { AgentId } from '@/lib/constants/agents'
 import type { OrchestratorEvent } from '@/lib/types/agent'
+import { resolveUrl } from '@/lib/citations/resolveUrl'
+import { citationKey, type Citation, type ResolvedCitation } from '@/lib/citations/types'
 import { parseSseStream } from './parseSseStream'
 
 export type BodySegment =
@@ -12,7 +14,7 @@ export type BodySegment =
 export interface SingleAgentState {
   status: 'active' | 'complete' | 'error'
   body: BodySegment[]
-  citations: Array<{ source: 'nasa-image' | 'jsc-sample' | 'lroc' | 'svs'; id: string }>
+  citations: Citation[]
   statusText?: string
   errorMessage?: string
 }
@@ -22,6 +24,7 @@ export interface AgentStreamState {
   activatedAgents: AgentId[]
   rationale: string
   agentStates: Partial<Record<AgentId, SingleAgentState>>
+  globalCitations: ResolvedCitation[]
   isDone: boolean
   streamError?: string
 }
@@ -35,6 +38,7 @@ export const initialAgentStreamState: AgentStreamState = {
   activatedAgents: [],
   rationale: '',
   agentStates: {},
+  globalCitations: [],
   isDone: false,
 }
 
@@ -106,14 +110,26 @@ export function agentStreamReducer(
         }),
       }
 
-    case 'agent-citation':
+    case 'agent-citation': {
+      const incomingKey = citationKey({ source: event.source, id: event.id })
+      const alreadyInGlobal = state.globalCitations.some(
+        (c) => citationKey(c) === incomingKey,
+      )
+      const nextGlobalCitations = alreadyInGlobal
+        ? state.globalCitations
+        : [
+            ...state.globalCitations,
+            { source: event.source, id: event.id, url: resolveUrl(event.source, event.id) },
+          ]
       return {
         ...state,
         agentStates: upsertAgent(state.agentStates, event.agent, (prev) => ({
           ...prev,
           citations: [...prev.citations, { source: event.source, id: event.id }],
         })),
+        globalCitations: nextGlobalCitations,
       }
+    }
 
     case 'agent-confidence':
       return {

@@ -234,3 +234,71 @@ describe('agentStreamReducer', () => {
     expect(state.streamError).toBe('Network failure')
   })
 })
+
+describe('agent-citation — global dedup', () => {
+  it('first citation appends one entry with correct source, id, and url', () => {
+    const state = agentStreamReducer(initialAgentStreamState, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'imagery', source: 'nasa-image', id: 'PIA12345' },
+    })
+    expect(state.globalCitations).toHaveLength(1)
+    expect(state.globalCitations[0]!.source).toBe('nasa-image')
+    expect(state.globalCitations[0]!.id).toBe('PIA12345')
+    expect(state.globalCitations[0]!.url).toBe('https://images.nasa.gov/details/PIA12345')
+  })
+
+  it('duplicate source:id from same agent does not add to globalCitations but does add to per-agent citations', () => {
+    const s1 = agentStreamReducer(initialAgentStreamState, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'imagery', source: 'nasa-image', id: 'PIA12345' },
+    })
+    const s2 = agentStreamReducer(s1, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'imagery', source: 'nasa-image', id: 'PIA12345' },
+    })
+    expect(s2.globalCitations).toHaveLength(1)
+    expect(s2.agentStates['imagery']?.citations).toHaveLength(2)
+  })
+
+  it('same source:id from different agent still results in one globalCitations entry', () => {
+    const s1 = agentStreamReducer(initialAgentStreamState, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'imagery', source: 'nasa-image', id: 'PIA12345' },
+    })
+    const s2 = agentStreamReducer(s1, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'mission-history', source: 'nasa-image', id: 'PIA12345' },
+    })
+    expect(s2.globalCitations).toHaveLength(1)
+  })
+
+  it('lroc citation entry has url === null', () => {
+    const state = agentStreamReducer(initialAgentStreamState, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'imagery', source: 'lroc', id: 'M1234567890LE' },
+    })
+    expect(state.globalCitations).toHaveLength(1)
+    expect(state.globalCitations[0]!.url).toBeNull()
+  })
+
+  it('dedupes case-insensitively on id (PIA12345 vs pia12345)', () => {
+    const s1 = agentStreamReducer(initialAgentStreamState, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'imagery', source: 'nasa-image', id: 'PIA12345' },
+    })
+    const s2 = agentStreamReducer(s1, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'imagery', source: 'nasa-image', id: 'pia12345' },
+    })
+    expect(s2.globalCitations).toHaveLength(1)
+    expect(s2.globalCitations[0]!.id).toBe('PIA12345')
+  })
+
+  it('svs with SVS- prefix url matches expected pattern', () => {
+    const state = agentStreamReducer(initialAgentStreamState, {
+      kind: 'sse',
+      event: { type: 'agent-citation', agent: 'orbit', source: 'svs', id: 'SVS-5587' },
+    })
+    expect(state.globalCitations[0]!.url).toBe('https://svs.gsfc.nasa.gov/5587')
+  })
+})

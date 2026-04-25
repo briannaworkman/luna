@@ -93,7 +93,7 @@ export default function Home() {
       deselectRef.current?.()
       setSelectedLocation(null)
     }
-  }, [deselectRef])
+  }, [])
 
   return (
     <>

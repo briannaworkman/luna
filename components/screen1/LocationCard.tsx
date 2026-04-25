@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { LunarLocation } from '@/components/globe/types'
+import type { LunarLocation, LocationType } from '@/components/globe/types'
 
 function RegionBadge({ region }: { region: string }) {
   const isNear = region.toUpperCase() === 'NEAR SIDE'
@@ -27,7 +27,7 @@ function TypeBadge({ location }: { location: LunarLocation }) {
       </span>
     )
   }
-  const labels: Record<string, string> = {
+  const labels: Record<Exclude<LocationType, 'proposed'>, string> = {
     crater: 'Crater',
     apollo: 'Apollo',
     robotic: 'Robotic',

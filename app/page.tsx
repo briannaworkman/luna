@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { X } from 'lucide-react'
 import { LocationPanel } from '@/components/globe/LocationPanel'
@@ -66,7 +66,10 @@ export default function Home() {
   const [view, setView] = useState<ViewMode>('list')
   const [filter, setFilter] = useState<LocationFilter>('all')
 
-  const filteredLocations = filterLocations(LOCATIONS, filter)
+  const filteredLocations = useMemo(
+    () => filterLocations(LOCATIONS, filter),
+    [filter],
+  )
 
   const handleLocationSelect = useCallback((location: LunarLocation | null) => {
     setSelectedLocation(location)
@@ -90,7 +93,7 @@ export default function Home() {
       deselectRef.current?.()
       setSelectedLocation(null)
     }
-  }, [])
+  }, [deselectRef])
 
   return (
     <>

@@ -7,6 +7,11 @@ import { X } from 'lucide-react'
 import { LocationPanel } from '@/components/globe/LocationPanel'
 import { useOpenGallery } from '@/providers/LocationSelectionProvider'
 import type { LunarLocation } from '@/components/globe/types'
+import { FilterBar } from '@/components/screen1/FilterBar'
+import { ViewToggle, type ViewMode } from '@/components/screen1/ViewToggle'
+import { LocationListView } from '@/components/screen1/LocationListView'
+import { filterLocations, type LocationFilter } from '@/components/screen1/filterLocations'
+import { LOCATIONS } from '@/components/globe/locations'
 
 const LunarGlobe = dynamic(
   () => import('@/components/globe/LunarGlobe').then((m) => m.LunarGlobe),
@@ -58,6 +63,11 @@ export default function Home() {
   const deselectRef = useRef<(() => void) | null>(null)
   const openGallery = useOpenGallery()
 
+  const [view, setView] = useState<ViewMode>('list')
+  const [filter, setFilter] = useState<LocationFilter>('all')
+
+  const filteredLocations = filterLocations(LOCATIONS, filter)
+
   const handleLocationSelect = useCallback((location: LunarLocation | null) => {
     setSelectedLocation(location)
   }, [])
@@ -74,18 +84,52 @@ export default function Home() {
     [openGallery],
   )
 
+  const handleCardSelect = useCallback(
+    (location: LunarLocation) => {
+      openGallery(location, 'navigate')
+    },
+    [openGallery],
+  )
+
+  const handleViewChange = useCallback((newView: ViewMode) => {
+    setView(newView)
+    if (newView === 'list') {
+      deselectRef.current?.()
+      setSelectedLocation(null)
+    }
+  }, [])
+
   return (
     <>
       <Suspense fallback={null}>
         <HintBanner />
       </Suspense>
-      <main className="fixed inset-0 overflow-hidden bg-luna-base">
-        <LunarGlobe onLocationSelect={handleLocationSelect} deselectRef={deselectRef} />
-        <LocationPanel
-          location={selectedLocation}
-          onClose={handlePanelClose}
-          onResearch={handleResearch}
-        />
+      <main className="fixed inset-x-0 bottom-0 top-14 flex flex-col bg-luna-base">
+        {/* Control strip: filters left, view toggle right */}
+        <div className="flex items-center gap-3 px-5 py-2.5 border-b border-luna-hairline flex-shrink-0">
+          <FilterBar activeFilter={filter} onFilterChange={setFilter} />
+          <ViewToggle activeView={view} onViewChange={handleViewChange} />
+        </div>
+
+        {view === 'list' ? (
+          <LocationListView
+            locations={filteredLocations}
+            onLocationSelect={handleCardSelect}
+          />
+        ) : (
+          <div className="flex-1 relative">
+            <LunarGlobe
+              locations={filteredLocations}
+              onLocationSelect={handleLocationSelect}
+              deselectRef={deselectRef}
+            />
+            <LocationPanel
+              location={selectedLocation}
+              onClose={handlePanelClose}
+              onResearch={handleResearch}
+            />
+          </div>
+        )}
       </main>
     </>
   )

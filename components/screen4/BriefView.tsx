@@ -61,7 +61,7 @@ export function BriefView({
             <BriefSkeleton />
           </div>
         </main>
-        <div className="w-[260px] shrink-0 border-l border-luna-hairline bg-luna-base" />
+        <CompletenessPanel dataCompleteness={{}} />
       </div>
     )
   }
@@ -72,7 +72,7 @@ export function BriefView({
       <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
         <AgentRail className="h-full" completedAgents={completedAgentSet} />
         <main className="flex-1 overflow-y-auto min-w-0">
-          <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col items-center gap-6 py-24">
+          <div className="w-full max-w-4xl mx-auto px-10 py-24 flex flex-col items-center gap-6">
             <p className="font-mono text-[13px] text-luna-danger text-center">
               Brief synthesis failed: {error}
             </p>
@@ -85,7 +85,7 @@ export function BriefView({
             </Button>
           </div>
         </main>
-        <div className="w-[260px] shrink-0 border-l border-luna-hairline bg-luna-base" />
+        <CompletenessPanel dataCompleteness={{}} />
       </div>
     )
   }
@@ -95,7 +95,6 @@ export function BriefView({
     brief ?? (partial ? partialAsBrief(partial) : null) ?? partialAsBrief({})
 
   const isPartial = status === 'partial' || (status === 'error' && !brief && partial !== null)
-  const hasCompleteness = Object.keys(renderBrief.dataCompleteness).length > 0
 
   const validFollowUps =
     status === 'complete' &&
@@ -171,12 +170,9 @@ export function BriefView({
         </div>
       </main>
 
-      {/* Completeness panel */}
-      {hasCompleteness ? (
-        <CompletenessPanel dataCompleteness={renderBrief.dataCompleteness} />
-      ) : (
-        <div className="w-[260px] shrink-0 border-l border-luna-hairline bg-luna-base" />
-      )}
+      {/* Completeness panel — always visible per S7.2.3. Falls back to
+          'Incomplete' for any of the 5 keys not yet populated. */}
+      <CompletenessPanel dataCompleteness={renderBrief.dataCompleteness} />
     </div>
   )
 }

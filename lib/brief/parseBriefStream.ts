@@ -6,6 +6,7 @@ import type { BriefStreamEvent } from '@/lib/types/brief'
  */
 export async function* parseBriefStream(
   stream: ReadableStream<Uint8Array>,
+  signal?: AbortSignal,
 ): AsyncGenerator<BriefStreamEvent> {
   const reader = stream.getReader()
   const decoder = new TextDecoder('utf-8', { fatal: false })
@@ -13,6 +14,10 @@ export async function* parseBriefStream(
 
   try {
     while (true) {
+      if (signal?.aborted) {
+        await reader.cancel()
+        break
+      }
       const { done, value } = await reader.read()
 
       if (done) {

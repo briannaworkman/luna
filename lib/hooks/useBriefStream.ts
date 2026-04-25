@@ -1,5 +1,5 @@
 'use client'
-import { useReducer, useCallback } from 'react'
+import { useReducer, useCallback, useEffect, useRef } from 'react'
 import type { MissionBrief } from '@/lib/types/brief'
 import { parseBriefStream } from '@/lib/brief/parseBriefStream'
 
@@ -121,8 +121,13 @@ export function useBriefStream(): [
   (input: BriefStreamInput) => void,
 ] {
   const [state, dispatch] = useReducer(briefStreamReducer, initialBriefStreamState)
+  const controllerRef = useRef<AbortController | null>(null)
 
   const start = useCallback((input: BriefStreamInput) => {
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+
     dispatch({ kind: 'start' })
 
     async function run() {
@@ -132,8 +137,10 @@ export function useBriefStream(): [
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
+          signal: controller.signal,
         })
       } catch (err) {
+        if (controller.signal.aborted) return
         dispatch({
           kind: 'error',
           message: err instanceof Error ? err.message : 'Network error',
@@ -141,6 +148,8 @@ export function useBriefStream(): [
         })
         return
       }
+
+      if (controller.signal.aborted) return
 
       if (!response.ok) {
         let message = `HTTP ${response.status}`
@@ -162,7 +171,8 @@ export function useBriefStream(): [
       }
 
       try {
-        for await (const ev of parseBriefStream(response.body)) {
+        for await (const ev of parseBriefStream(response.body, controller.signal)) {
+          if (controller.signal.aborted) return
           switch (ev.type) {
             case 'partial':
               dispatch({ kind: 'partial', text: ev.text })
@@ -176,6 +186,7 @@ export function useBriefStream(): [
           }
         }
       } catch (err) {
+        if (controller.signal.aborted) return
         dispatch({
           kind: 'error',
           message: err instanceof Error ? err.message : 'Stream error',
@@ -185,6 +196,13 @@ export function useBriefStream(): [
     }
 
     run()
+  }, [])
+
+  // Abort any in-flight stream when the hook unmounts.
+  useEffect(() => {
+    return () => {
+      controllerRef.current?.abort()
+    }
   }, [])
 
   return [state, start]

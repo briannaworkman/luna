@@ -54,7 +54,7 @@ export function QueryComposer({ location, onSubmit, initialQuery }: QueryCompose
   )
 
   const handleBack = useCallback(() => {
-    router.push('/')
+    router.push('/explore')
   }, [router])
 
   const handleOpenGallery = useCallback(() => {

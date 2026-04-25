@@ -317,6 +317,70 @@ describe('runSynthesis', () => {
     expect(completeEvent!.brief.dataCompleteness).toEqual(serverCompleteness)
   })
 
+  it('overloaded SDK error (status 529) on attempt 1 → retries → completes on success', async () => {
+    const overloaded = Object.assign(new Error('Overloaded'), {
+      status: 529,
+      error: { type: 'overloaded_error' },
+    })
+    const failingStream = {
+      [Symbol.asyncIterator]() {
+        return {
+          next: vi.fn().mockRejectedValue(overloaded),
+          return: vi.fn().mockResolvedValue({ done: true }),
+        }
+      },
+    }
+
+    const client = {
+      messages: {
+        stream: vi.fn()
+          .mockReturnValueOnce(failingStream)
+          .mockReturnValueOnce(makeChunks(validBriefJson)),
+      },
+    }
+    mockGetAnthropic.mockReturnValue(client as unknown as ReturnType<typeof getAnthropic>)
+
+    const events = await drainGenerator(runSynthesis(baseInput))
+
+    expect(events.find((e) => (e as { type: string }).type === 'complete')).toBeDefined()
+    expect(client.messages.stream).toHaveBeenCalledTimes(2)
+  })
+
+  it('overloaded on both attempts → emits friendly error message (not raw SDK message)', async () => {
+    const overloaded = Object.assign(new Error('Overloaded'), {
+      status: 529,
+      error: { type: 'overloaded_error' },
+    })
+    const makeFailingStream = () => ({
+      [Symbol.asyncIterator]() {
+        return {
+          next: vi.fn().mockRejectedValue(overloaded),
+          return: vi.fn().mockResolvedValue({ done: true }),
+        }
+      },
+    })
+
+    const client = {
+      messages: {
+        stream: vi.fn()
+          .mockReturnValueOnce(makeFailingStream())
+          .mockReturnValueOnce(makeFailingStream()),
+      },
+    }
+    mockGetAnthropic.mockReturnValue(client as unknown as ReturnType<typeof getAnthropic>)
+
+    const events = await drainGenerator(runSynthesis(baseInput))
+
+    const errorEvent = events.find((e) => (e as { type: string }).type === 'error') as
+      | { type: 'error'; message: string; partial: unknown }
+      | undefined
+    expect(errorEvent).toBeDefined()
+    expect(errorEvent!.message).toMatch(/overloaded/i)
+    // The user-facing message must not be the raw SDK shape.
+    expect(errorEvent!.message).not.toMatch(/overloaded_error/)
+    expect(errorEvent!.partial).toBeUndefined()
+  })
+
   it('signal is wired into the second argument of messages.stream (timeout enforceable)', async () => {
     const client = makeMockClient(makeChunks(validBriefJson))
     mockGetAnthropic.mockReturnValue(client as unknown as ReturnType<typeof getAnthropic>)

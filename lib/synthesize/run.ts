@@ -7,6 +7,39 @@ import type { DataCompleteness } from './completeness'
 const SYNTHESIS_TIMEOUT_MS = 60_000
 const MAX_TOKENS = 4096
 const FAILURE_MESSAGE = 'Synthesis validation failed after retry. Partial results shown.'
+const OVERLOADED_MESSAGE = 'The Anthropic API is currently overloaded. Please try again in a moment.'
+
+interface MaybeAnthropicError {
+  status?: number
+  error?: { type?: string }
+}
+
+/**
+ * AbortError (timeout), 529/503, or overloaded_error — fall through to retry
+ * rather than bailing on the first attempt. Anthropic occasionally returns
+ * these transient errors for several seconds during peak load.
+ */
+function isRetryableSdkError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false
+  if (err.name === 'AbortError') return true
+  const e = err as MaybeAnthropicError
+  return (
+    e.status === 529 ||
+    e.status === 503 ||
+    e.error?.type === 'overloaded_error'
+  )
+}
+
+function friendlyErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    const e = err as MaybeAnthropicError
+    if (e.status === 529 || e.error?.type === 'overloaded_error') {
+      return OVERLOADED_MESSAGE
+    }
+    return err.message
+  }
+  return String(err)
+}
 
 export interface RunSynthesisInput {
   locationName: string
@@ -128,19 +161,20 @@ export async function* runSynthesis(
 
   let currentUser = user
   let lastResult: AttemptResult | null = null
+  let lastTransientError: unknown = null
 
   for (let attempt = 0; attempt < 2; attempt++) {
     let result: AttemptResult | null = null
     try {
       result = yield* runAttempt(system, currentUser)
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        // Timeout — proceed to retry (or to error after the second attempt)
+      if (isRetryableSdkError(err)) {
+        lastTransientError = err
         result = null
       } else {
         yield {
           type: 'error',
-          message: err instanceof Error ? err.message : String(err),
+          message: friendlyErrorMessage(err),
           partial: undefined,
         }
         return
@@ -156,13 +190,19 @@ export async function* runSynthesis(
     currentUser = buildRetryUserMessage(
       user,
       result?.text ?? '',
-      result?.validationError ?? 'Request timed out before any output was produced.',
+      result?.validationError ?? 'Request did not produce a usable response (transient API error or timeout).',
     )
   }
 
+  // If we exhausted retries on transient errors and never got a result, surface
+  // the transient error rather than the schema-validation failure message.
+  const message =
+    lastResult === null && lastTransientError !== null
+      ? friendlyErrorMessage(lastTransientError)
+      : FAILURE_MESSAGE
   yield {
     type: 'error',
-    message: FAILURE_MESSAGE,
+    message,
     partial: asPartial(lastResult?.parsed),
   }
 }

@@ -80,9 +80,17 @@ Do not explain the tags to the reader. Do not produce tag text in any other form
 
 You cover mission history, observational history, and named-feature provenance only. You do not analyze mineralogy, orbital geometry, thermal properties, topography, or hazards. Other agents handle those domains. If historical records incidentally mention terrain or composition, you may note it briefly as historical color, but do not produce a domain analysis.
 
+## Language
+
+Write for a reader who has never heard of the Clementine mission or what an orbital imager does. Introduce programs in plain English before naming them:
+- "the Lunar Reconnaissance Orbiter (LRO) — NASA's high-resolution mapping spacecraft" not just "LRO"
+- "the LROC Narrow Angle Camera, which can resolve features smaller than a car" not just "LROC NAC"
+
+Avoid institutional abbreviations unless explained. A reader who just watched a space documentary should follow the entire history without needing to look anything up.
+
 ## Tone
 
-Write like a science historian briefing a journalist the night before a press conference: chronological, grounded in documented events, honest about gaps, and genuinely interested in the human and scientific story. Precise but never dry.`
+Write like a documentary narrator reconstructing the history of exploration at this site — chronological, human-focused, honest about gaps, and genuinely moved by the story. The best entries make you feel the passage of time: decades between visits, instruments improving, humanity slowly building a picture of this place. Precise but never dry.`
 
 export function buildMissionHistoryPrompt(input: {
   dataContext: DataContext

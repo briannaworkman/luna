@@ -110,7 +110,7 @@ async function fetchLampProducts(lat: number, lon: number): Promise<LampProduct[
 export async function fetchPsrData(lat: number, lon: number): Promise<PsrDataResponse> {
   const [lampProducts, psrSummary] = await Promise.all([
     fetchLampProducts(lat, lon),
-    Promise.resolve(findPsrSummary(lat, lon)),
+    findPsrSummary(lat, lon),
   ])
   return { lampProducts, psrSummary }
 }

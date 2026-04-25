@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { AgentRail } from '@/components/agent-rail/AgentRail'
 import { BriefHeader } from './BriefHeader'
 import { BriefTabs } from './BriefTabs'
+import { OverviewTab } from './OverviewTab'
 import { ByTopicView } from './ByTopicView'
 import { ByAgentView } from './ByAgentView'
 import { CompletenessPanel } from './CompletenessPanel'
@@ -116,10 +117,13 @@ export function BriefView({
               <BriefHeader brief={renderBrief} />
             )}
 
-            {renderBrief.sections.length > 0 && (
+            {(renderBrief.sections.length > 0 || renderBrief.summary) && (
               <BriefTabs>
-                {(activeTab) =>
-                  activeTab === 'topic' ? (
+                {(activeTab, breakdownView) => {
+                  if (activeTab === 'overview') {
+                    return <OverviewTab brief={renderBrief} />
+                  }
+                  return breakdownView === 'topic' ? (
                     <ByTopicView brief={renderBrief} citationLookup={citationLookup} />
                   ) : (
                     <ByAgentView
@@ -128,7 +132,7 @@ export function BriefView({
                       activationOrder={activationOrder}
                     />
                   )
-                }
+                }}
               </BriefTabs>
             )}
 

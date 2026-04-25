@@ -56,7 +56,7 @@ Schema:
 
 Field requirements:
 - generatedAt: use the exact ISO 8601 UTC value provided to you in the user message
-- summary: one paragraph (3–5 sentences) synthesizing the most important finding from each active agent into a coherent narrative for a non-specialist
+- summary: 2–3 paragraphs (separated by blank lines) that DIRECTLY ANSWER the user's query. Lead with the most authoritative answer, then weave in the most important supporting findings drawn from across the active agents' outputs. Write for a non-specialist who has not seen the agent stream — this is the standalone answer the user reads first. Use plain prose; do NOT include inline tags, markdown headers, or bullet lists. Roughly 8–14 sentences total.
 - sections: one per active specialist agent (exclude data-ingest; exclude stub agents thermal, topography, hazards)
 - agentId: exact AgentId string (e.g. "mineralogy")
 - agentName: human-readable label (e.g. "Mineralogy")

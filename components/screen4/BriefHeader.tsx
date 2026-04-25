@@ -72,12 +72,6 @@ export function BriefHeader({ brief }: BriefHeaderProps) {
         </div>
       </div>
 
-      {/* Summary paragraph */}
-      {brief.summary && (
-        <p className="font-sans text-[13px] leading-[1.7] text-luna-fg-2 mt-5 m-0">
-          {brief.summary}
-        </p>
-      )}
     </header>
   )
 }

@@ -53,7 +53,7 @@ export function LocationCard({ location, onClick }: LocationCardProps) {
     <button
       type="button"
       onClick={() => onClick(location)}
-      className="text-left w-full bg-luna-base-2 border border-luna-hairline rounded-lg p-3.5 hover:border-luna-cyan/30 hover:bg-luna-base-3 transition-colors"
+      className="text-left w-full bg-luna-base-2 border border-luna-hairline rounded-lg p-3.5 hover:bg-luna-base-3 transition-colors"
     >
       <div className="text-sm font-medium text-luna-fg leading-snug mb-1.5">
         {displayName}

@@ -15,6 +15,14 @@ export interface SingleAgentState {
   status: 'active' | 'complete' | 'error'
   body: BodySegment[]
   citations: Citation[]
+  /**
+   * Count of `agent-chunk` SSE events received for this agent.
+   * Anthropic streaming deltas do not expose per-chunk token counts,
+   * so this is a chunk-event count, not an Anthropic token count.
+   * Per spec S6.1.2, incrementing on each incoming chunk is the
+   * specified behavior.
+   */
+  chunkCount: number
   statusText?: string
   errorMessage?: string
 }
@@ -43,7 +51,7 @@ export const initialAgentStreamState: AgentStreamState = {
 }
 
 function makeDefaultAgentState(): SingleAgentState {
-  return { status: 'active', body: [], citations: [] }
+  return { status: 'active', body: [], citations: [], chunkCount: 0 }
 }
 
 function upsertAgent(
@@ -77,7 +85,7 @@ export function agentStreamReducer(
       }
 
     case 'agent-activate': {
-      const updated: SingleAgentState = { status: 'active', body: [], citations: [] }
+      const updated: SingleAgentState = { status: 'active', body: [], citations: [], chunkCount: 0 }
       return {
         ...state,
         agentStates: { ...state.agentStates, [event.agent]: updated },
@@ -98,15 +106,11 @@ export function agentStreamReducer(
         ...state,
         agentStates: upsertAgent(state.agentStates, event.agent, (prev) => {
           const lastSeg = prev.body[prev.body.length - 1]
-          if (lastSeg !== undefined && lastSeg.kind === 'text') {
-            // Merge with existing trailing text segment
-            const newBody: BodySegment[] = [
-              ...prev.body.slice(0, prev.body.length - 1),
-              { kind: 'text', text: lastSeg.text + event.text },
-            ]
-            return { ...prev, body: newBody }
-          }
-          return { ...prev, body: [...prev.body, { kind: 'text', text: event.text }] }
+          const newBody: BodySegment[] =
+            lastSeg !== undefined && lastSeg.kind === 'text'
+              ? [...prev.body.slice(0, -1), { kind: 'text', text: lastSeg.text + event.text }]
+              : [...prev.body, { kind: 'text', text: event.text }]
+          return { ...prev, body: newBody, chunkCount: prev.chunkCount + 1 }
         }),
       }
 

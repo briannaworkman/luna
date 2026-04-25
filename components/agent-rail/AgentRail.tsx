@@ -9,6 +9,7 @@ interface AgentRailProps {
   completedAgents?: Set<AgentId>
   errorAgents?: Set<AgentId>
   statusTexts?: Partial<Record<AgentId, string>>
+  chunkCounts?: Partial<Record<AgentId, number>>
   footerActiveCount?: number
 }
 
@@ -18,14 +19,17 @@ function AgentRow({
   isComplete,
   isError,
   statusText,
+  chunkCount,
 }: {
   agent: Agent
   isActive: boolean
   isComplete: boolean
   isError: boolean
   statusText?: string
+  chunkCount?: number
 }) {
-  const hasStatus = Boolean(statusText)
+  const showChunkCount = isActive && typeof chunkCount === 'number' && chunkCount > 0 && agent.id !== 'data-ingest'
+  const hasStatus = Boolean(statusText) || showChunkCount
   const status: AgentStatus = isActive
     ? 'active'
     : isComplete
@@ -49,12 +53,17 @@ function AgentRow({
         <AgentStatusGlyph status={status} size={3.5} />
       </span>
 
-      {/* Label + optional status text */}
+      {/* Label + optional status text + optional chunk counter */}
       <span className="flex flex-col min-w-0">
         <span className="lowercase leading-tight">{agent.label}</span>
-        {hasStatus && (
+        {hasStatus && statusText && (
           <span className="font-mono text-[10px] tracking-[0.02em] text-luna-fg-4 leading-tight truncate max-w-[170px] mt-0.5">
             {statusText}
+          </span>
+        )}
+        {showChunkCount && (
+          <span className="font-mono text-[10px] text-luna-fg-4 leading-tight mt-0.5 tabular-nums">
+            {chunkCount} tokens
           </span>
         )}
       </span>
@@ -68,6 +77,7 @@ export function AgentRail({
   completedAgents = new Set(),
   errorAgents = new Set(),
   statusTexts = {},
+  chunkCounts = {},
   footerActiveCount = 0,
 }: AgentRailProps) {
   return (
@@ -94,6 +104,7 @@ export function AgentRail({
             isComplete={completedAgents.has(agent.id)}
             isError={errorAgents.has(agent.id)}
             statusText={statusTexts[agent.id]}
+            chunkCount={chunkCounts[agent.id]}
           />
         ))}
       </div>

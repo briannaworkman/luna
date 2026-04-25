@@ -9,6 +9,7 @@ const baseLocation: LunarLocation = {
   lon: -11,
   significance: 'Most prominent young crater; bright ray system visible from Earth with naked eye',
   isProposed: false,
+  type: 'crater',
   coords: '43°S, 11°W',
   region: 'NEAR SIDE',
 }
@@ -20,6 +21,7 @@ const proposedLocation: LunarLocation = {
   lon: -86.51,
   significance: 'Sits near the near/far side boundary — visible from Earth at certain libration angles.',
   isProposed: true,
+  type: 'proposed',
   coords: '18.84°N, 86.51°W',
   region: 'FAR SIDE',
 }

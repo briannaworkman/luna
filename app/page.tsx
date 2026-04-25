@@ -1,12 +1,17 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { X } from 'lucide-react'
 import { LocationPanel } from '@/components/globe/LocationPanel'
 import { useOpenGallery } from '@/providers/LocationSelectionProvider'
 import type { LunarLocation } from '@/components/globe/types'
+import { FilterBar } from '@/components/screen1/FilterBar'
+import { ViewToggle, type ViewMode } from '@/components/screen1/ViewToggle'
+import { LocationListView } from '@/components/screen1/LocationListView'
+import { filterLocations, type LocationFilter } from '@/components/screen1/filterLocations'
+import { LOCATIONS } from '@/components/globe/locations'
 
 const LunarGlobe = dynamic(
   () => import('@/components/globe/LunarGlobe').then((m) => m.LunarGlobe),
@@ -38,7 +43,7 @@ function HintBanner() {
   return (
     <div
       role="status"
-      className="fixed top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-4 py-2 rounded bg-luna-base-2 border border-luna-hairline font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan shadow-lg"
+      className="fixed top-28 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 px-4 py-2 rounded bg-luna-base-2 border border-luna-hairline font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan shadow-lg"
     >
       <span>{message}</span>
       <button
@@ -58,6 +63,14 @@ export default function Home() {
   const deselectRef = useRef<(() => void) | null>(null)
   const openGallery = useOpenGallery()
 
+  const [view, setView] = useState<ViewMode>('list')
+  const [filter, setFilter] = useState<LocationFilter>('all')
+
+  const filteredLocations = useMemo(
+    () => filterLocations(LOCATIONS, filter),
+    [filter],
+  )
+
   const handleLocationSelect = useCallback((location: LunarLocation | null) => {
     setSelectedLocation(location)
   }, [])
@@ -67,25 +80,54 @@ export default function Home() {
     setSelectedLocation(null)
   }, [])
 
-  const handleResearch = useCallback(
+  const handleOpenGallery = useCallback(
     (location: LunarLocation) => {
       openGallery(location, 'navigate')
     },
     [openGallery],
   )
 
+  const handleViewChange = useCallback((newView: ViewMode) => {
+    setView(newView)
+    if (newView === 'list') {
+      deselectRef.current?.()
+      setSelectedLocation(null)
+    }
+  }, [])
+
   return (
     <>
       <Suspense fallback={null}>
         <HintBanner />
       </Suspense>
-      <main className="fixed inset-0 overflow-hidden bg-luna-base">
-        <LunarGlobe onLocationSelect={handleLocationSelect} deselectRef={deselectRef} />
-        <LocationPanel
-          location={selectedLocation}
-          onClose={handlePanelClose}
-          onResearch={handleResearch}
-        />
+      <main className="fixed inset-x-0 bottom-0 top-14 flex flex-col bg-luna-base">
+        {/* Control strip: filters left, view toggle right */}
+        <div className="border-b border-luna-hairline flex-shrink-0">
+          <div className="flex items-center gap-3 px-8 py-2.5 max-w-6xl mx-auto">
+            <FilterBar activeFilter={filter} onFilterChange={setFilter} />
+            <ViewToggle activeView={view} onViewChange={handleViewChange} />
+          </div>
+        </div>
+
+        {view === 'list' ? (
+          <LocationListView
+            locations={filteredLocations}
+            onLocationSelect={handleOpenGallery}
+          />
+        ) : (
+          <div className="flex-1 relative">
+            <LunarGlobe
+              locations={filteredLocations}
+              onLocationSelect={handleLocationSelect}
+              deselectRef={deselectRef}
+            />
+            <LocationPanel
+              location={selectedLocation}
+              onClose={handlePanelClose}
+              onResearch={handleOpenGallery}
+            />
+          </div>
+        )}
       </main>
     </>
   )

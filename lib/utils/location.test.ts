@@ -9,6 +9,7 @@ const makeLocation = (overrides: Partial<LunarLocation> & Pick<LunarLocation, 'n
   significance: 'Test location',
   coords: '0°N, 0°E',
   region: 'NEAR SIDE',
+  type: 'crater',
   ...overrides,
 })
 

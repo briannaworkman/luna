@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 export function TopBar({ className }: { className?: string }) {
@@ -10,7 +11,7 @@ export function TopBar({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="flex items-center gap-2.5 text-luna-fg font-sans font-medium text-[14px] tracking-[0.14em] uppercase">
+      <Link href="/" className="flex items-center gap-2.5 text-luna-fg font-sans font-medium text-[14px] tracking-[0.14em] uppercase hover:text-luna-fg-2 transition-colors">
         <span aria-hidden="true" className="relative inline-block w-[14px] h-[14px]">
           <span
             className="absolute inset-0 rounded-full bg-luna-fg"
@@ -21,7 +22,7 @@ export function TopBar({ className }: { className?: string }) {
           />
         </span>
         LUNA
-      </div>
+      </Link>
     </header>
   )
 }

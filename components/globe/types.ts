@@ -1,3 +1,5 @@
+export type LocationType = 'crater' | 'apollo' | 'robotic' | 'proposed'
+
 export interface LunarLocation {
   id: string
   name: string
@@ -12,6 +14,10 @@ export interface LunarLocation {
   namedBy?: string[]
   citations?: string[]
   suggestedQuestions?: string[]
+  type: LocationType
+  missionName?: string
+  siteName?: string
+  landingYear?: number
 }
 
 export interface DotState {

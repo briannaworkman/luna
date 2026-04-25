@@ -152,9 +152,10 @@ export function BriefView({
         )}
       </main>
 
-      {/* S7.2.3: panel always visible. Falls back to 'Incomplete' for any of
-          the 5 keys not yet populated by the streaming brief. */}
-      <CompletenessPanel dataCompleteness={renderBrief.dataCompleteness} />
+      <CompletenessPanel
+        dataCompleteness={renderBrief.dataCompleteness}
+        citations={globalCitations}
+      />
     </div>
   )
 }

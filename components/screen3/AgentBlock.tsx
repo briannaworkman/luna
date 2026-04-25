@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { CitationChip } from './CitationChip'
+import { CitationChip } from '@/components/citations/CitationChip'
 import { ConfidenceBadge } from './ConfidenceBadge'
 import { AgentStatusGlyph } from '@/components/agent-rail/AgentStatusGlyph'
 import { Badge } from '@/components/badge'

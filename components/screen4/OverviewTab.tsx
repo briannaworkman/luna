@@ -5,17 +5,15 @@ interface OverviewTabProps {
 }
 
 export function OverviewTab({ brief }: OverviewTabProps) {
-  if (!brief.summary.trim()) {
+  const paragraphs = brief.summary.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
+
+  if (!paragraphs.length) {
     return (
       <div className="font-mono text-[13px] text-luna-fg-4 italic py-6">
         Overview not yet available.
       </div>
     )
   }
-
-  // Render the summary as separate paragraphs so 2-3 paragraph responses from
-  // the synthesis model render with proper spacing instead of as one wall.
-  const paragraphs = brief.summary.split(/\n\n+/).map((p) => p.trim()).filter(Boolean)
 
   return (
     <article className="bg-luna-base-1 border border-luna-hairline rounded-md px-6 py-5 flex flex-col gap-4">

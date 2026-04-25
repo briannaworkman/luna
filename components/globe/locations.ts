@@ -19,6 +19,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '56°S, 180°W',
     region: 'FAR SIDE',
+    suggestedQuestions: [
+      'What makes SPA Basin the most scientifically valuable target on the Moon?',
+      "What secrets about the Moon's interior might be exposed at SPA Basin's floor?",
+      'Which missions have explored this region and what did they discover?',
+    ],
   },
   {
     id: 'orientale',
@@ -30,6 +35,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '19°S, 95°W',
     region: 'FAR SIDE',
+    suggestedQuestions: [
+      "Why does Orientale's three-ring structure matter for understanding large impacts?",
+      'What did the Artemis II crew see when they looked at Orientale for the first time?',
+      'How does Orientale compare to similar multi-ring basins on other worlds?',
+    ],
   },
   {
     id: 'tycho',
@@ -41,6 +51,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '43°S, 11°W',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      "What makes Tycho's ray system so unusually bright and long-lasting?",
+      "How young is Tycho, and what can its age tell us about the Moon's recent history?",
+      'What would a future mission to Tycho be looking for?',
+    ],
   },
   {
     id: 'copernicus',
@@ -52,6 +67,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '10°N, 20°W',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      'Why is Copernicus called the "Monarch of the Moon"?',
+      "How do Copernicus's terraced walls form and what do they reveal about the impact?",
+      'Which missions have imaged Copernicus in the most detail?',
+    ],
   },
   {
     id: 'clavius',
@@ -63,6 +83,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '58°S, 14°W',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      'What is the chain of craters inside Clavius and how did it form?',
+      'What water ice evidence exists in the Clavius region?',
+      'Why is Clavius considered one of the best candidates for a future lunar base?',
+    ],
   },
   {
     id: 'bailly',
@@ -74,6 +99,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '67°S, 69°W',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      'Why is Bailly so heavily degraded compared to younger craters?',
+      "What does Bailly's ancient eroded state tell us about the Moon's early bombardment history?",
+      'Has any mission ever made a close-up study of Bailly?',
+    ],
   },
   {
     id: 'petavius',
@@ -85,6 +115,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '25°S, 61°E',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      "What caused the dramatic rille radiating from Petavius's central peak?",
+      "How does Petavius's floor fracture compare to others on the Moon?",
+      'What minerals or volcanic features are exposed at Petavius?',
+    ],
   },
   {
     id: 'langrenus',
@@ -96,6 +131,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '9°S, 61°E',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      'What makes Langrenus one of the best-preserved complex craters on the near side?',
+      'How do the bright central peaks of Langrenus form and what do they reveal about the crust?',
+      'Which missions have captured the best imagery of Langrenus?',
+    ],
   },
   {
     id: 'humboldt',
@@ -107,6 +147,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '27°S, 81°E',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      "What makes Humboldt's floor fractures scientifically interesting?",
+      'Why is Humboldt difficult to observe from Earth and how has it been studied?',
+      "How does Humboldt's position near the eastern limb affect exploration access?",
+    ],
   },
   {
     id: 'janssen',
@@ -118,6 +163,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '45°S, 41°E',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      'How old is Janssen, and what does its heavily eroded state reveal about early lunar history?',
+      'What features have survived inside Janssen despite billions of years of bombardment?',
+      'Why is the southeastern near-side highland region scientifically underexplored?',
+    ],
   },
   {
     id: 'schickard',
@@ -129,6 +179,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '44°S, 55°W',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      'What is a "walled plain" and how does Schickard fit that description?',
+      'What do the dark floor markings in Schickard tell us about its volcanic past?',
+      'Which missions have provided the best views of Schickard?',
+    ],
   },
   {
     id: 'stofler',
@@ -140,6 +195,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '41°S, 6°E',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      "How do geologists date a crater as ancient as Stöfler when its rim is so degraded?",
+      "What can Stöfler's overlapping impact history tell us about the Late Heavy Bombardment?",
+      'What is the highland crust made of in the Stöfler region?',
+    ],
   },
   {
     id: 'maginus',
@@ -151,6 +211,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '50°S, 6°W',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      'Why is Maginus so worn compared to nearby Tycho, even though both are in the southern highlands?',
+      'What geological processes have reshaped Maginus over billions of years?',
+      'What can comparing Maginus and Tycho teach us?',
+    ],
   },
   {
     id: 'longomontanus',
@@ -162,6 +227,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '50°S, 21°W',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      "How does Longomontanus's erosion compare to its neighbor Tycho?",
+      "What has Tycho's bright ray system deposited across Longomontanus?",
+      'Are there any notable features inside Longomontanus worth a closer look?',
+    ],
   },
   {
     id: 'vendelinus',
@@ -173,6 +243,11 @@ export const LOCATIONS: LunarLocation[] = [
     isProposed: false,
     coords: '16°S, 62°E',
     region: 'NEAR SIDE',
+    suggestedQuestions: [
+      'What is Mare Fecunditatis and how has its lava flooding shaped the landscape around Vendelinus?',
+      'How did Vendelinus form before the nearby mare filled in around it?',
+      'Which early lunar missions observed this region?',
+    ],
   },
   {
     id: 'carroll',

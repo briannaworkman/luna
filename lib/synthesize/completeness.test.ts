@@ -115,15 +115,14 @@ describe('deriveDataCompleteness', () => {
       expect(result2['LROC WAC']).toBe('Confirmed')
     })
 
-    it('handles mixed case instrument labels (case-insensitive)', () => {
-      const mixedCase: LrocProduct[] = [
+    it('returns Analogue only for instrument labels that do not exactly match the canonical constants', () => {
+      const offBrand: LrocProduct[] = [
         { productId: 'p1', resolutionMpp: 0.5, acquisitionDate: '2024-01-01', downloadUrl: '', instrument: 'lroc nac' },
-        { productId: 'p2', resolutionMpp: 0.5, acquisitionDate: '2024-01-01', downloadUrl: '', instrument: 'lroc nac' },
-        { productId: 'p3', resolutionMpp: 100, acquisitionDate: '2024-01-01', downloadUrl: '', instrument: 'LROC WAC' },
+        { productId: 'p2', resolutionMpp: 100, acquisitionDate: '2024-01-01', downloadUrl: '', instrument: 'LROC-WAC' },
       ]
-      const result = deriveDataCompleteness(makeCtx({ lrocProducts: mixedCase }))
-      expect(result['LROC NAC']).toBe('Confirmed') // ≥2
-      expect(result['LROC WAC']).toBe('Confirmed') // ≥1
+      const result = deriveDataCompleteness(makeCtx({ lrocProducts: offBrand }))
+      expect(result['LROC NAC']).toBe('Analogue only')
+      expect(result['LROC WAC']).toBe('Analogue only')
     })
   })
 

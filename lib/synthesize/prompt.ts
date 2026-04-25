@@ -1,22 +1,18 @@
-import { AGENTS } from '@/lib/constants/agents'
+import { AGENTS, type AgentId } from '@/lib/constants/agents'
+import { COMPLETENESS_SOURCES } from '@/lib/types/brief'
 import type { DataCompleteness } from './completeness'
 
-// ---------------------------------------------------------------------------
-// Stub agent IDs and data-ingest ID — must be excluded from synthesis
-// ---------------------------------------------------------------------------
-
-const STUB_AGENT_IDS = new Set(
-  AGENTS.filter((a) => a.isStub).map((a) => a.id)
+const STUB_AGENT_IDS = new Set<AgentId>(
+  AGENTS.filter((a) => a.isStub).map((a) => a.id),
 )
-const DATA_INGEST_ID = 'data-ingest'
+const DATA_INGEST_ID: AgentId = 'data-ingest'
+const AGENT_LABEL_MAP = new Map<AgentId, string>(
+  AGENTS.map((a) => [a.id, a.label]),
+)
 
 function isExcluded(id: string): boolean {
-  return id === DATA_INGEST_ID || STUB_AGENT_IDS.has(id as never)
+  return id === DATA_INGEST_ID || STUB_AGENT_IDS.has(id as AgentId)
 }
-
-// ---------------------------------------------------------------------------
-// System prompt (verbatim from blueprint)
-// ---------------------------------------------------------------------------
 
 export const SYNTHESIS_SYSTEM_PROMPT = `You are the synthesis engine for LUNA (Lunar Unified Navigation & Analysis), a multi-agent lunar research system. Your audience is science journalists, space creators, and undergraduate planetary science students.
 
@@ -89,10 +85,6 @@ The stub agents — thermal, topography, hazards — produced no output and must
 
 Three complete questions. Example shape: "How does the regolith composition here compare to the Apollo 16 landing site?" — not "Regolith comparison".`
 
-// ---------------------------------------------------------------------------
-// User message builder
-// ---------------------------------------------------------------------------
-
 interface BuildSynthesisPromptInput {
   locationName: string
   lat: number
@@ -121,35 +113,25 @@ export function buildSynthesisPrompt(input: BuildSynthesisPromptInput): {
     agentOutputs,
   } = input
 
-  // Resolve agent name from AGENTS constant
-  const agentLabelMap = new Map(AGENTS.map((a) => [a.id, a.label]))
-
-  // Filter out excluded agents for both the activeAgents list and the sections
   const filteredActiveAgents = activeAgents.filter((id) => !isExcluded(id))
 
-  const locationLine =
-    `${locationName}` + (isProposed ? ' (proposed name, pending IAU approval)' : '')
-
+  const locationLine = isProposed
+    ? `${locationName} (proposed name, pending IAU approval)`
+    : locationName
   const latStr = `${Math.abs(lat)}°${lat >= 0 ? 'N' : 'S'}`
   const lonStr = `${Math.abs(lon)}°${lon >= 0 ? 'E' : 'W'}`
 
-  // Build data completeness section
-  const completenessLines = [
-    `LROC NAC: ${completeness['LROC NAC']}`,
-    `LROC WAC: ${completeness['LROC WAC']}`,
-    `JSC Samples: ${completeness['JSC Samples']}`,
-    `SVS Illumination: ${completeness['SVS Illumination']}`,
-    `NASA Image Library: ${completeness['NASA Image Library']}`,
-  ].join('\n')
+  const completenessLines = COMPLETENESS_SOURCES
+    .map((source) => `${source}: ${completeness[source]}`)
+    .join('\n')
 
-  // Build agent outputs section — only agents with actual output
-  const agentSections = filteredActiveAgents
-    .filter((id) => id in agentOutputs && agentOutputs[id] !== '')
-    .map((id) => {
-      const label = agentLabelMap.get(id as never) ?? id
-      return `--- AGENT: ${id} (${label}) ---\n${agentOutputs[id]}`
-    })
-    .join('\n\n')
+  const agentSections: string[] = []
+  for (const id of filteredActiveAgents) {
+    const text = agentOutputs[id]
+    if (!text) continue
+    const label = AGENT_LABEL_MAP.get(id as AgentId) ?? id
+    agentSections.push(`--- AGENT: ${id} (${label}) ---\n${text}`)
+  }
 
   const user = `SYNTHESIS REQUEST
 =================
@@ -169,10 +151,7 @@ ${filteredActiveAgents.join(', ')}
 AGENT OUTPUTS
 =============
 
-${agentSections}`
+${agentSections.join('\n\n')}`
 
-  return {
-    system: SYNTHESIS_SYSTEM_PROMPT,
-    user,
-  }
+  return { system: SYNTHESIS_SYSTEM_PROMPT, user }
 }

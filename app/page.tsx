@@ -71,7 +71,7 @@ export default function IntroPage() {
       </div>
 
       {/* Content */}
-      <div className="relative flex max-w-[520px] flex-col items-center px-6 text-center">
+      <div className="relative flex max-w-[1020px] flex-col items-center px-6 text-center">
         {/* Location dots */}
         <div className="mb-7 flex items-center gap-2.5">
           <div

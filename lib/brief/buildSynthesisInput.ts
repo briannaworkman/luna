@@ -1,46 +1,35 @@
-import { AGENTS, type AgentId } from '@/lib/constants/agents'
+import { STUB_AGENT_IDS, type AgentId } from '@/lib/constants/agents'
 import type { SingleAgentState } from '@/components/screen3/useAgentStream'
 
-const STUB_IDS = new Set<AgentId>(AGENTS.filter((a) => a.isStub).map((a) => a.id))
-
 /**
- * Builds the agentOutputs record passed to POST /api/synthesize.
- *
- * For each non-stub, non-data-ingest agent in activatedAgents:
- * - Concatenate text body segments (drop confidence segments)
- * - If citations exist, append "Citations: source:id, source:id, ..." line
- * - Skip agents missing from agentStates
+ * Builds the agentOutputs record for POST /api/synthesize. For each non-stub,
+ * non-data-ingest activated agent: concatenates text body segments (drop
+ * confidence segments — the synthesis model assigns its own per-claim
+ * confidence) and appends a structured "Citations: source:id, ..." line so
+ * the model can populate Finding.citations without inline tag parsing.
  */
 export function buildSynthesisInput(
   agentStates: Partial<Record<AgentId, SingleAgentState>>,
-  activatedAgents: AgentId[],
-): Record<string, string> {
-  const result: Record<string, string> = {}
+  activatedAgents: readonly AgentId[],
+): Partial<Record<AgentId, string>> {
+  const result: Partial<Record<AgentId, string>> = {}
 
   for (const agentId of activatedAgents) {
-    if (agentId === 'data-ingest') continue
-    if (STUB_IDS.has(agentId)) continue
+    if (agentId === 'data-ingest' || STUB_AGENT_IDS.has(agentId)) continue
 
     const agentState = agentStates[agentId]
     if (!agentState) continue
 
-    const textParts: string[] = []
-    for (const seg of agentState.body) {
-      if (seg.kind === 'text') {
-        textParts.push(seg.text)
-      }
-    }
+    const text = agentState.body
+      .filter((seg) => seg.kind === 'text')
+      .map((seg) => (seg as { text: string }).text)
+      .join('')
 
-    let output = textParts.join('')
+    const citationsLine = agentState.citations.length > 0
+      ? `\nCitations: ${agentState.citations.map((c) => `${c.source}:${c.id}`).join(', ')}`
+      : ''
 
-    if (agentState.citations.length > 0) {
-      const citationList = agentState.citations
-        .map((c) => `${c.source}:${c.id}`)
-        .join(', ')
-      output = output + `\nCitations: ${citationList}`
-    }
-
-    result[agentId] = output
+    result[agentId] = text + citationsLine
   }
 
   return result

@@ -1,32 +1,27 @@
 'use client'
 import { useReducer, useCallback, useEffect, useRef } from 'react'
 import type { MissionBrief } from '@/lib/types/brief'
+import type { AgentId } from '@/lib/constants/agents'
 import { parseBriefStream } from '@/lib/brief/parseBriefStream'
-
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
 
 export interface BriefStreamState {
   status: 'idle' | 'loading' | 'partial' | 'complete' | 'error'
   brief: MissionBrief | null
   partial: Partial<MissionBrief> | null
-  /** Accumulated raw text (for partial JSON parsing) */
-  rawText: string
   error: string | null
+  /** Internal accumulator for partial JSON parsing. Not consumed by the UI. */
+  rawText: string
 }
 
 export const initialBriefStreamState: BriefStreamState = {
   status: 'idle',
   brief: null,
   partial: null,
-  rawText: '',
   error: null,
+  rawText: '',
 }
 
-// ---------------------------------------------------------------------------
-// Actions
-// ---------------------------------------------------------------------------
+const initial = initialBriefStreamState
 
 export type BriefStreamAction =
   | { kind: 'start' }
@@ -35,42 +30,25 @@ export type BriefStreamAction =
   | { kind: 'error'; message: string; partial: Partial<MissionBrief> | undefined }
   | { kind: 'reset' }
 
-// ---------------------------------------------------------------------------
-// Reducer
-// ---------------------------------------------------------------------------
-
 export function briefStreamReducer(
   state: BriefStreamState,
   action: BriefStreamAction,
 ): BriefStreamState {
   switch (action.kind) {
     case 'start':
-      return {
-        ...initialBriefStreamState,
-        status: 'loading',
-      }
+      return { ...initial, status: 'loading' }
 
     case 'partial': {
       const rawText = state.rawText + action.text
-      // Attempt to extract a usable partial object from the accumulated JSON
-      const partial = tryParsePartial(rawText)
-      return {
-        ...state,
-        status: 'partial',
-        rawText,
-        partial,
-      }
+      // The model streams a single JSON object. JSON.parse only succeeds when
+      // the buffer contains a complete object — gate on a `}` suffix to skip
+      // an O(n²) parse-every-chunk and let only the final-token attempt land.
+      const partial = rawText.trimEnd().endsWith('}') ? tryParsePartial(rawText) : state.partial
+      return { ...state, status: 'partial', rawText, partial }
     }
 
     case 'complete':
-      return {
-        ...state,
-        status: 'complete',
-        brief: action.brief,
-        partial: null,
-        rawText: '',
-        error: null,
-      }
+      return { ...state, status: 'complete', brief: action.brief, partial: null, rawText: '', error: null }
 
     case 'error':
       return {
@@ -82,16 +60,12 @@ export function briefStreamReducer(
       }
 
     case 'reset':
-      return initialBriefStreamState
+      return initial
 
     default:
       return state
   }
 }
-
-// ---------------------------------------------------------------------------
-// Partial parser — best-effort; returns null on failure
-// ---------------------------------------------------------------------------
 
 function tryParsePartial(text: string): Partial<MissionBrief> | null {
   const trimmed = text.trim()
@@ -99,8 +73,6 @@ function tryParsePartial(text: string): Partial<MissionBrief> | null {
   try {
     return JSON.parse(trimmed) as Partial<MissionBrief>
   } catch {
-    // Try to parse what we have so far by closing the JSON object
-    // This is best-effort; we just return null on failure
     return null
   }
 }
@@ -112,8 +84,8 @@ function tryParsePartial(text: string): Partial<MissionBrief> | null {
 interface BriefStreamInput {
   query: string
   locationId: string
-  agentOutputs: Record<string, string>
-  activeAgents: string[]
+  agentOutputs: Partial<Record<AgentId, string>>
+  activeAgents: readonly AgentId[]
 }
 
 export function useBriefStream(): [

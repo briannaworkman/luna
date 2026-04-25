@@ -7,18 +7,11 @@ interface CompletenessPanelProps {
   dataCompleteness: MissionBrief['dataCompleteness']
 }
 
-const STATUS_DOT_CLASS: Record<CompletenessStatus, string> = {
-  Confirmed:       'bg-luna-success',
-  Partial:         'bg-luna-warning',
-  'Analogue only': 'bg-luna-fg-3',
-  Incomplete:      'bg-luna-danger',
-}
-
-const STATUS_LABEL_CLASS: Record<CompletenessStatus, string> = {
-  Confirmed:       'text-luna-success',
-  Partial:         'text-luna-warning',
-  'Analogue only': 'text-luna-fg-3',
-  Incomplete:      'text-luna-danger',
+const STATUS_STYLE: Record<CompletenessStatus, { dot: string; label: string }> = {
+  Confirmed:       { dot: 'bg-luna-success', label: 'text-luna-success' },
+  Partial:         { dot: 'bg-luna-warning', label: 'text-luna-warning' },
+  'Analogue only': { dot: 'bg-luna-fg-3',    label: 'text-luna-fg-3'    },
+  Incomplete:      { dot: 'bg-luna-danger',  label: 'text-luna-danger'  },
 }
 
 export function CompletenessPanel({ dataCompleteness }: CompletenessPanelProps) {
@@ -36,6 +29,7 @@ export function CompletenessPanel({ dataCompleteness }: CompletenessPanelProps) 
       <div className="flex-1 overflow-y-auto">
         {COMPLETENESS_SOURCES.map((source) => {
           const status = (dataCompleteness[source] ?? 'Incomplete') as CompletenessStatus
+          const style = STATUS_STYLE[status]
           const url = COMPLETENESS_LANDING_URLS[source]
 
           return (
@@ -51,22 +45,14 @@ export function CompletenessPanel({ dataCompleteness }: CompletenessPanelProps) 
               aria-label={`${source}: ${status} — open data source`}
             >
               <span
-                className={cn(
-                  'rounded-full w-2 h-2 shrink-0',
-                  STATUS_DOT_CLASS[status],
-                )}
+                className={cn('rounded-full w-2 h-2 shrink-0', style.dot)}
                 aria-hidden="true"
               />
               <div className="flex flex-col min-w-0 flex-1">
                 <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-luna-fg-2 group-hover:text-luna-fg transition-colors truncate">
                   {source}
                 </span>
-                <span
-                  className={cn(
-                    'font-mono text-[10px] tracking-[0.04em]',
-                    STATUS_LABEL_CLASS[status],
-                  )}
-                >
+                <span className={cn('font-mono text-[10px] tracking-[0.04em]', style.label)}>
                   {status}
                 </span>
               </div>

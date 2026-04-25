@@ -16,21 +16,27 @@ import type { BriefStreamState } from '@/lib/hooks/useBriefStream'
 
 interface BriefViewProps {
   briefState: BriefStreamState
-  activationOrder: AgentId[]
+  activationOrder: readonly AgentId[]
   globalCitations: ResolvedCitation[]
   onFollowUp: (question: string) => void
   onReset: () => void
 }
 
-/**
- * Coerces a Partial<MissionBrief> to a renderable MissionBrief shape.
- * Missing arrays default to [], missing strings to ''.
- */
+const EMPTY_BRIEF: MissionBrief = {
+  locationName: '',
+  query: '',
+  generatedAt: '',
+  summary: '',
+  sections: [],
+  followUpQueries: ['', '', ''],
+  dataCompleteness: {},
+}
+
 function partialAsBrief(partial: Partial<MissionBrief>): MissionBrief {
   return {
     locationName: partial.locationName ?? '',
     query: partial.query ?? '',
-    generatedAt: partial.generatedAt ?? new Date().toISOString(),
+    generatedAt: partial.generatedAt ?? '',
     summary: partial.summary ?? '',
     sections: partial.sections ?? [],
     followUpQueries: (partial.followUpQueries?.length === 3
@@ -50,128 +56,94 @@ export function BriefView({
   const { status, brief, partial, error } = briefState
 
   const completedAgentSet = useMemo(() => new Set(activationOrder), [activationOrder])
+  const citationLookup = useMemo(() => {
+    const m = new Map<string, ResolvedCitation>()
+    for (const c of globalCitations) m.set(c.id.toLowerCase(), c)
+    return m
+  }, [globalCitations])
 
-  // Show skeleton while loading and no partials yet
-  if (status === 'loading') {
-    return (
-      <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
-        <AgentRail className="h-full" completedAgents={completedAgentSet} />
-        <main className="flex-1 overflow-y-auto min-w-0">
+  const renderBrief: MissionBrief =
+    brief ?? (partial ? partialAsBrief(partial) : EMPTY_BRIEF)
+
+  const isLoading = status === 'loading'
+  const isErrorWithoutBrief = status === 'error' && !partial && !brief
+  const isPartial = status === 'partial' || (status === 'error' && !brief && partial !== null)
+  const validFollowUps =
+    status === 'complete' && renderBrief.followUpQueries.every((q) => q.length > 0)
+
+  return (
+    <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
+      <AgentRail className="h-full" completedAgents={completedAgentSet} />
+
+      <main className="flex-1 overflow-y-auto min-w-0">
+        {isLoading ? (
           <div className="w-full max-w-4xl mx-auto px-10 py-10">
             <BriefSkeleton />
           </div>
-        </main>
-        <CompletenessPanel dataCompleteness={{}} />
-      </div>
-    )
-  }
-
-  // Error with no partial — centered error block
-  if (status === 'error' && !partial && !brief) {
-    return (
-      <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
-        <AgentRail className="h-full" completedAgents={completedAgentSet} />
-        <main className="flex-1 overflow-y-auto min-w-0">
+        ) : isErrorWithoutBrief ? (
           <div className="w-full max-w-4xl mx-auto px-10 py-24 flex flex-col items-center gap-6">
             <p className="font-mono text-[13px] text-luna-danger text-center">
               Brief synthesis failed: {error}
             </p>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onReset}
-            >
+            <Button type="button" variant="outline" onClick={onReset}>
               Try again
             </Button>
           </div>
-        </main>
-        <CompletenessPanel dataCompleteness={{}} />
-      </div>
-    )
-  }
+        ) : (
+          <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-6">
+            <div className="flex items-center justify-end">
+              <Button type="button" variant="outline" size="sm" onClick={onReset}>
+                New query
+              </Button>
+            </div>
 
-  // Get renderable brief (complete or partial fallback)
-  const renderBrief: MissionBrief =
-    brief ?? (partial ? partialAsBrief(partial) : null) ?? partialAsBrief({})
+            {status === 'error' && (partial || brief) && (
+              <div
+                className="border border-luna-warning rounded px-4 py-3 font-mono text-[13px] text-luna-warning"
+                role="alert"
+              >
+                Brief was not fully synthesized — partial results shown.
+              </div>
+            )}
 
-  const isPartial = status === 'partial' || (status === 'error' && !brief && partial !== null)
+            {isPartial && !error && (
+              <div className="font-mono text-[11px] text-luna-fg-4 animate-pulse" aria-live="polite">
+                Synthesizing…
+              </div>
+            )}
 
-  const validFollowUps =
-    status === 'complete' &&
-    renderBrief.followUpQueries.length === 3 &&
-    renderBrief.followUpQueries.every((q) => q.length > 0)
+            {(renderBrief.locationName || renderBrief.query) && (
+              <BriefHeader brief={renderBrief} />
+            )}
 
-  return (
-    <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
-      {/* Agent rail — all agents shown as completed/idle (no active pulse) */}
-      <AgentRail className="h-full" completedAgents={completedAgentSet} />
+            {renderBrief.sections.length > 0 && (
+              <BriefTabs>
+                {(activeTab) =>
+                  activeTab === 'topic' ? (
+                    <ByTopicView brief={renderBrief} citationLookup={citationLookup} />
+                  ) : (
+                    <ByAgentView
+                      brief={renderBrief}
+                      citationLookup={citationLookup}
+                      activationOrder={activationOrder}
+                    />
+                  )
+                }
+              </BriefTabs>
+            )}
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto min-w-0">
-        <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-6">
-          {/* Header row: reset button */}
-          <div className="flex items-center justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onReset}
-            >
-              New query
-            </Button>
+            {validFollowUps && (
+              <FollowUpChips
+                questions={renderBrief.followUpQueries as [string, string, string]}
+                onFollowUp={onFollowUp}
+              />
+            )}
           </div>
-
-          {/* Error with partial — inline warning banner */}
-          {status === 'error' && (partial || brief) && (
-            <div
-              className="border border-luna-warning rounded px-4 py-3 font-mono text-[13px] text-luna-warning"
-              role="alert"
-            >
-              Brief was not fully synthesized — partial results shown.
-            </div>
-          )}
-
-          {/* Partial streaming indicator */}
-          {isPartial && !error && (
-            <div className="font-mono text-[11px] text-luna-fg-4 animate-pulse" aria-live="polite">
-              Synthesizing…
-            </div>
-          )}
-
-          {/* Brief header */}
-          {(renderBrief.locationName || renderBrief.query) && (
-            <BriefHeader brief={renderBrief} />
-          )}
-
-          {/* Tabs */}
-          {renderBrief.sections.length > 0 && (
-            <BriefTabs>
-              {(activeTab) =>
-                activeTab === 'topic' ? (
-                  <ByTopicView brief={renderBrief} globalCitations={globalCitations} />
-                ) : (
-                  <ByAgentView
-                    brief={renderBrief}
-                    globalCitations={globalCitations}
-                    activationOrder={activationOrder}
-                  />
-                )
-              }
-            </BriefTabs>
-          )}
-
-          {/* Follow-up chips — only on complete, no errors, valid questions */}
-          {validFollowUps && (
-            <FollowUpChips
-              questions={renderBrief.followUpQueries as [string, string, string]}
-              onFollowUp={onFollowUp}
-            />
-          )}
-        </div>
+        )}
       </main>
 
-      {/* Completeness panel — always visible per S7.2.3. Falls back to
-          'Incomplete' for any of the 5 keys not yet populated. */}
+      {/* S7.2.3: panel always visible. Falls back to 'Incomplete' for any of
+          the 5 keys not yet populated by the streaming brief. */}
       <CompletenessPanel dataCompleteness={renderBrief.dataCompleteness} />
     </div>
   )

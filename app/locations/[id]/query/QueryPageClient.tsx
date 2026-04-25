@@ -19,9 +19,8 @@ type Phase =
       query: string
       locationId: string
       images: NasaImage[]
-      agentOutputs: Record<string, string>
-      activeAgents: string[]
-      activationOrder: AgentId[]
+      agentOutputs: Partial<Record<AgentId, string>>
+      activationOrder: readonly AgentId[]
       globalCitations: ResolvedCitation[]
     }
 
@@ -55,14 +54,13 @@ export function QueryPageClient({ location }: { location: LunarLocation }) {
         query={phase.query}
         images={phase.images}
         onReset={handleReset}
-        onGenerateBrief={(agentOutputs, activeAgents, activationOrder, globalCitations) => {
+        onGenerateBrief={(agentOutputs, activationOrder, globalCitations) => {
           setPhase({
             name: 'brief',
             query: phase.query,
             locationId: location.id,
             images: phase.images,
             agentOutputs,
-            activeAgents,
             activationOrder,
             globalCitations,
           })
@@ -90,9 +88,8 @@ interface StreamPhaseViewProps {
   images: NasaImage[]
   onReset: () => void
   onGenerateBrief: (
-    agentOutputs: Record<string, string>,
-    activeAgents: string[],
-    activationOrder: AgentId[],
+    agentOutputs: Partial<Record<AgentId, string>>,
+    activationOrder: readonly AgentId[],
     globalCitations: ResolvedCitation[],
   ) => void
 }
@@ -107,18 +104,11 @@ function StreamPhaseView({
   const imageAssetIds = images.map((img) => img.assetId)
   const state = useAgentStream({ location, query, imageAssetIds })
 
+  const { agentStates, activatedAgents, globalCitations } = state
   const handleGenerateBrief = useCallback(() => {
-    const agentOutputs = buildSynthesisInput(
-      state.agentStates,
-      state.activatedAgents,
-    )
-    onGenerateBrief(
-      agentOutputs,
-      state.activatedAgents,
-      state.activatedAgents,
-      state.globalCitations,
-    )
-  }, [state, onGenerateBrief])
+    const agentOutputs = buildSynthesisInput(agentStates, activatedAgents)
+    onGenerateBrief(agentOutputs, activatedAgents, globalCitations)
+  }, [agentStates, activatedAgents, globalCitations, onGenerateBrief])
 
   return (
     <AgentStreamView
@@ -140,9 +130,8 @@ interface BriefPhasePayload {
   query: string
   locationId: string
   images: NasaImage[]
-  agentOutputs: Record<string, string>
-  activeAgents: string[]
-  activationOrder: AgentId[]
+  agentOutputs: Partial<Record<AgentId, string>>
+  activationOrder: readonly AgentId[]
   globalCitations: ResolvedCitation[]
 }
 
@@ -155,13 +144,15 @@ interface BriefPhaseViewProps {
 function BriefPhaseView({ phase, onFollowUp, onReset }: BriefPhaseViewProps) {
   const [briefState, startBrief] = useBriefStream()
 
-  // Start the brief stream on mount — the user clicked "Generate mission brief" to get here
+  // Start once on mount. The user clicked "Generate mission brief" to get here;
+  // the phase payload is captured at click time and is stable for this view's
+  // lifetime, so an empty deps array is correct.
   useEffect(() => {
     startBrief({
       query: phase.query,
       locationId: phase.locationId,
       agentOutputs: phase.agentOutputs,
-      activeAgents: phase.activeAgents,
+      activeAgents: phase.activationOrder,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

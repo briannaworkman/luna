@@ -39,3 +39,7 @@ export const AGENTS: readonly Agent[] = [
 export function isMainPanelAgent(id: AgentId): boolean {
   return id !== 'data-ingest'
 }
+
+export const STUB_AGENT_IDS: ReadonlySet<AgentId> = new Set(
+  AGENTS.filter((a) => a.isStub).map((a) => a.id),
+)

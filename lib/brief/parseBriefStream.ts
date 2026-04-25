@@ -23,8 +23,7 @@ export async function* parseBriefStream(
       if (done) {
         buffer += decoder.decode(undefined, { stream: false })
         if (buffer.trim()) {
-          const segments = buffer.split('\n\n')
-          for (const segment of segments) {
+          for (const segment of buffer.split(/\r?\n\r?\n/)) {
             if (!segment.trim()) continue
             const event = parseSegment(segment)
             if (event !== null) yield event
@@ -35,7 +34,9 @@ export async function* parseBriefStream(
 
       buffer += decoder.decode(value, { stream: true })
 
-      const segments = buffer.split('\n\n')
+      // Split on either LF-LF or CRLF-CRLF so this works behind proxies that
+      // normalize line endings.
+      const segments = buffer.split(/\r?\n\r?\n/)
       buffer = segments.pop() ?? ''
 
       for (const segment of segments) {

@@ -1,17 +1,18 @@
+import { useMemo } from 'react'
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { FindingItem } from './FindingItem'
-import { AGENTS } from '@/lib/constants/agents'
+import { AGENTS, STUB_AGENT_IDS, type AgentId } from '@/lib/constants/agents'
 import type { MissionBrief, BriefSection } from '@/lib/types/brief'
 import type { ResolvedCitation } from '@/lib/citations/types'
-import type { AgentId } from '@/lib/constants/agents'
 
 interface ByAgentViewProps {
   brief: MissionBrief
-  globalCitations: ResolvedCitation[]
-  /** Activation order from the agent stream */
-  activationOrder: AgentId[]
+  citationLookup: Map<string, ResolvedCitation>
+  activationOrder: readonly AgentId[]
 }
+
+const STUB_IDS = AGENTS.filter((a) => a.isStub).map((a) => a.id)
 
 function StubSection({ section }: { section: BriefSection }) {
   return (
@@ -39,34 +40,32 @@ function StubSection({ section }: { section: BriefSection }) {
   )
 }
 
-export function ByAgentView({ brief, globalCitations, activationOrder }: ByAgentViewProps) {
-  // Build a map of agentId -> section for quick lookup
-  const sectionMap = new Map<string, BriefSection>()
-  for (const section of brief.sections) {
-    sectionMap.set(section.agentId, section)
-  }
-
-  // Order: activated agents first, then any brief.sections not in activationOrder,
-  // then all stub agents (S7.2.1: stubs are present in "By agent" view with V2 badge,
-  // independent of whether they were activated for this query).
-  const stubIds = AGENTS.filter((a) => a.isStub).map((a) => a.id)
-  const orderedIds = [
-    ...activationOrder,
-    ...brief.sections
+export function ByAgentView({ brief, citationLookup, activationOrder }: ByAgentViewProps) {
+  const orderedIds = useMemo(() => {
+    // Order: activated agents → any sections not in activationOrder → all stubs
+    // (S7.2.1: stubs always present in "By agent" view, even if not activated).
+    const activated = new Set<AgentId>(activationOrder)
+    const orphanSections = brief.sections
       .map((s) => s.agentId as AgentId)
-      .filter((id) => !activationOrder.includes(id)),
-    ...stubIds,
-  ]
+      .filter((id) => !activated.has(id))
 
-  // De-duplicate while preserving order
-  const seen = new Set<string>()
-  const deduped = orderedIds.filter((id) => {
-    if (seen.has(id)) return false
-    seen.add(id)
-    return true
-  })
+    const seen = new Set<string>()
+    const out: AgentId[] = []
+    for (const id of [...activationOrder, ...orphanSections, ...STUB_IDS]) {
+      if (seen.has(id)) continue
+      seen.add(id)
+      out.push(id)
+    }
+    return out
+  }, [brief.sections, activationOrder])
 
-  if (deduped.length === 0) {
+  const sectionMap = useMemo(() => {
+    const m = new Map<string, BriefSection>()
+    for (const section of brief.sections) m.set(section.agentId, section)
+    return m
+  }, [brief.sections])
+
+  if (orderedIds.length === 0) {
     return (
       <div className="font-mono text-[13px] text-luna-fg-4 italic py-6">
         No agent sections available.
@@ -76,23 +75,16 @@ export function ByAgentView({ brief, globalCitations, activationOrder }: ByAgent
 
   return (
     <div className="flex flex-col gap-6">
-      {deduped.map((agentId) => {
+      {orderedIds.map((agentId) => {
         const section = sectionMap.get(agentId)
         const agentMeta = AGENTS.find((a) => a.id === agentId)
-        const isStub = agentMeta?.isStub ?? false
         const label = agentMeta?.label ?? agentId
 
-        // Stub agents that have a section — render with V2 badge
-        if (isStub) {
-          const stubSection = section ?? {
-            agentId,
-            agentName: label,
-            findings: [],
-          }
+        if (STUB_AGENT_IDS.has(agentId)) {
+          const stubSection = section ?? { agentId, agentName: label, findings: [] }
           return <StubSection key={agentId} section={stubSection} />
         }
 
-        // Non-stub agent with no section (e.g., data-ingest) — skip
         if (!section) return null
 
         return (
@@ -110,7 +102,7 @@ export function ByAgentView({ brief, globalCitations, activationOrder }: ByAgent
                   <FindingItem
                     key={i}
                     finding={finding}
-                    globalCitations={globalCitations}
+                    citationLookup={citationLookup}
                   />
                 ))
               )}

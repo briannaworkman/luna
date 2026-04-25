@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { groupFindingsByTopic } from '@/lib/brief/topicMap'
 import { FindingItem } from './FindingItem'
 import type { MissionBrief } from '@/lib/types/brief'
@@ -5,11 +6,11 @@ import type { ResolvedCitation } from '@/lib/citations/types'
 
 interface ByTopicViewProps {
   brief: MissionBrief
-  globalCitations: ResolvedCitation[]
+  citationLookup: Map<string, ResolvedCitation>
 }
 
-export function ByTopicView({ brief, globalCitations }: ByTopicViewProps) {
-  const groups = groupFindingsByTopic(brief.sections)
+export function ByTopicView({ brief, citationLookup }: ByTopicViewProps) {
+  const groups = useMemo(() => groupFindingsByTopic(brief.sections), [brief.sections])
 
   if (groups.length === 0) {
     return (
@@ -31,7 +32,7 @@ export function ByTopicView({ brief, globalCitations }: ByTopicViewProps) {
               <FindingItem
                 key={`${finding.agentId}-${i}`}
                 finding={finding}
-                globalCitations={globalCitations}
+                citationLookup={citationLookup}
                 agentName={finding.agentName}
               />
             ))}

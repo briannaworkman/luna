@@ -7,27 +7,13 @@ import type { CitationSource } from '@/lib/orchestrator/agents/parseInlineTags'
 
 interface FindingItemProps {
   finding: Finding
-  globalCitations: ResolvedCitation[]
-  /** Optional: the agent name, shown as attribution label */
+  citationLookup: Map<string, ResolvedCitation>
   agentName?: string
 }
 
-/**
- * Resolves a citation ID against globalCitations. Case-insensitive ID match.
- * Returns null if no match found.
- */
-function resolveFindingCitation(
-  id: string,
-  globalCitations: ResolvedCitation[],
-): ResolvedCitation | null {
-  const lower = id.toLowerCase()
-  return globalCitations.find((c) => c.id.toLowerCase() === lower) ?? null
-}
-
-export function FindingItem({ finding, globalCitations, agentName }: FindingItemProps) {
+export function FindingItem({ finding, citationLookup, agentName }: FindingItemProps) {
   return (
     <div className="flex flex-col gap-1.5 py-3 border-b border-luna-hairline last:border-b-0">
-      {/* Claim row */}
       <div className="flex items-start gap-2">
         <BriefConfidenceBadge
           confidence={finding.confidence}
@@ -38,7 +24,6 @@ export function FindingItem({ finding, globalCitations, agentName }: FindingItem
         </p>
       </div>
 
-      {/* Corroborated by */}
       {finding.corroboratedBy.length > 0 && (
         <div className="flex items-center gap-1.5 ml-[calc(var(--badge-offset,0px)+0.5rem)] pl-7">
           <span className="font-mono text-[11px] text-luna-fg-4 tracking-[0.04em]">
@@ -50,10 +35,9 @@ export function FindingItem({ finding, globalCitations, agentName }: FindingItem
         </div>
       )}
 
-      {/* Citation chips + agent attribution row */}
       <div className="flex flex-wrap items-center gap-1.5 pl-7">
         {finding.citations.map((citId) => {
-          const resolved = resolveFindingCitation(citId, globalCitations)
+          const resolved = citationLookup.get(citId.toLowerCase())
           const source = resolved?.source as CitationSource | undefined
           const label = source ? INSTRUMENT_LABELS[source] : 'UNKNOWN'
           const url = resolved?.url ?? null

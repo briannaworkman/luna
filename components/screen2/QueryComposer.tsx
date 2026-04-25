@@ -116,14 +116,14 @@ export function QueryComposer({ location, onSubmit, initialQuery }: QueryCompose
             <ImageryStrip images={images} onRemove={handleRemoveImage} />
 
             <div className="flex items-center justify-between gap-4">
-              <span aria-hidden="true" className="font-mono text-[11px] tracking-[0.04em] text-luna-fg-4">
-                ⌘↵ to analyze
-              </span>
+              <Button type="button" variant="outline" onClick={handleOpenGallery}>
+                <ImagePlus size={14} strokeWidth={1.5} aria-hidden="true" />
+                Attach imagery
+              </Button>
               <div className="flex items-center gap-3">
-                <Button type="button" variant="outline" onClick={handleOpenGallery}>
-                  <ImagePlus size={14} strokeWidth={1.5} aria-hidden="true" />
-                  Attach imagery
-                </Button>
+                <span aria-hidden="true" className="font-mono text-[11px] tracking-[0.04em] text-luna-fg-4">
+                  ⌘↵ to analyze
+                </span>
                 <Button onClick={handleSubmit}>
                   Analyze location
                   <ArrowRight size={14} strokeWidth={1.5} className="ml-2" />

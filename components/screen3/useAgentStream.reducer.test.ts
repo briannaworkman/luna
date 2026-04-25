@@ -276,6 +276,28 @@ describe('agentStreamReducer', () => {
     })
     expect(state.agentStates['mineralogy']?.chunkCount).toBe(0)
   })
+
+  it('agent-activate resets chunkCount when re-activating after complete', () => {
+    let state = agentStreamReducer(initialAgentStreamState, {
+      kind: 'sse',
+      event: { type: 'agent-activate', agent: 'orbit' },
+    })
+    state = agentStreamReducer(state, {
+      kind: 'sse',
+      event: { type: 'agent-chunk', agent: 'orbit', text: 'a' },
+    })
+    state = agentStreamReducer(state, {
+      kind: 'sse',
+      event: { type: 'agent-complete', agent: 'orbit' },
+    })
+    expect(state.agentStates['orbit']?.chunkCount).toBe(1)
+
+    state = agentStreamReducer(state, {
+      kind: 'sse',
+      event: { type: 'agent-activate', agent: 'orbit' },
+    })
+    expect(state.agentStates['orbit']?.chunkCount).toBe(0)
+  })
 })
 
 describe('agent-citation — global dedup', () => {

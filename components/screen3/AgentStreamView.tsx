@@ -41,7 +41,7 @@ export function AgentStreamView({
       if (s.status === 'complete') complete.add(id)
       if (s.status === 'error') error.add(id)
       if (s.statusText) texts[id] = s.statusText
-      if (s.chunkCount > 0) counts[id] = s.chunkCount
+      if (s.status === 'active' && s.chunkCount > 0) counts[id] = s.chunkCount
     }
 
     return { activeAgents: active, completedAgents: complete, errorAgents: error, statusTexts: texts, chunkCounts: counts }

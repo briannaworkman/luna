@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { AGENTS } from '@/lib/constants/agents'
+import { AGENTS, isMainPanelAgent } from '@/lib/constants/agents'
 import type { Agent, AgentId } from '@/lib/constants/agents'
 import { AgentStatusGlyph, type AgentStatus } from './AgentStatusGlyph'
 
@@ -28,7 +28,7 @@ function AgentRow({
   statusText?: string
   chunkCount?: number
 }) {
-  const showChunkCount = isActive && typeof chunkCount === 'number' && chunkCount > 0 && agent.id !== 'data-ingest'
+  const showChunkCount = isActive && typeof chunkCount === 'number' && chunkCount > 0 && isMainPanelAgent(agent.id)
   const hasStatus = Boolean(statusText) || showChunkCount
   const status: AgentStatus = isActive
     ? 'active'

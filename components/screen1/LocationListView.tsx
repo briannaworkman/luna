@@ -21,7 +21,7 @@ export function LocationListView({ locations, onLocationSelect }: LocationListVi
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="grid grid-cols-2 gap-2.5 p-5">
+      <div className="grid grid-cols-2 gap-3 px-10 py-6 max-w-4xl mx-auto">
         {locations.map((location) => (
           <LocationCard
             key={location.id}

@@ -102,9 +102,11 @@ export default function Home() {
       </Suspense>
       <main className="fixed inset-x-0 bottom-0 top-14 flex flex-col bg-luna-base">
         {/* Control strip: filters left, view toggle right */}
-        <div className="flex items-center gap-3 px-8 py-2.5 border-b border-luna-hairline flex-shrink-0">
-          <FilterBar activeFilter={filter} onFilterChange={setFilter} />
-          <ViewToggle activeView={view} onViewChange={handleViewChange} />
+        <div className="border-b border-luna-hairline flex-shrink-0">
+          <div className="flex items-center gap-3 px-8 py-2.5 max-w-5xl mx-auto">
+            <FilterBar activeFilter={filter} onFilterChange={setFilter} />
+            <ViewToggle activeView={view} onViewChange={handleViewChange} />
+          </div>
         </div>
 
         {view === 'list' ? (

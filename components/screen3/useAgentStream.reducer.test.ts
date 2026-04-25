@@ -41,7 +41,6 @@ describe('agentStreamReducer', () => {
       status: 'active',
       body: [],
       citations: [],
-      chunkCount: 0,
     })
   })
 
@@ -196,7 +195,6 @@ describe('agentStreamReducer', () => {
           status: 'active',
           body: [{ kind: 'text', text: 'done text' }],
           citations: [],
-          chunkCount: 0,
           statusText: 'Still working...',
         },
       },
@@ -234,69 +232,6 @@ describe('agentStreamReducer', () => {
       message: 'Network failure',
     })
     expect(state.streamError).toBe('Network failure')
-  })
-
-  it('agent-chunk increments chunkCount', () => {
-    let state = agentStreamReducer(initialAgentStreamState, {
-      kind: 'sse',
-      event: { type: 'agent-activate', agent: 'orbit' },
-    })
-    state = agentStreamReducer(state, {
-      kind: 'sse',
-      event: { type: 'agent-chunk', agent: 'orbit', text: 'a' },
-    })
-    state = agentStreamReducer(state, {
-      kind: 'sse',
-      event: { type: 'agent-chunk', agent: 'orbit', text: 'b' },
-    })
-    expect(state.agentStates['orbit']?.chunkCount).toBe(2)
-  })
-
-  it('agent-complete preserves chunkCount', () => {
-    let state = agentStreamReducer(initialAgentStreamState, {
-      kind: 'sse',
-      event: { type: 'agent-activate', agent: 'orbit' },
-    })
-    state = agentStreamReducer(state, {
-      kind: 'sse',
-      event: { type: 'agent-chunk', agent: 'orbit', text: 'a' },
-    })
-    state = agentStreamReducer(state, {
-      kind: 'sse',
-      event: { type: 'agent-complete', agent: 'orbit' },
-    })
-    expect(state.agentStates['orbit']?.chunkCount).toBe(1)
-    expect(state.agentStates['orbit']?.status).toBe('complete')
-  })
-
-  it('agent-activate initializes chunkCount to 0', () => {
-    const state = agentStreamReducer(initialAgentStreamState, {
-      kind: 'sse',
-      event: { type: 'agent-activate', agent: 'mineralogy' },
-    })
-    expect(state.agentStates['mineralogy']?.chunkCount).toBe(0)
-  })
-
-  it('agent-activate resets chunkCount when re-activating after complete', () => {
-    let state = agentStreamReducer(initialAgentStreamState, {
-      kind: 'sse',
-      event: { type: 'agent-activate', agent: 'orbit' },
-    })
-    state = agentStreamReducer(state, {
-      kind: 'sse',
-      event: { type: 'agent-chunk', agent: 'orbit', text: 'a' },
-    })
-    state = agentStreamReducer(state, {
-      kind: 'sse',
-      event: { type: 'agent-complete', agent: 'orbit' },
-    })
-    expect(state.agentStates['orbit']?.chunkCount).toBe(1)
-
-    state = agentStreamReducer(state, {
-      kind: 'sse',
-      event: { type: 'agent-activate', agent: 'orbit' },
-    })
-    expect(state.agentStates['orbit']?.chunkCount).toBe(0)
   })
 })
 

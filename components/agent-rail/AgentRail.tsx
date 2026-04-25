@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { AGENTS, isMainPanelAgent } from '@/lib/constants/agents'
+import { AGENTS } from '@/lib/constants/agents'
 import type { Agent, AgentId } from '@/lib/constants/agents'
 import { AgentStatusGlyph, type AgentStatus } from './AgentStatusGlyph'
 
@@ -9,7 +9,6 @@ interface AgentRailProps {
   completedAgents?: Set<AgentId>
   errorAgents?: Set<AgentId>
   statusTexts?: Partial<Record<AgentId, string>>
-  chunkCounts?: Partial<Record<AgentId, number>>
   footerActiveCount?: number
 }
 
@@ -19,17 +18,14 @@ function AgentRow({
   isComplete,
   isError,
   statusText,
-  chunkCount,
 }: {
   agent: Agent
   isActive: boolean
   isComplete: boolean
   isError: boolean
   statusText?: string
-  chunkCount?: number
 }) {
-  const showChunkCount = isActive && typeof chunkCount === 'number' && chunkCount > 0 && isMainPanelAgent(agent.id)
-  const hasSubline = Boolean(statusText) || showChunkCount
+  const hasStatus = Boolean(statusText)
   const status: AgentStatus = isActive
     ? 'active'
     : isComplete
@@ -39,7 +35,7 @@ function AgentRow({
         : 'idle'
   const rowClass = cn(
     'px-4 flex items-center gap-3 border-b border-luna-hairline font-sans font-normal text-[13px] transition-colors',
-    hasSubline ? 'min-h-11 h-auto py-2' : 'h-11',
+    hasStatus ? 'min-h-11 h-auto py-2' : 'h-11',
     isActive && 'text-luna-fg',
     isComplete && 'text-luna-fg-2',
     isError && 'text-luna-danger',
@@ -48,22 +44,15 @@ function AgentRow({
 
   return (
     <div className={rowClass}>
-      {/* Status glyph */}
       <span className="shrink-0 w-2.5 text-center leading-none select-none">
         <AgentStatusGlyph status={status} size={3.5} />
       </span>
 
-      {/* Label + optional status text + optional chunk counter */}
       <span className="flex flex-col min-w-0">
         <span className="lowercase leading-tight">{agent.label}</span>
         {statusText && (
           <span className="font-mono text-[10px] tracking-[0.02em] text-luna-fg-4 leading-tight truncate max-w-[170px] mt-0.5">
             {statusText}
-          </span>
-        )}
-        {showChunkCount && (
-          <span className="font-mono text-[10px] text-luna-fg-4 leading-tight mt-0.5 tabular-nums">
-            {chunkCount} tokens
           </span>
         )}
       </span>
@@ -77,7 +66,6 @@ export function AgentRail({
   completedAgents = new Set(),
   errorAgents = new Set(),
   statusTexts = {},
-  chunkCounts = {},
   footerActiveCount = 0,
 }: AgentRailProps) {
   return (
@@ -104,7 +92,6 @@ export function AgentRail({
             isComplete={completedAgents.has(agent.id)}
             isError={errorAgents.has(agent.id)}
             statusText={statusTexts[agent.id]}
-            chunkCount={chunkCounts[agent.id]}
           />
         ))}
       </div>

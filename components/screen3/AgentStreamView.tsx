@@ -29,22 +29,20 @@ export function AgentStreamView({
   const state = useAgentStream({ location, query, imageAssetIds })
 
   // Derive sets for AgentRail — recomputed only when agentStates changes
-  const { activeAgents, completedAgents, errorAgents, statusTexts, chunkCounts } = useMemo(() => {
+  const { activeAgents, completedAgents, errorAgents, statusTexts } = useMemo(() => {
     const active = new Set<AgentId>()
     const complete = new Set<AgentId>()
     const error = new Set<AgentId>()
     const texts: Partial<Record<AgentId, string>> = {}
-    const counts: Partial<Record<AgentId, number>> = {}
 
     for (const [id, s] of Object.entries(state.agentStates) as Array<[AgentId, SingleAgentState]>) {
       if (s.status === 'active') active.add(id)
       if (s.status === 'complete') complete.add(id)
       if (s.status === 'error') error.add(id)
       if (s.statusText) texts[id] = s.statusText
-      if (s.status === 'active' && s.chunkCount > 0) counts[id] = s.chunkCount
     }
 
-    return { activeAgents: active, completedAgents: complete, errorAgents: error, statusTexts: texts, chunkCounts: counts }
+    return { activeAgents: active, completedAgents: complete, errorAgents: error, statusTexts: texts }
   }, [state.agentStates])
 
   const visibleAgents = state.activatedAgents.filter(isMainPanelAgent)
@@ -57,7 +55,6 @@ export function AgentStreamView({
         completedAgents={completedAgents}
         errorAgents={errorAgents}
         statusTexts={statusTexts}
-        chunkCounts={chunkCounts}
         footerActiveCount={activeAgents.size}
       />
 

@@ -15,14 +15,6 @@ export interface SingleAgentState {
   status: 'active' | 'complete' | 'error'
   body: BodySegment[]
   citations: Citation[]
-  /**
-   * Count of `agent-chunk` SSE events received for this agent.
-   * Anthropic streaming deltas do not expose per-chunk token counts,
-   * so this is a chunk-event count, not an Anthropic token count.
-   * Per spec S6.1.2, incrementing on each incoming chunk is the
-   * specified behavior.
-   */
-  chunkCount: number
   statusText?: string
   errorMessage?: string
 }
@@ -51,7 +43,7 @@ export const initialAgentStreamState: AgentStreamState = {
 }
 
 export function makeDefaultAgentState(): SingleAgentState {
-  return { status: 'active', body: [], citations: [], chunkCount: 0 }
+  return { status: 'active', body: [], citations: [] }
 }
 
 function upsertAgent(
@@ -109,7 +101,7 @@ export function agentStreamReducer(
             lastSeg !== undefined && lastSeg.kind === 'text'
               ? [...prev.body.slice(0, -1), { kind: 'text', text: lastSeg.text + event.text }]
               : [...prev.body, { kind: 'text', text: event.text }]
-          return { ...prev, body: newBody, chunkCount: prev.chunkCount + 1 }
+          return { ...prev, body: newBody }
         }),
       }
 

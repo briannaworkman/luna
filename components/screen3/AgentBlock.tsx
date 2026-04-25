@@ -35,6 +35,9 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
 
   const controlsId = `agent-block-body-${agentId}`
 
+  const headerClass =
+    'sticky top-0 z-[1] -mx-5 px-5 -mt-4 pt-4 pb-3 bg-luna-base-1 border-b border-luna-hairline rounded-t-md flex items-center justify-between gap-2 w-[calc(100%+2.5rem)] text-left'
+
   return (
     <div
       className="bg-luna-base-1 border border-luna-hairline rounded-md px-5 py-4"
@@ -44,7 +47,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
       {canCollapse ? (
         <button
           type="button"
-          className="flex items-center justify-between gap-2 w-full text-left"
+          className={headerClass}
           aria-expanded={!collapsed}
           aria-controls={controlsId}
           onClick={() => setCollapsed((c) => !c)}
@@ -75,7 +78,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
           </span>
         </button>
       ) : (
-        <div className="flex items-center justify-between gap-2">
+        <div className={headerClass}>
           <span className="flex items-center font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
             {label}
             {isStub && (

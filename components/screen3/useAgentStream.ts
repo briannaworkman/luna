@@ -42,7 +42,7 @@ export const initialAgentStreamState: AgentStreamState = {
   isDone: false,
 }
 
-function makeDefaultAgentState(): SingleAgentState {
+export function makeDefaultAgentState(): SingleAgentState {
   return { status: 'active', body: [], citations: [] }
 }
 
@@ -77,10 +77,9 @@ export function agentStreamReducer(
       }
 
     case 'agent-activate': {
-      const updated: SingleAgentState = { status: 'active', body: [], citations: [] }
       return {
         ...state,
-        agentStates: { ...state.agentStates, [event.agent]: updated },
+        agentStates: { ...state.agentStates, [event.agent]: makeDefaultAgentState() },
       }
     }
 
@@ -98,15 +97,11 @@ export function agentStreamReducer(
         ...state,
         agentStates: upsertAgent(state.agentStates, event.agent, (prev) => {
           const lastSeg = prev.body[prev.body.length - 1]
-          if (lastSeg !== undefined && lastSeg.kind === 'text') {
-            // Merge with existing trailing text segment
-            const newBody: BodySegment[] = [
-              ...prev.body.slice(0, prev.body.length - 1),
-              { kind: 'text', text: lastSeg.text + event.text },
-            ]
-            return { ...prev, body: newBody }
-          }
-          return { ...prev, body: [...prev.body, { kind: 'text', text: event.text }] }
+          const newBody: BodySegment[] =
+            lastSeg !== undefined && lastSeg.kind === 'text'
+              ? [...prev.body.slice(0, -1), { kind: 'text', text: lastSeg.text + event.text }]
+              : [...prev.body, { kind: 'text', text: event.text }]
+          return { ...prev, body: newBody }
         }),
       }
 

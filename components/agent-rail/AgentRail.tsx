@@ -44,15 +44,13 @@ function AgentRow({
 
   return (
     <div className={rowClass}>
-      {/* Status glyph */}
       <span className="shrink-0 w-2.5 text-center leading-none select-none">
         <AgentStatusGlyph status={status} size={3.5} />
       </span>
 
-      {/* Label + optional status text */}
       <span className="flex flex-col min-w-0">
         <span className="lowercase leading-tight">{agent.label}</span>
-        {hasStatus && (
+        {statusText && (
           <span className="font-mono text-[10px] tracking-[0.02em] text-luna-fg-4 leading-tight truncate max-w-[170px] mt-0.5">
             {statusText}
           </span>

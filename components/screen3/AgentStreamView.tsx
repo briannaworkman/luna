@@ -5,7 +5,7 @@ import { AgentRail } from '@/components/agent-rail/AgentRail'
 import { LocationHeader } from '@/components/screen2/LocationHeader'
 import { OrchestratorBlock } from './OrchestratorBlock'
 import { AgentBlock } from './AgentBlock'
-import { useAgentStream, type SingleAgentState } from './useAgentStream'
+import { useAgentStream, makeDefaultAgentState, type SingleAgentState } from './useAgentStream'
 import { SourceDock } from './SourceDock'
 import { AGENTS, isMainPanelAgent } from '@/lib/constants/agents'
 import type { AgentId } from '@/lib/constants/agents'
@@ -106,11 +106,7 @@ export function AgentStreamView({
           {visibleAgents.map((agentId) => {
               const agentMeta = AGENTS.find((a) => a.id === agentId)
               const label = agentMeta?.label ?? agentId
-              const agentState = state.agentStates[agentId] ?? {
-                status: 'active' as const,
-                body: [],
-                citations: [],
-              }
+              const agentState = state.agentStates[agentId] ?? makeDefaultAgentState()
               return (
                 <AgentBlock
                   key={agentId}

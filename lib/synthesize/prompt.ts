@@ -56,13 +56,13 @@ Schema:
 
 Field requirements:
 - generatedAt: use the exact ISO 8601 UTC value provided to you in the user message
-- summary: one paragraph (3–5 sentences) synthesizing the most important finding from each active agent into a coherent narrative for a non-specialist
+- summary: 2–3 paragraphs (separated by blank lines) that DIRECTLY ANSWER the user's query. Lead with the most authoritative answer, then weave in the most important supporting findings drawn from across the active agents' outputs. Write for a non-specialist who has not seen the agent stream — this is the standalone answer the user reads first. Use plain prose; do NOT include inline tags, markdown headers, or bullet lists. Roughly 8–14 sentences total.
 - sections: one per active specialist agent (exclude data-ingest; exclude stub agents thermal, topography, hazards)
 - agentId: exact AgentId string (e.g. "mineralogy")
 - agentName: human-readable label (e.g. "Mineralogy")
 - claim: one factual declarative sentence — no hedging preamble, no bundling
 - corroboratedBy: AgentId strings of OTHER agents that made a similar claim independently. Empty array if none. NEVER include the current section's own agentId.
-- citations: asset IDs referenced by [CITE:...] tags in the agent output that support this specific claim. Use exact IDs — do not invent.
+- citations: asset IDs referenced in the agent output that support this specific claim. Note: inline [CITE:...] tags have been stripped from agent output before it reaches you. Each agent's section may end with a structured line of the form "Citations: source:id, source:id, ..." listing the asset IDs that came up during that agent's analysis. Populate this field using those IDs. Use exact IDs — do not invent.
 - followUpQueries: exactly 3 complete questions (not topic labels)
 - dataCompleteness: echo the 5 values exactly as provided in the user message
 

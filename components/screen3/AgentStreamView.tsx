@@ -5,29 +5,28 @@ import { AgentRail } from '@/components/agent-rail/AgentRail'
 import { LocationHeader } from '@/components/screen2/LocationHeader'
 import { OrchestratorBlock } from './OrchestratorBlock'
 import { AgentBlock } from './AgentBlock'
-import { useAgentStream, makeDefaultAgentState, type SingleAgentState } from './useAgentStream'
+import { makeDefaultAgentState, type SingleAgentState, type AgentStreamState } from './useAgentStream'
 import { SourceDock } from './SourceDock'
 import { AGENTS, isMainPanelAgent } from '@/lib/constants/agents'
 import type { AgentId } from '@/lib/constants/agents'
 import type { LunarLocation } from '@/components/globe/types'
-import type { NasaImage } from '@/lib/types/nasa'
 
 interface AgentStreamViewProps {
   location: LunarLocation
   query: string
-  images: NasaImage[]
+  /** Agent stream state, owned by the parent */
+  state: AgentStreamState
   onReset: () => void
+  onGenerateBrief: () => void
 }
 
 export function AgentStreamView({
   location,
   query,
-  images,
+  state,
   onReset,
+  onGenerateBrief,
 }: AgentStreamViewProps) {
-  const imageAssetIds = images.map((img) => img.assetId)
-  const state = useAgentStream({ location, query, imageAssetIds })
-
   // Derive sets for AgentRail — recomputed only when agentStates changes
   const { activeAgents, completedAgents, errorAgents, statusTexts } = useMemo(() => {
     const active = new Set<AgentId>()
@@ -116,6 +115,18 @@ export function AgentStreamView({
                 />
               )
             })}
+
+          {/* Generate mission brief button — always visible, disabled until stream completes */}
+          <div className="flex justify-end pt-2 pb-4">
+            <Button
+              type="button"
+              onClick={onGenerateBrief}
+              disabled={!state.isDone}
+              className={!state.isDone ? 'opacity-40 cursor-not-allowed' : ''}
+            >
+              Generate mission brief
+            </Button>
+          </div>
         </div>
       </main>
 

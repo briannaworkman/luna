@@ -129,22 +129,25 @@ describe('buildSynthesisPrompt', () => {
     expect(() => buildSynthesisPrompt(input)).not.toThrow()
   })
 
-  it('preserves [CITE:...] and [CONFIDENCE:...] inline tags verbatim in agent outputs', () => {
+  it('passes agent output text verbatim (post-strip: structured Citations line, no inline tags)', () => {
+    // Client strips [CITE:...] and [CONFIDENCE:...] tags before calling buildSynthesisPrompt.
+    // Each agent section now ends with a structured "Citations: source:id, ..." line.
     const input = {
       ...baseInput,
       activeAgents: ['mineralogy', 'mission-history'],
       agentOutputs: {
         'mineralogy':
-          'Mare basalt analogues here. [CITE:M1334189784LE] [CONFIDENCE: High] KREEP signatures consistent with Imbrium ejecta. [CITE:jsc-sample:14310]',
+          'Mare basalt analogues here. KREEP signatures consistent with Imbrium ejecta.\nCitations: lroc:M1334189784LE, jsc-sample:14310',
         'mission-history':
-          'No crewed landings. [CITE:nasa-image:PIA12345] [CONFIDENCE: Medium]',
+          'No crewed landings.\nCitations: nasa-image:PIA12345',
       },
     }
     const { user } = buildSynthesisPrompt(input)
-    expect(user).toContain('[CITE:M1334189784LE]')
-    expect(user).toContain('[CONFIDENCE: High]')
-    expect(user).toContain('[CITE:jsc-sample:14310]')
-    expect(user).toContain('[CITE:nasa-image:PIA12345]')
-    expect(user).toContain('[CONFIDENCE: Medium]')
+    // Structured citations line should be preserved verbatim
+    expect(user).toContain('Citations: lroc:M1334189784LE, jsc-sample:14310')
+    expect(user).toContain('Citations: nasa-image:PIA12345')
+    // No raw [CITE:...] or [CONFIDENCE:...] tags should appear
+    expect(user).not.toContain('[CITE:')
+    expect(user).not.toContain('[CONFIDENCE:')
   })
 })

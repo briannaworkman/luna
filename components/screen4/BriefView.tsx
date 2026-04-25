@@ -1,6 +1,7 @@
 'use client'
 import { useMemo } from 'react'
 import { AgentRail } from '@/components/agent-rail/AgentRail'
+import { AgentStrip } from '@/components/agent-rail/AgentStrip'
 import { BriefHeader } from './BriefHeader'
 import { BriefTabs } from './BriefTabs'
 import { OverviewTab } from './OverviewTab'
@@ -84,11 +85,15 @@ export function BriefView({
 
   return (
     <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
-      <AgentRail className="h-full" completedAgents={completedAgentSet} />
+      <div className="hidden md:flex h-full">
+        <AgentRail className="h-full" completedAgents={completedAgentSet} />
+      </div>
 
-      <main className="flex-1 overflow-y-auto min-w-0">
+      <main className="flex-1 overflow-y-auto min-w-0 flex flex-col">
+        <AgentStrip completedAgents={completedAgentSet} />
+
         {isLoading ? (
-          <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-6">
+          <div className="w-full max-w-4xl mx-auto px-4 md:px-10 py-10 flex flex-col gap-6">
             <BriefHeader
               brief={{ ...EMPTY_BRIEF, locationName, query }}
               isLoading
@@ -99,14 +104,14 @@ export function BriefView({
             </BriefTabs>
           </div>
         ) : isErrorWithoutBrief ? (
-          <div className="w-full max-w-4xl mx-auto px-10 py-24 flex flex-col items-center gap-6">
+          <div className="w-full max-w-4xl mx-auto px-4 md:px-10 py-24 flex flex-col items-center gap-6">
             <p className="font-mono text-[13px] text-luna-danger text-center">
               Brief synthesis failed: {error}
             </p>
             <BriefActionsMenu onReset={onReset} />
           </div>
         ) : (
-          <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-6">
+          <div className="w-full max-w-4xl mx-auto px-4 md:px-10 py-10 flex flex-col gap-6">
             {status === 'error' && (partial || brief) && (
               <div
                 className="border border-luna-warning rounded px-4 py-3 font-mono text-[13px] text-luna-warning"
@@ -148,14 +153,25 @@ export function BriefView({
                 onFollowUp={onFollowUp}
               />
             )}
+
+            {/* Mobile completeness + sources — inline below content */}
+            <div className="md:hidden border-t border-luna-hairline pt-4 pb-8">
+              <CompletenessPanel
+                dataCompleteness={renderBrief.dataCompleteness}
+                citations={globalCitations}
+                inline
+              />
+            </div>
           </div>
         )}
       </main>
 
-      <CompletenessPanel
-        dataCompleteness={renderBrief.dataCompleteness}
-        citations={globalCitations}
-      />
+      <div className="hidden md:flex h-full">
+        <CompletenessPanel
+          dataCompleteness={renderBrief.dataCompleteness}
+          citations={globalCitations}
+        />
+      </div>
     </div>
   )
 }

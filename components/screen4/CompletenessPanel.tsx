@@ -8,6 +8,7 @@ import type { ResolvedCitation } from '@/lib/citations/types'
 interface CompletenessPanelProps {
   dataCompleteness: MissionBrief['dataCompleteness']
   citations: ResolvedCitation[]
+  inline?: boolean
 }
 
 const STATUS_STYLE: Record<CompletenessStatus, { dot: string; label: string }> = {
@@ -17,10 +18,15 @@ const STATUS_STYLE: Record<CompletenessStatus, { dot: string; label: string }> =
   Incomplete:      { dot: 'bg-luna-danger',  label: 'text-luna-danger'  },
 }
 
-export function CompletenessPanel({ dataCompleteness, citations }: CompletenessPanelProps) {
+export function CompletenessPanel({ dataCompleteness, citations, inline = false }: CompletenessPanelProps) {
   return (
     <aside
-      className="w-[260px] shrink-0 flex flex-col h-full border-l border-luna-hairline bg-luna-base overflow-y-auto"
+      className={cn(
+        'flex flex-col bg-luna-base',
+        inline
+          ? 'w-full'
+          : 'w-[260px] shrink-0 h-full border-l border-luna-hairline overflow-y-auto',
+      )}
       aria-label="Data completeness and sources"
     >
       <div className="px-4 pt-4 pb-2">

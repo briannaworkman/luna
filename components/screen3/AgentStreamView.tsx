@@ -2,11 +2,13 @@
 import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { AgentRail } from '@/components/agent-rail/AgentRail'
+import { AgentStrip } from '@/components/agent-rail/AgentStrip'
 import { LocationHeader } from '@/components/screen2/LocationHeader'
 import { OrchestratorBlock } from './OrchestratorBlock'
 import { AgentBlock } from './AgentBlock'
 import { makeDefaultAgentState, type SingleAgentState, type AgentStreamState } from './useAgentStream'
 import { SourceDock } from './SourceDock'
+import { CitationList } from '@/components/citations/CitationList'
 import { AGENTS, isMainPanelAgent } from '@/lib/constants/agents'
 import type { AgentId } from '@/lib/constants/agents'
 import type { LunarLocation } from '@/components/globe/types'
@@ -48,19 +50,27 @@ export function AgentStreamView({
 
   return (
     <div className="fixed inset-0 top-14 flex bg-luna-base overflow-hidden">
-      <AgentRail
-        className="h-full"
-        activeAgents={activeAgents}
-        completedAgents={completedAgents}
-        errorAgents={errorAgents}
-        statusTexts={statusTexts}
-        footerActiveCount={activeAgents.size}
-      />
+      <div className="hidden md:flex h-full">
+        <AgentRail
+          className="h-full"
+          activeAgents={activeAgents}
+          completedAgents={completedAgents}
+          errorAgents={errorAgents}
+          statusTexts={statusTexts}
+          footerActiveCount={activeAgents.size}
+        />
+      </div>
 
-      <main className="flex-1 overflow-y-auto min-w-0">
-        <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-6">
+      <main className="flex-1 overflow-y-auto min-w-0 flex flex-col">
+        <AgentStrip
+          activeAgents={activeAgents}
+          completedAgents={completedAgents}
+          errorAgents={errorAgents}
+        />
+
+        <div className="w-full max-w-4xl mx-auto px-4 md:px-10 py-10 flex flex-col gap-6">
           {/* Header row */}
-          <div className="flex items-start justify-between gap-4 border-b border-luna-hairline pb-8">
+          <div className="flex items-start justify-between gap-4 border-b border-luna-hairline pb-4 md:pb-8">
             <div className="flex-1 min-w-0">
               <LocationHeader location={location} noBorder />
             </div>
@@ -116,6 +126,16 @@ export function AgentStreamView({
               )
             })}
 
+          {/* Mobile sources — inline below agent blocks */}
+          {state.globalCitations.length > 0 && (
+            <div className="md:hidden border-t border-luna-hairline pt-4 flex flex-col gap-2">
+              <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
+                Sources
+              </span>
+              <CitationList citations={state.globalCitations} />
+            </div>
+          )}
+
           {/* Generate mission brief button — always visible, disabled until stream completes */}
           <div className="flex justify-end pt-2 pb-4">
             <Button
@@ -130,10 +150,12 @@ export function AgentStreamView({
         </div>
       </main>
 
-      <SourceDock
-        citations={state.globalCitations}
-        activatedAgentCount={visibleAgents.length}
-      />
+      <div className="hidden md:flex h-full">
+        <SourceDock
+          citations={state.globalCitations}
+          activatedAgentCount={visibleAgents.length}
+        />
+      </div>
     </div>
   )
 }

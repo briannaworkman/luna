@@ -87,7 +87,7 @@ export function QueryComposer({ location, onSubmit, initialQuery }: QueryCompose
 
   return (
     <div className="fixed inset-0 top-14 flex bg-luna-base">
-      <AgentRail className="h-full" />
+      <AgentRail className="hidden md:flex h-full" />
       <main className="flex-1 overflow-y-auto">
         <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-8">
           <button
@@ -115,16 +115,16 @@ export function QueryComposer({ location, onSubmit, initialQuery }: QueryCompose
 
             <ImageryStrip images={images} onRemove={handleRemoveImage} />
 
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <Button type="button" variant="outline" onClick={handleOpenGallery}>
                 <ImagePlus size={14} strokeWidth={1.5} aria-hidden="true" />
                 Attach imagery
               </Button>
               <div className="flex items-center gap-3">
-                <span aria-hidden="true" className="font-mono text-[11px] tracking-[0.04em] text-luna-fg-4">
+                <span aria-hidden="true" className="hidden md:inline font-mono text-[11px] tracking-[0.04em] text-luna-fg-4">
                   ⌘↵ to analyze
                 </span>
-                <Button onClick={handleSubmit}>
+                <Button onClick={handleSubmit} className="w-full md:w-auto">
                   Analyze location
                   <ArrowRight size={14} strokeWidth={1.5} className="ml-2" />
                 </Button>

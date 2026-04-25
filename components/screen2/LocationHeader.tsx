@@ -25,9 +25,14 @@ export function LocationHeader({ location, noBorder }: { location: LunarLocation
   ]
   if (location.diameter) coordParts.push(<span key="d">{location.diameter}</span>)
 
+  const hasSecondColumn =
+    !!location.namingStory ||
+    (location.namedBy && location.namedBy.length > 0) ||
+    (location.citations && location.citations.length > 0)
+
   return (
-    <section className={cn(!noBorder && 'border-b border-luna-hairline pb-8')}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+    <section className={cn(!noBorder && 'border-b border-luna-hairline pb-4 md:pb-8')}>
+      <div className={cn('grid grid-cols-1 items-start', hasSecondColumn ? 'md:grid-cols-2 gap-4 md:gap-8' : '')}>
         <div className="flex flex-col min-w-0">
           <Eyebrow className="text-luna-cyan mb-3.5">
             <DotJoin
@@ -50,28 +55,30 @@ export function LocationHeader({ location, noBorder }: { location: LunarLocation
           </div>
         </div>
 
-        <div className="flex flex-col items-end text-right pt-7">
-          {location.namingStory && (
-            <p className="font-sans text-[13px] leading-[1.6] text-luna-fg-2 m-0 mb-4.5 max-w-[320px] ml-auto text-pretty">
-              {location.namingStory}
-            </p>
-          )}
+        {hasSecondColumn && (
+          <div className="flex flex-col items-end text-right pt-0 md:pt-7">
+            {location.namingStory && (
+              <p className="font-sans text-[13px] leading-[1.6] text-luna-fg-2 m-0 mb-4.5 max-w-[320px] ml-auto text-pretty">
+                {location.namingStory}
+              </p>
+            )}
 
-          {location.namedBy && location.namedBy.length > 0 && (
-            <>
-              <Eyebrow className="text-luna-fg-3 mb-2">Named by</Eyebrow>
-              <div className="font-sans text-[12px] leading-[1.55] text-luna-fg">
-                <DotJoin items={location.namedBy} sepClassName="text-luna-fg-3 mx-1.5" />
+            {location.namedBy && location.namedBy.length > 0 && (
+              <>
+                <Eyebrow className="text-luna-fg-3 mb-2">Named by</Eyebrow>
+                <div className="font-sans text-[12px] leading-[1.55] text-luna-fg">
+                  <DotJoin items={location.namedBy} sepClassName="text-luna-fg-3 mx-1.5" />
+                </div>
+              </>
+            )}
+
+            {location.citations && location.citations.length > 0 && (
+              <div className="mt-6 font-mono text-[11px] tracking-[0.06em] text-luna-fg-3 leading-[1.7]">
+                <DotJoin items={location.citations} sepClassName="text-luna-hairline-2 mx-2.5" />
               </div>
-            </>
-          )}
-
-          {location.citations && location.citations.length > 0 && (
-            <div className="mt-6 font-mono text-[11px] tracking-[0.06em] text-luna-fg-3 leading-[1.7]">
-              <DotJoin items={location.citations} sepClassName="text-luna-hairline-2 mx-2.5" />
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   )

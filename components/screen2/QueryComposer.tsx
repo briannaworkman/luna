@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { LocationHeader } from './LocationHeader'
 import { QueryTextarea } from './QueryTextarea'
-import { TemplateChips } from './TemplateChips'
 import { SuggestedQuestions } from './SuggestedQuestions'
 import { ImageryStrip } from './ImageryStrip'
 import { AgentRail } from '@/components/agent-rail/AgentRail'
@@ -114,8 +113,6 @@ export function QueryComposer({ location, onSubmit, initialQuery }: QueryCompose
               placeholder={`Ask anything about ${location.name} — geology, landing conditions, mission history…`}
             />
 
-            <TemplateChips onSelect={handleTemplateSelect} />
-
             <ImageryStrip images={images} onRemove={handleRemoveImage} />
 
             <div className="flex items-center justify-between gap-4">
@@ -136,7 +133,6 @@ export function QueryComposer({ location, onSubmit, initialQuery }: QueryCompose
           </div>
 
           <SuggestedQuestions
-            locationName={location.name}
             questions={location.suggestedQuestions ?? []}
             onSelect={handleTemplateSelect}
           />

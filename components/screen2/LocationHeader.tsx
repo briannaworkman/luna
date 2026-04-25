@@ -1,4 +1,5 @@
 'use client'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/badge'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { displayLocationName, formatLat, formatLon } from '@/lib/utils/location'
@@ -17,7 +18,7 @@ function DotJoin({ items, sepClassName }: { items: React.ReactNode[]; sepClassNa
   )
 }
 
-export function LocationHeader({ location }: { location: LunarLocation }) {
+export function LocationHeader({ location, noBorder }: { location: LunarLocation; noBorder?: boolean }) {
   const coordParts: React.ReactNode[] = [
     <span key="lat">{formatLat(location.lat)}</span>,
     <span key="lon">{formatLon(location.lon)}</span>,
@@ -25,7 +26,7 @@ export function LocationHeader({ location }: { location: LunarLocation }) {
   if (location.diameter) coordParts.push(<span key="d">{location.diameter}</span>)
 
   return (
-    <section className="border-b border-luna-hairline pb-8">
+    <section className={cn(!noBorder && 'border-b border-luna-hairline pb-8')}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <div className="flex flex-col min-w-0">
           <Eyebrow className="text-luna-cyan mb-3.5">

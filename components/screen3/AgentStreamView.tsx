@@ -60,9 +60,9 @@ export function AgentStreamView({
       <main className="flex-1 overflow-y-auto min-w-0">
         <div className="w-full max-w-4xl mx-auto px-10 py-10 flex flex-col gap-6">
           {/* Header row */}
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4 border-b border-luna-hairline pb-8">
             <div className="flex-1 min-w-0">
-              <LocationHeader location={location} />
+              <LocationHeader location={location} noBorder />
             </div>
             <div className="pt-1 shrink-0">
               <Button

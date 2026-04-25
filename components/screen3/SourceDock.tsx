@@ -1,5 +1,5 @@
 import { ExternalLink } from 'lucide-react'
-import { INSTRUMENT_LABELS } from '@/lib/citations/labels'
+import { INSTRUMENT_LABELS, SOURCE_ICONS } from '@/lib/citations/labels'
 import { citationKey } from '@/lib/citations/types'
 import { cn } from '@/lib/utils'
 import type { AgentStreamState } from '@/components/screen3/useAgentStream'
@@ -24,15 +24,27 @@ export function SourceDock({ citations, activatedAgentCount }: SourceDockProps) 
       <div className="flex-1 overflow-y-auto">
         {citations.map((c) => {
           const key = citationKey(c)
+          const SourceIcon = SOURCE_ICONS[c.source]
           const inner = (
             <>
-              <div className="flex flex-col justify-center min-w-0">
-                <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-luna-cyan truncate">
-                  {INSTRUMENT_LABELS[c.source]}
-                </span>
-                <span className="font-mono text-[11px] text-luna-fg-3 truncate">
-                  {c.id}
-                </span>
+              <div className="flex items-center gap-3 min-w-0">
+                <SourceIcon
+                  className={cn(
+                    'w-3.5 h-3.5 shrink-0',
+                    c.url !== null
+                      ? 'text-luna-cyan-dim group-hover:text-luna-cyan transition-colors duration-[120ms] ease-out'
+                      : 'text-luna-fg-4',
+                  )}
+                  aria-hidden="true"
+                />
+                <div className="flex flex-col justify-center min-w-0">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-luna-cyan truncate">
+                    {INSTRUMENT_LABELS[c.source]}
+                  </span>
+                  <span className="font-mono text-[11px] text-luna-fg-3 truncate">
+                    {c.id}
+                  </span>
+                </div>
               </div>
               <ExternalLink
                 className={cn(

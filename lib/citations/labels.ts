@@ -1,3 +1,4 @@
+import { Camera, Gem, Satellite, Sun, type LucideIcon } from 'lucide-react'
 import type { CitationSource } from '@/lib/orchestrator/agents/parseInlineTags'
 
 export const INSTRUMENT_LABELS: Record<CitationSource, string> = {
@@ -12,4 +13,11 @@ export const SOURCE_DESCRIPTIONS: Record<CitationSource, string> = {
   'jsc-sample': 'Apollo sample from the JSC Lunar Sample Database',
   'lroc': 'Lunar Reconnaissance Orbiter Camera product',
   'svs': 'NASA Scientific Visualization Studio dataset',
+}
+
+export const SOURCE_ICONS: Record<CitationSource, LucideIcon> = {
+  'nasa-image': Camera,
+  'jsc-sample': Gem,
+  'lroc': Satellite,
+  'svs': Sun,
 }

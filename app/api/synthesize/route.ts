@@ -90,8 +90,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ error: 'Unknown locationId' }, { status: 400 })
   }
 
-  const generatedAt = new Date().toISOString()
-
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const emit = (event: BriefStreamEvent) => {
@@ -106,6 +104,10 @@ export async function POST(req: NextRequest): Promise<Response> {
         })
 
         const completeness = deriveDataCompleteness(dataContext)
+
+        // Stamp generatedAt at synthesis call time (S7.1.2), after data ingest —
+        // not at request entry, since runDataIngest can take several seconds.
+        const generatedAt = new Date().toISOString()
 
         for await (const event of runSynthesis({
           locationName: dataContext.location.name,

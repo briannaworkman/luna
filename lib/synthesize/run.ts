@@ -31,13 +31,15 @@ async function* streamText(
   user: string,
   signal: AbortSignal,
 ): AsyncGenerator<string, void> {
-  const stream = getAnthropic().messages.stream({
-    model: CLAUDE_MODEL,
-    max_tokens: 4096,
-    system,
-    messages: [{ role: 'user', content: user }],
-    signal,
-  })
+  const stream = getAnthropic().messages.stream(
+    {
+      model: CLAUDE_MODEL,
+      max_tokens: 4096,
+      system,
+      messages: [{ role: 'user', content: user }],
+    },
+    { signal },
+  )
 
   for await (const event of stream) {
     if (
@@ -90,6 +92,22 @@ function parseBestEffort(text: string): Partial<MissionBrief> | undefined {
   } catch {
     return undefined
   }
+}
+
+// ---------------------------------------------------------------------------
+// Finalize brief — override model-supplied dataCompleteness with the
+// server-derived map. The spec (S7.2.3) makes the server-derived completeness
+// the source of truth: "Coverage values are derived from DataContext — not
+// estimated by the synthesis model." This also guarantees the brief always
+// has the exact 5 keys the UI expects, even if the model produced a partial
+// or extra-keyed map that still passed schema validation.
+// ---------------------------------------------------------------------------
+
+function finalizeBrief(
+  brief: MissionBrief,
+  completeness: DataCompleteness,
+): MissionBrief {
+  return { ...brief, dataCompleteness: { ...completeness } }
 }
 
 // ---------------------------------------------------------------------------
@@ -163,7 +181,7 @@ export async function* runSynthesis(
 
     const validation = MissionBriefSchema.safeParse(parsed)
     if (validation.success) {
-      yield { type: 'complete', brief: validation.data }
+      yield { type: 'complete', brief: finalizeBrief(validation.data, input.completeness) }
       return
     }
 
@@ -212,15 +230,15 @@ export async function* runSynthesis(
 
     const validation2 = MissionBriefSchema.safeParse(parsed2)
     if (validation2.success) {
-      yield { type: 'complete', brief: validation2.data }
+      yield { type: 'complete', brief: finalizeBrief(validation2.data, input.completeness) }
       return
     }
 
-    // Double invalid
+    // Double invalid — fall back to attempt1 partial if attempt2 produced nothing
     yield {
       type: 'error',
       message: 'Synthesis validation failed after retry. Partial results shown.',
-      partial: parseBestEffort(attempt2Text),
+      partial: parseBestEffort(attempt2Text) ?? parseBestEffort(attempt1Text),
     }
     return
   }
@@ -266,7 +284,7 @@ export async function* runSynthesis(
 
   const validation2 = MissionBriefSchema.safeParse(parsed2)
   if (validation2.success) {
-    yield { type: 'complete', brief: validation2.data }
+    yield { type: 'complete', brief: finalizeBrief(validation2.data, input.completeness) }
     return
   }
 

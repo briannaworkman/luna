@@ -128,4 +128,23 @@ describe('buildSynthesisPrompt', () => {
     }
     expect(() => buildSynthesisPrompt(input)).not.toThrow()
   })
+
+  it('preserves [CITE:...] and [CONFIDENCE:...] inline tags verbatim in agent outputs', () => {
+    const input = {
+      ...baseInput,
+      activeAgents: ['mineralogy', 'mission-history'],
+      agentOutputs: {
+        'mineralogy':
+          'Mare basalt analogues here. [CITE:M1334189784LE] [CONFIDENCE: High] KREEP signatures consistent with Imbrium ejecta. [CITE:jsc-sample:14310]',
+        'mission-history':
+          'No crewed landings. [CITE:nasa-image:PIA12345] [CONFIDENCE: Medium]',
+      },
+    }
+    const { user } = buildSynthesisPrompt(input)
+    expect(user).toContain('[CITE:M1334189784LE]')
+    expect(user).toContain('[CONFIDENCE: High]')
+    expect(user).toContain('[CITE:jsc-sample:14310]')
+    expect(user).toContain('[CITE:nasa-image:PIA12345]')
+    expect(user).toContain('[CONFIDENCE: Medium]')
+  })
 })

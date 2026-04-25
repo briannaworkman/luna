@@ -283,4 +283,51 @@ describe('runSynthesis', () => {
     // SDK error should not retry
     expect(client.messages.stream).toHaveBeenCalledTimes(1)
   })
+
+  it('overrides model-supplied dataCompleteness with server-derived map (S7.2.3)', async () => {
+    // Model returns a brief whose dataCompleteness disagrees with the server.
+    // After validation, the server-derived map (input.completeness) must win.
+    const briefWithDivergentCompleteness = JSON.parse(validBriefJson) as Record<string, unknown>
+    briefWithDivergentCompleteness['dataCompleteness'] = {
+      'LROC NAC': 'Incomplete', // server says Confirmed
+      // Missing all the other 4 keys — model "forgot" them.
+    }
+
+    const client = makeMockClient(makeChunks(JSON.stringify(briefWithDivergentCompleteness)))
+    mockGetAnthropic.mockReturnValue(client as unknown as ReturnType<typeof getAnthropic>)
+
+    const serverCompleteness: DataCompleteness = {
+      'LROC NAC': 'Confirmed',
+      'LROC WAC': 'Partial',
+      'JSC Samples': 'Analogue only',
+      'SVS Illumination': 'Confirmed',
+      'NASA Image Library': 'Incomplete',
+    }
+
+    const events = await drainGenerator(
+      runSynthesis({ ...baseInput, completeness: serverCompleteness }),
+    )
+
+    const completeEvent = events.find((e) => (e as { type: string }).type === 'complete') as
+      | { type: 'complete'; brief: { dataCompleteness: Record<string, string> } }
+      | undefined
+
+    expect(completeEvent).toBeDefined()
+    // All 5 server-derived keys present and exact, regardless of what model said.
+    expect(completeEvent!.brief.dataCompleteness).toEqual(serverCompleteness)
+  })
+
+  it('signal is wired into the second argument of messages.stream (timeout enforceable)', async () => {
+    const client = makeMockClient(makeChunks(validBriefJson))
+    mockGetAnthropic.mockReturnValue(client as unknown as ReturnType<typeof getAnthropic>)
+
+    await drainGenerator(runSynthesis(baseInput))
+
+    // Second argument should be an options object with a `signal: AbortSignal`.
+    expect(client.messages.stream).toHaveBeenCalledTimes(1)
+    const callArgs = client.messages.stream.mock.calls[0]!
+    expect(callArgs).toHaveLength(2)
+    const options = callArgs[1] as { signal?: AbortSignal }
+    expect(options.signal).toBeInstanceOf(AbortSignal)
+  })
 })

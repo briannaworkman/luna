@@ -62,4 +62,8 @@ describe('filterLocations', () => {
     const result = filterLocations(locations, 'all')
     expect(result.map(l => l.id)).toEqual(['a', 'b', 'c', 'd'])
   })
+
+  it('"all" filter returns the same array reference', () => {
+    expect(filterLocations(locations, 'all')).toBe(locations)
+  })
 })

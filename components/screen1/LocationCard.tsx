@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import type { LunarLocation } from '@/components/globe/types'
 
 function RegionBadge({ region }: { region: string }) {
-  const isNear = region === 'NEAR SIDE'
+  const isNear = region.toUpperCase() === 'NEAR SIDE'
   return (
     <span
       className={cn(

@@ -7,9 +7,9 @@ export function SuggestedQuestions({ questions, onSelect }: SuggestedQuestionsPr
   if (questions.length === 0) return null
 
   return (
-    <section aria-label="Start here" className="flex flex-col gap-3 mt-8">
-      <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
-        Start here
+    <section aria-label="Not sure where to start?" className="flex flex-col gap-3 mt-8">
+      <div className="font-mono text-[11px] tracking-[0.04em] text-luna-fg-4">
+        Not sure where to start? Try one of these...
       </div>
       <div className="flex flex-col gap-2 w-full">
         {questions.map((question) => (

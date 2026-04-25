@@ -18,6 +18,7 @@ type Phase =
       name: 'brief'
       query: string
       locationId: string
+      locationName: string
       images: NasaImage[]
       agentOutputs: Partial<Record<AgentId, string>>
       activationOrder: readonly AgentId[]
@@ -59,6 +60,7 @@ export function QueryPageClient({ location }: { location: LunarLocation }) {
             name: 'brief',
             query: phase.query,
             locationId: location.id,
+            locationName: location.name,
             images: phase.images,
             agentOutputs,
             activationOrder,
@@ -129,6 +131,7 @@ interface BriefPhasePayload {
   name: 'brief'
   query: string
   locationId: string
+  locationName: string
   images: NasaImage[]
   agentOutputs: Partial<Record<AgentId, string>>
   activationOrder: readonly AgentId[]
@@ -162,6 +165,8 @@ function BriefPhaseView({ phase, onFollowUp, onReset }: BriefPhaseViewProps) {
       briefState={briefState}
       activationOrder={phase.activationOrder}
       globalCitations={phase.globalCitations}
+      locationName={phase.locationName}
+      query={phase.query}
       onFollowUp={onFollowUp}
       onReset={onReset}
     />

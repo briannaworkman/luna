@@ -13,10 +13,7 @@ describe('LOCATIONS', () => {
         `${loc.name} should have 3 suggestedQuestions`,
       ).toBe(3)
       for (const q of loc.suggestedQuestions!) {
-        expect(
-          typeof q === 'string' && q.trim().length > 0,
-          `${loc.name} has a blank or non-string question`,
-        ).toBe(true)
+        expect(q.trim().length, `${loc.name} has a blank question: "${q}"`).toBeGreaterThan(0)
       }
     }
   })

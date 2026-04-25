@@ -114,3 +114,24 @@ export interface PsrDataErrorResponse {
   lampProducts: LampProduct[];
   psrSummary: PsrSummary | null;
 }
+
+export interface LunarSampleMeta {
+  mission: string;
+  massGrams: number;
+  ageGa: number;
+  rockTypes: string[];
+  description: string;
+  nasaComparativeRef: string;
+}
+
+export interface LunarSamplesResponse {
+  images: NasaImage[];
+  sampleMeta: LunarSampleMeta | null;
+}
+
+export interface LunarSamplesErrorResponse {
+  error: string;
+  code: 'INVALID_PARAMS';
+  images: NasaImage[];
+  sampleMeta: null;
+}

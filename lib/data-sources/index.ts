@@ -3,3 +3,4 @@ export { fetchLrocProducts, INSTRUMENT_NAC, INSTRUMENT_WAC } from './fetch-lroc-
 export { fetchJscSamples } from './fetch-jsc-samples'
 export { fetchIlluminationWindows } from './fetch-illumination-windows'
 export { fetchPsrData } from './fetch-psr-data'
+export { fetchLunarSamples } from './fetch-lunar-samples'

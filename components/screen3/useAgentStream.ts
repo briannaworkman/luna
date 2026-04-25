@@ -50,7 +50,7 @@ export const initialAgentStreamState: AgentStreamState = {
   isDone: false,
 }
 
-function makeDefaultAgentState(): SingleAgentState {
+export function makeDefaultAgentState(): SingleAgentState {
   return { status: 'active', body: [], citations: [], chunkCount: 0 }
 }
 
@@ -85,10 +85,9 @@ export function agentStreamReducer(
       }
 
     case 'agent-activate': {
-      const updated: SingleAgentState = { status: 'active', body: [], citations: [], chunkCount: 0 }
       return {
         ...state,
-        agentStates: { ...state.agentStates, [event.agent]: updated },
+        agentStates: { ...state.agentStates, [event.agent]: makeDefaultAgentState() },
       }
     }
 

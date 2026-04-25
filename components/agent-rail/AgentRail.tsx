@@ -29,7 +29,7 @@ function AgentRow({
   chunkCount?: number
 }) {
   const showChunkCount = isActive && typeof chunkCount === 'number' && chunkCount > 0 && isMainPanelAgent(agent.id)
-  const hasStatus = Boolean(statusText) || showChunkCount
+  const hasSubline = Boolean(statusText) || showChunkCount
   const status: AgentStatus = isActive
     ? 'active'
     : isComplete
@@ -39,7 +39,7 @@ function AgentRow({
         : 'idle'
   const rowClass = cn(
     'px-4 flex items-center gap-3 border-b border-luna-hairline font-sans font-normal text-[13px] transition-colors',
-    hasStatus ? 'min-h-11 h-auto py-2' : 'h-11',
+    hasSubline ? 'min-h-11 h-auto py-2' : 'h-11',
     isActive && 'text-luna-fg',
     isComplete && 'text-luna-fg-2',
     isError && 'text-luna-danger',
@@ -56,7 +56,7 @@ function AgentRow({
       {/* Label + optional status text + optional chunk counter */}
       <span className="flex flex-col min-w-0">
         <span className="lowercase leading-tight">{agent.label}</span>
-        {hasStatus && statusText && (
+        {statusText && (
           <span className="font-mono text-[10px] tracking-[0.02em] text-luna-fg-4 leading-tight truncate max-w-[170px] mt-0.5">
             {statusText}
           </span>

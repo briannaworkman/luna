@@ -1,4 +1,4 @@
-import { BriefConfidenceBadge } from './BriefConfidenceBadge'
+import { ConfidenceBadge, type ConfidenceLevel } from '@/components/ui/confidence-badge'
 import { Badge } from '@/components/badge'
 import { INSTRUMENT_LABELS } from '@/lib/citations/labels'
 import type { Finding } from '@/lib/types/brief'
@@ -15,9 +15,9 @@ export function FindingItem({ finding, citationLookup, agentName }: FindingItemP
   return (
     <div className="flex flex-col gap-1.5 py-3 border-b border-luna-hairline last:border-b-0">
       <div className="flex items-start gap-2">
-        <BriefConfidenceBadge
-          confidence={finding.confidence}
-          className="mt-[2px]"
+        <ConfidenceBadge
+          level={finding.confidence.toLowerCase() as ConfidenceLevel}
+          className="mt-[2px] shrink-0 whitespace-nowrap inline-flex uppercase"
         />
         <p className="font-sans text-[13px] leading-[1.65] text-luna-fg flex-1 m-0">
           {finding.claim}

@@ -1,41 +1,15 @@
 import type { OrchestratorEvent } from '@/lib/types/agent'
+import { serializeEvent, SseEmitter } from '@/lib/sse'
 
-export function serializeEvent(event: OrchestratorEvent): string {
-  return `data: ${JSON.stringify(event)}\n\n`
-}
-
-export class SseEmitter {
-  private controller: ReadableStreamDefaultController<Uint8Array>
-  private encoder = new TextEncoder()
-  private _closed = false
-
-  constructor(controller: ReadableStreamDefaultController<Uint8Array>) {
-    this.controller = controller
-  }
-
-  emit(event: OrchestratorEvent): void {
-    if (this._closed) return
-    this.controller.enqueue(this.encoder.encode(serializeEvent(event)))
-  }
-
-  close(): void {
-    if (this._closed) return
-    this._closed = true
-    this.controller.close()
-  }
-
-  get closed(): boolean {
-    return this._closed
-  }
-}
+export { serializeEvent, SseEmitter }
 
 export function createSseResponse(
-  handler: (emitter: SseEmitter) => Promise<void>,
+  handler: (emitter: SseEmitter<OrchestratorEvent>) => Promise<void>,
   timeoutMs = 120_000,
 ): Response {
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      const emitter = new SseEmitter(controller)
+      const emitter = new SseEmitter<OrchestratorEvent>(controller)
 
       const timeoutId = setTimeout(() => {
         emitter.emit({

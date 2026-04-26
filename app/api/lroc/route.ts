@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import type { LrocResponse, LrocErrorResponse } from '@/lib/types/nasa'
 import { TimeoutError, UpstreamError } from '@/lib/utils/fetch-with-timeout'
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache'
@@ -7,17 +8,27 @@ import { fetchLrocProducts, INSTRUMENT_NAC } from '@/lib/data-sources'
 
 const checkRateLimit = rateLimit(60_000, 100)
 
+const CoerceFiniteNumber = z.string().min(1).transform(Number).pipe(z.number().finite())
+
+const QuerySchema = z.object({
+  lat: CoerceFiniteNumber,
+  lon: CoerceFiniteNumber,
+})
+
 export async function GET(req: NextRequest): Promise<Response> {
   const rateLimitResponse = checkRateLimit(req)
   if (rateLimitResponse) return rateLimitResponse
 
-  const { searchParams } = req.nextUrl
-  const lat = parseFloat(searchParams.get('lat') ?? '')
-  const lon = parseFloat(searchParams.get('lon') ?? '')
+  const parsed = QuerySchema.safeParse({
+    lat: req.nextUrl.searchParams.get('lat'),
+    lon: req.nextUrl.searchParams.get('lon'),
+  })
 
-  if (isNaN(lat) || isNaN(lon)) {
+  if (!parsed.success) {
     return NextResponse.json({ wac: [], nac: [] }, { status: 400 })
   }
+
+  const { lat, lon } = parsed.data
 
   try {
     const products = await fetchLrocProducts(lat, lon)

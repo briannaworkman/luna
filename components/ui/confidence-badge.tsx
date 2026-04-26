@@ -1,3 +1,4 @@
+'use client'
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 

@@ -11,6 +11,12 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "LUNA",
   description: "Lunar Unified Navigation & Analysis",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
+  },
 };
 
 export default function RootLayout({

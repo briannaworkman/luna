@@ -44,7 +44,7 @@ Orchestrator (Claude Opus 4.7)
 
 ### Screen flow
 
-1. **Globe** — Three.js globe with 17 interactive location markers (15 Artemis landmarks + 2 crew-proposed craters). Auto-rotates when idle.
+1. **Globe / List** — 40 curated lunar sites browsable as an interactive Three.js globe or a searchable list. Globe auto-rotates when idle.
 2. **Image Gallery** — Dialog overlay showing LROC imagery for the selected location. Select up to 4 images to attach to your query.
 3. **Query Composer** — Natural language input with attached image thumbnails and suggested question chips.
 4. **Agent Stream** — Live view of active agents pulsing in the left rail as they stream their findings.
@@ -115,14 +115,21 @@ pnpm test:watch # Run tests in watch mode
 
 ---
 
-## The 17 locations
+## The 40 locations
 
-Pre-computed 3D cartesian positions hardcoded in `components/globe/locations.ts`. Includes 15 Artemis mission landmarks and 2 crew-proposed craters:
+Pre-computed 3D cartesian positions hardcoded in `components/globe/locations.ts`. The set spans four categories:
+
+- **Prominent craters** — SPA Basin, Tycho, Copernicus, Clavius, and others
+- **Apollo & robotic mission sites** — all six Apollo landing zones plus Luna, Surveyor, Chang'e, and SLIM sites
+- **Artemis South Pole candidates** — Shackleton, Nobile, Haworth, Malapert Massif
+- **Geological features** — major maria, Aristarchus Plateau, Reiner Gamma, Vallis Schröteri
+
+Two locations are crew-proposed craters and are always labeled "proposed" in the UI:
 
 - **Carroll** (18.84°N, 86.51°W)
 - **Integrity** (2.66°N, 104.92°W)
 
-Both crew-proposed craters are always labeled "proposed" in the UI. Far-side locations (Carroll, Integrity) never show an empty image gallery — they fall back to regional imagery with a coverage notice.
+Far-side locations (Carroll, Integrity) never show an empty image gallery — they fall back to regional imagery with a coverage notice.
 
 ---
 

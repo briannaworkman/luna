@@ -23,7 +23,7 @@ const ARC_RINGS = [
 ]
 
 const BULLETS = [
-  'Pick from 17 Artemis candidate landing sites on an interactive globe',
+  'Pick from 40 of NASA\'s most significant lunar sites',
   'Ask any question — specialist agents pull from real NASA sources in real time',
   'Get a cited research brief in under a minute',
 ]
@@ -105,7 +105,7 @@ export default function IntroPage() {
 
         <ul className="mb-10 flex w-full max-w-[380px] flex-col items-start gap-2.5">
           {BULLETS.map((text) => (
-            <li key={text} className="flex items-start gap-3 text-[14px] leading-snug text-luna-fg-2">
+            <li key={text} className="flex w-full items-start gap-3 text-[14px] leading-snug text-luna-fg-2">
               <span className="mt-px flex-shrink-0 font-mono text-luna-cyan">—</span>
               <span>{text}</span>
             </li>

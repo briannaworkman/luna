@@ -6,9 +6,9 @@ import { fetchLunarSamples } from '@/lib/data-sources'
 
 const checkRateLimit = rateLimit(60_000, 100)
 
-export async function GET(req: NextRequest): Promise<NextResponse<LunarSamplesResponse | LunarSamplesErrorResponse>> {
+export async function GET(req: NextRequest): Promise<Response> {
   const rateLimitResponse = checkRateLimit(req)
-  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<LunarSamplesResponse | LunarSamplesErrorResponse>
+  if (rateLimitResponse) return rateLimitResponse
 
   const locationId = req.nextUrl.searchParams.get('locationId')?.trim()
   if (!locationId) {

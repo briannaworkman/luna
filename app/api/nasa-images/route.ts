@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa'
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache'
 import { rateLimit } from '@/lib/middleware/rate-limit'
@@ -8,12 +9,16 @@ const checkRateLimit = rateLimit(60_000, 100)
 
 const SPARSE_THRESHOLD = 2
 
-export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResponse>> {
-  const rateLimitResponse = checkRateLimit(req)
-  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<NasaImagesResponse>
+const QuerySchema = z.object({
+  q: z.string().trim().min(1),
+})
 
-  const q = req.nextUrl.searchParams.get('q')?.trim()
-  if (!q) {
+export async function GET(req: NextRequest): Promise<Response> {
+  const rateLimitResponse = checkRateLimit(req)
+  if (rateLimitResponse) return rateLimitResponse
+
+  const parsed = QuerySchema.safeParse({ q: req.nextUrl.searchParams.get('q') })
+  if (!parsed.success) {
     return NextResponse.json(
       { images: [], limitedCoverage: true },
       { status: 400 }
@@ -22,7 +27,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<NasaImagesResp
 
   let images: NasaImage[] = []
   try {
-    images = await fetchNasaImages(q)
+    images = await fetchNasaImages(parsed.data.q)
   } catch (err) {
     console.warn('[nasa-images] fetch failed, returning empty', err)
   }

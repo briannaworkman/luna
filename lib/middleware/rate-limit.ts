@@ -22,7 +22,7 @@ setInterval(() => {
 }, CLEANUP_INTERVAL);
 
 export function rateLimit(windowMs = 60_000, maxRequests = 100) {
-  return (req: NextRequest): NextResponse | null => {
+  return (req: NextRequest): Response | null => {
     const forwarded = req.headers.get('x-forwarded-for');
     const realIp = req.headers.get('x-real-ip');
     const ip = (forwarded?.split(',')[0]?.trim()) || realIp || 'unknown';

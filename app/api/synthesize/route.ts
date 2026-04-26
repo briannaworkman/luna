@@ -5,10 +5,10 @@ import { getLocationById } from '@/components/globe/locations'
 import { runDataIngest } from '@/lib/orchestrator/data-ingest'
 import { deriveDataCompleteness } from '@/lib/synthesize/completeness'
 import { runSynthesis } from '@/lib/synthesize/run'
+import { SseEmitter } from '@/lib/sse'
 import type { BriefStreamEvent } from '@/lib/types/brief'
 
 const checkRateLimit = rateLimit(60_000, 5)
-const encoder = new TextEncoder()
 
 const RequestSchema = z.object({
   query: z.string().trim().min(1).max(2000),
@@ -16,10 +16,6 @@ const RequestSchema = z.object({
   agentOutputs: z.record(z.string(), z.string()),
   activeAgents: z.array(z.string()),
 })
-
-function sseEvent(event: BriefStreamEvent): string {
-  return `data: ${JSON.stringify(event)}\n\n`
-}
 
 export async function POST(req: NextRequest): Promise<Response> {
   const rateLimitResponse = checkRateLimit(req)
@@ -48,9 +44,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const emit = (event: BriefStreamEvent) => {
-        controller.enqueue(encoder.encode(sseEvent(event)))
-      }
+      const emitter = new SseEmitter<BriefStreamEvent>(controller)
       try {
         const dataContext = await runDataIngest({
           location,
@@ -72,16 +66,16 @@ export async function POST(req: NextRequest): Promise<Response> {
           activeAgents,
           agentOutputs,
         })) {
-          emit(event)
+          emitter.emit(event)
         }
       } catch (err) {
-        emit({
+        emitter.emit({
           type: 'error',
           message: err instanceof Error ? err.message : String(err),
           partial: undefined,
         })
       } finally {
-        controller.close()
+        emitter.close()
       }
     },
   })

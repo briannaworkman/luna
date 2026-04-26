@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import type { JscSamplesResponse, JscSamplesErrorResponse } from '@/lib/types/nasa'
 import { TimeoutError, UpstreamError } from '@/lib/utils/fetch-with-timeout'
 import { CACHE_CONTROL_1H } from '@/lib/constants/cache'
@@ -8,18 +9,27 @@ import { fetchJscSamples, MAX_JSC_DISTANCE_KM } from '@/lib/data-sources/fetch-j
 
 const checkRateLimit = rateLimit(60_000, 100)
 
-export async function GET(req: NextRequest): Promise<NextResponse<JscSamplesResponse | JscSamplesErrorResponse>> {
+const CoerceFiniteNumber = z.string().trim().min(1).transform(Number).pipe(z.number().finite())
+
+const QuerySchema = z.object({
+  lat: CoerceFiniteNumber,
+  lon: CoerceFiniteNumber,
+})
+
+export async function GET(req: NextRequest): Promise<Response> {
   const rateLimitResponse = checkRateLimit(req)
-  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<JscSamplesResponse | JscSamplesErrorResponse>
+  if (rateLimitResponse) return rateLimitResponse
 
-  const { searchParams } = req.nextUrl
-  const lat = parseFloat(searchParams.get('lat') ?? '')
-  const lon = parseFloat(searchParams.get('lon') ?? '')
+  const parsed = QuerySchema.safeParse({
+    lat: req.nextUrl.searchParams.get('lat'),
+    lon: req.nextUrl.searchParams.get('lon'),
+  })
 
-  if (isNaN(lat) || isNaN(lon)) {
+  if (!parsed.success) {
     return NextResponse.json({ results: [], nearestMission: null }, { status: 400 })
   }
 
+  const { lat, lon } = parsed.data
   const nearest = findNearestStation(lat, lon)
 
   if (!nearest || nearest.distanceKm > MAX_JSC_DISTANCE_KM) {

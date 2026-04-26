@@ -1,8 +1,11 @@
+'use client'
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
+export type ConfidenceLevel = 'high' | 'medium' | 'low'
+
 interface ConfidenceBadgeProps {
-  level: 'high' | 'medium' | 'low'
+  level: ConfidenceLevel
   className?: string
 }
 
@@ -12,7 +15,7 @@ const LEVEL_VARIANT = {
   low: 'default',
 } as const
 
-const LEVEL_DESCRIPTIONS: Record<ConfidenceBadgeProps['level'], string> = {
+const LEVEL_DESCRIPTIONS: Record<ConfidenceLevel, string> = {
   high: 'Backed by Apollo sample data within ~50 km of this location.',
   medium: 'Reasoned by analogy from a nearby Apollo station (more than 50 km, same terrain type).',
   low: 'General regional inference — no direct sample support.',

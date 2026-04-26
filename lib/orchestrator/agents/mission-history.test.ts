@@ -18,7 +18,7 @@ const baseDataContext: DataContext = {
 }
 
 describe('buildMissionHistoryPrompt', () => {
-  it('Carroll location — user msg contains naming story and "pending IAU"', () => {
+  it('Carroll location — user msg contains naming story, Carroll Taylor Wiseman', () => {
     const carrollContext: DataContext = {
       location: {
         name: 'Carroll',

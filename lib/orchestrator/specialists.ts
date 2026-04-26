@@ -1,6 +1,6 @@
 import type { DataContext, OrchestratorEvent } from '@/lib/types/agent'
 import type { AgentId } from '@/lib/constants/agents'
-import { AGENTS } from '@/lib/constants/agents'
+import { STUB_AGENT_IDS } from '@/lib/constants/agents'
 import { runStubAgent } from './stub-agents'
 import { runImageryAgent } from './agents/imagery'
 import { runSpecialistStream } from './agents/runSpecialistStream'
@@ -33,10 +33,7 @@ export async function runSpecialist(
 ): Promise<void> {
   const { dataContext, imageAssetIds } = context
 
-  const agent = AGENTS.find((a) => a.id === agentId)
-  if (!agent) return
-
-  if (agent.isStub) {
+  if (STUB_AGENT_IDS.has(agentId)) {
     void runStubAgent(agentId, emit)
     return
   }

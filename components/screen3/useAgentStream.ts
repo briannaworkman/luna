@@ -1,5 +1,5 @@
 'use client'
-import { useReducer, useEffect } from 'react'
+import { useReducer, useEffect, useMemo } from 'react'
 import type { LunarLocation } from '@/components/globe/types'
 import type { AgentId } from '@/lib/constants/agents'
 import type { OrchestratorEvent } from '@/lib/types/agent'
@@ -169,6 +169,7 @@ export function useAgentStream(input: {
   imageAssetIds: string[]
 }): AgentStreamState {
   const [state, dispatch] = useReducer(agentStreamReducer, initialAgentStreamState)
+  const imageAssetKey = useMemo(() => input.imageAssetIds.join(','), [input.imageAssetIds])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -234,8 +235,7 @@ export function useAgentStream(input: {
     return () => {
       controller.abort()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input.location.id, input.query, JSON.stringify(input.imageAssetIds)])
+  }, [input.location.id, input.query, imageAssetKey])
 
   return state
 }

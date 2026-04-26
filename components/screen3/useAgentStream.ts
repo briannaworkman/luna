@@ -206,6 +206,16 @@ export function useAgentStream(input: {
         } catch {
           // ignore — parsing the error body is best-effort
         }
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After')
+          const seconds = retryAfter ? parseInt(retryAfter, 10) : null
+          if (seconds && seconds > 0) {
+            const minutes = Math.ceil(seconds / 60)
+            message = `You've reached the 3 query limit for this hour. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`
+          } else {
+            message = "You've reached the 3 query limit for this hour. Try again later."
+          }
+        }
         if (controller.signal.aborted) return
         dispatch({ kind: 'stream-error', message })
         return

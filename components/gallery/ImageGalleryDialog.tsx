@@ -8,6 +8,19 @@ import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
 import type { LunarLocation } from '@/components/globe/types'
 import type { NasaImage, NasaImagesResponse } from '@/lib/types/nasa'
+
+function defaultImageQuery(location: LunarLocation): string {
+  switch (location.type) {
+    case 'apollo':
+      return `${location.missionName ?? location.name} lunar landing`
+    case 'robotic':
+    case 'feature':
+      return `${location.name} lunar`
+    case 'crater':
+    case 'proposed':
+      return `${location.name} lunar crater`
+  }
+}
 import { fetchJson } from '@/lib/utils/fetch-with-timeout'
 import { useDialogDismiss } from '@/lib/hooks/use-dialog-dismiss'
 import { useDelayedFlag } from '@/lib/hooks/use-delayed-flag'
@@ -150,7 +163,7 @@ export function ImageGalleryDialog({
 
   useEffect(() => {
     if (!open || !location) return
-    const initial = `${location.name} moon crater`
+    const initial = defaultImageQuery(location)
     setInputValue(initial)
     setSubmittedQuery(initial)
     // Seed selection from caller on open; intentionally excluded from deps so
@@ -292,7 +305,7 @@ export function ImageGalleryDialog({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onClear={() => {
-                  const initial = location ? `${location.name} moon crater` : ''
+                  const initial = location ? defaultImageQuery(location) : ''
                   setInputValue(initial)
                   setSubmittedQuery(initial)
                 }}

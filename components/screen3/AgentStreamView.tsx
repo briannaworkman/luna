@@ -10,6 +10,7 @@ import { makeDefaultAgentState, type SingleAgentState, type AgentStreamState } f
 import { SourceDock } from './SourceDock'
 import { CitationList } from '@/components/citations/CitationList'
 import { AGENTS, isMainPanelAgent } from '@/lib/constants/agents'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import type { AgentId } from '@/lib/constants/agents'
 import type { LunarLocation } from '@/components/globe/types'
 
@@ -129,9 +130,9 @@ export function AgentStreamView({
           {/* Mobile sources — inline below agent blocks */}
           {state.globalCitations.length > 0 && (
             <div className="md:hidden border-t border-luna-hairline pt-4 flex flex-col gap-2">
-              <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
+              <Eyebrow as="span" className="text-luna-fg-4">
                 Sources
-              </span>
+              </Eyebrow>
               <CitationList citations={state.globalCitations} />
             </div>
           )}

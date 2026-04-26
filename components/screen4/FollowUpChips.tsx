@@ -1,3 +1,5 @@
+import { Eyebrow } from '@/components/ui/eyebrow'
+
 interface FollowUpChipsProps {
   questions: [string, string, string]
   onFollowUp: (question: string) => void
@@ -6,9 +8,9 @@ interface FollowUpChipsProps {
 export function FollowUpChips({ questions, onFollowUp }: FollowUpChipsProps) {
   return (
     <section aria-label="Follow-up questions" className="flex flex-col gap-3 mt-8">
-      <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
+      <Eyebrow className="text-luna-fg-4">
         Follow-up questions
-      </div>
+      </Eyebrow>
       <div className="flex flex-col gap-2 w-full">
         {questions.map((question, i) => (
           <button

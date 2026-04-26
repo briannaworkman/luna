@@ -21,6 +21,7 @@ import { HeroSkeleton, GridSkeleton } from './GallerySkeleton'
 import { CoverageBanner } from './CoverageBanner'
 import { ImageCaption } from './ImageCaption'
 import { StripItem } from './StripItem'
+import { Eyebrow } from '@/components/ui/eyebrow'
 
 const MAX_IMAGES = 22
 
@@ -266,9 +267,9 @@ export function ImageGalleryDialog({
         {/* ── Header ──────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-8 max-[767px]:px-5 py-5 border-b border-luna-hairline shrink-0">
           <div className="flex flex-col gap-1">
-            <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan">
+            <Eyebrow as="span" className="text-luna-cyan">
               Image Gallery
-            </span>
+            </Eyebrow>
             <h2 className="font-sans font-medium text-[22px] leading-[1.15] tracking-[-0.01em] text-luna-fg m-0">
               {location?.name ?? ''}
             </h2>
@@ -397,9 +398,9 @@ export function ImageGalleryDialog({
           }}
         >
           <div className="px-8 max-[767px]:px-5 pt-3 pb-3 border-t border-luna-hairline">
-            <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3 block mb-2">
+            <Eyebrow as="span" className="text-luna-fg-3 block mb-2">
               Added to context
-            </span>
+            </Eyebrow>
             <div
               className="flex gap-2 overflow-x-auto pb-1"
               style={{ scrollbarWidth: 'none', transition: 'all 150ms ease-out' }}
@@ -413,9 +414,9 @@ export function ImageGalleryDialog({
 
         {/* ── Footer ──────────────────────────────────────────────── */}
         <div className="px-8 max-[767px]:px-5 py-5 border-t border-luna-hairline shrink-0 flex items-center justify-between gap-4 max-[767px]:flex-col max-[767px]:items-start">
-          <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4 max-[767px]:order-2 max-[767px]:w-full">
+          <Eyebrow as="span" className="text-luna-fg-4 max-[767px]:order-2 max-[767px]:w-full">
             {selectedImages.length}/{MAX_SELECTION}
-          </span>
+          </Eyebrow>
           <div className="flex items-center gap-3 max-[767px]:order-1 max-[767px]:w-full">
             <Button
               onClick={() => location && onContinue(location, selectedImages)}

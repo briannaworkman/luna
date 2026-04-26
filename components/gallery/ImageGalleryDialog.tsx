@@ -267,7 +267,7 @@ export function ImageGalleryDialog({
           'rounded-lg max-[767px]:rounded-none',
           'overflow-hidden',
           // Mobile (≤767px): full screen; Desktop (≥768px): 82% viewport
-          'max-[767px]:w-screen max-[767px]:h-screen',
+          'max-[767px]:w-screen max-[767px]:h-dvh',
           'min-[768px]:w-[82vw] min-[768px]:h-[82vh]',
         )}
         style={{

@@ -6,7 +6,7 @@ A multi-agent lunar research co-pilot powered by Claude Opus 4.7. LUNA lets scie
 
 ## What it does
 
-Pick a location on the interactive 3D globe. Select relevant imagery. Ask a question like:
+Pick a location from the list or on the interactive 3D globe. Select relevant imagery. Ask a question like:
 
 > "What do we know about Vavilov Crater geologically? Would it be interesting for a future landing?"
 

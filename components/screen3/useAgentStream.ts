@@ -235,6 +235,10 @@ export function useAgentStream(input: {
     return () => {
       controller.abort()
     }
+  // imageAssetKey is a stable string derived from input.imageAssetIds via useMemo,
+  // so this effect re-runs whenever the array contents change. The linter can't
+  // trace the indirect dependency, hence the suppression.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input.location.id, input.query, imageAssetKey])
 
   return state

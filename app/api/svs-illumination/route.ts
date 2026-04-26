@@ -9,9 +9,9 @@ const checkRateLimit = rateLimit(60_000, 100)
 
 export async function GET(
   request: NextRequest,
-): Promise<NextResponse<IlluminationWindow[] | IlluminationWindowsErrorResponse>> {
+): Promise<Response> {
   const rateLimitResponse = checkRateLimit(request)
-  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<IlluminationWindow[] | IlluminationWindowsErrorResponse>
+  if (rateLimitResponse) return rateLimitResponse
 
   const { searchParams } = request.nextUrl
   const latStr = searchParams.get('lat')

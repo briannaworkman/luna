@@ -8,9 +8,9 @@ import { fetchJscSamples, MAX_JSC_DISTANCE_KM } from '@/lib/data-sources/fetch-j
 
 const checkRateLimit = rateLimit(60_000, 100)
 
-export async function GET(req: NextRequest): Promise<NextResponse<JscSamplesResponse | JscSamplesErrorResponse>> {
+export async function GET(req: NextRequest): Promise<Response> {
   const rateLimitResponse = checkRateLimit(req)
-  if (rateLimitResponse) return rateLimitResponse as unknown as NextResponse<JscSamplesResponse | JscSamplesErrorResponse>
+  if (rateLimitResponse) return rateLimitResponse
 
   const { searchParams } = req.nextUrl
   const lat = parseFloat(searchParams.get('lat') ?? '')

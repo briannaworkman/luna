@@ -5,6 +5,19 @@ import { Eyebrow } from '@/components/ui/eyebrow'
 import { displayLocationName, formatLat, formatLon } from '@/lib/utils/location'
 import type { LunarLocation } from '@/components/globe/types'
 
+function getMissionLabel(location: LunarLocation): string {
+  switch (location.type) {
+    case 'apollo':
+      return location.missionName?.toUpperCase() ?? 'APOLLO'
+    case 'proposed':
+      return 'ARTEMIS II'
+    case 'robotic':
+    case 'crater':
+    case 'feature':
+      return 'LUNAR'
+  }
+}
+
 function DotJoin({ items, sepClassName }: { items: React.ReactNode[]; sepClassName: string }) {
   return (
     <>
@@ -36,7 +49,7 @@ export function LocationHeader({ location, noBorder }: { location: LunarLocation
         <div className="flex flex-col min-w-0">
           <Eyebrow className="text-luna-cyan mb-3.5">
             <DotJoin
-              items={['ARTEMIS', location.region]}
+              items={[getMissionLabel(location), location.region]}
               sepClassName="text-luna-fg-3 mx-2"
             />
           </Eyebrow>

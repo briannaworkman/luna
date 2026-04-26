@@ -8,7 +8,7 @@ import { fetchLunarSamples } from '@/lib/data-sources'
 const checkRateLimit = rateLimit(60_000, 100)
 
 const QuerySchema = z.object({
-  locationId: z.string().min(1),
+  locationId: z.string().trim().min(1),
 })
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (rateLimitResponse) return rateLimitResponse
 
   const parsed = QuerySchema.safeParse({
-    locationId: req.nextUrl.searchParams.get('locationId')?.trim(),
+    locationId: req.nextUrl.searchParams.get('locationId'),
   })
 
   if (!parsed.success) {

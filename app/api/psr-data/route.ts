@@ -7,7 +7,7 @@ import { fetchPsrData } from '@/lib/data-sources'
 
 const checkRateLimit = rateLimit(60_000, 100)
 
-const CoerceFiniteNumber = z.string().min(1).transform(Number).pipe(z.number().finite())
+const CoerceFiniteNumber = z.string().trim().min(1).transform(Number).pipe(z.number().finite())
 
 const QuerySchema = z.object({
   lat: CoerceFiniteNumber,

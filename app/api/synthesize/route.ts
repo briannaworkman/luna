@@ -51,6 +51,8 @@ export async function POST(req: NextRequest): Promise<Response> {
           emit: () => undefined,
         })
         const completeness = deriveDataCompleteness(dataContext)
+        // Stamp generatedAt at synthesis call time, after data ingest
+        // (which can take several seconds).
         const generatedAt = new Date().toISOString()
 
         for await (const event of runSynthesis({

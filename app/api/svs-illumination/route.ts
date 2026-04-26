@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic'
 const checkRateLimit = rateLimit(60_000, 100)
 
 const QuerySchema = z.object({
-  lat: z.string().min(1).transform(Number).pipe(z.number().finite().min(-90).max(90)),
-  lon: z.string().min(1).transform(Number).pipe(z.number().finite().min(-180).max(180)),
+  lat: z.string().trim().min(1).transform(Number).pipe(z.number().finite().min(-90).max(90)),
+  lon: z.string().trim().min(1).transform(Number).pipe(z.number().finite().min(-180).max(180)),
 })
 
 export async function GET(

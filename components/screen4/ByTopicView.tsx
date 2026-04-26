@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { groupFindingsByTopic } from '@/lib/brief/topicMap'
 import { FindingItem } from './FindingItem'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import type { MissionBrief } from '@/lib/types/brief'
 import type { ResolvedCitation } from '@/lib/citations/types'
 
@@ -24,9 +25,9 @@ export function ByTopicView({ brief, citationLookup }: ByTopicViewProps) {
     <div className="flex flex-col gap-8">
       {groups.map(({ topic, findings }) => (
         <section key={topic} aria-label={topic}>
-          <h3 className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4 mb-3">
+          <Eyebrow className="text-luna-fg-4 mb-3">
             {topic}
-          </h3>
+          </Eyebrow>
           <div className="bg-luna-base-1 border border-luna-hairline rounded-md px-5">
             {findings.map((finding, i) => (
               <FindingItem

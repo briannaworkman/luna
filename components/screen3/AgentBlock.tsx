@@ -6,6 +6,7 @@ import { ConfidenceBadge } from '@/components/ui/confidence-badge'
 import { AgentStatusGlyph } from '@/components/agent-rail/AgentStatusGlyph'
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import { AGENTS } from '@/lib/constants/agents'
 import { citationKey } from '@/lib/citations/types'
 import type { SingleAgentState } from './useAgentStream'
@@ -52,7 +53,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
           aria-controls={controlsId}
           onClick={() => setCollapsed((c) => !c)}
         >
-          <span className="flex items-center font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
+          <Eyebrow as="span" className="flex items-center text-luna-fg-4">
             {label}
             {isStub && (
               <Tooltip>
@@ -67,7 +68,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
                 </TooltipContent>
               </Tooltip>
             )}
-          </span>
+          </Eyebrow>
           <span className="flex items-center gap-1.5">
             <AgentStatusGlyph status={state.status} />
             {collapsed ? (
@@ -79,7 +80,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
         </button>
       ) : (
         <div className={headerClass}>
-          <span className="flex items-center font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
+          <Eyebrow as="span" className="flex items-center text-luna-fg-4">
             {label}
             {isStub && (
               <Tooltip>
@@ -94,7 +95,7 @@ export function AgentBlock({ agentId, label, state }: AgentBlockProps) {
                 </TooltipContent>
               </Tooltip>
             )}
-          </span>
+          </Eyebrow>
           <AgentStatusGlyph status={state.status} />
         </div>
       )}

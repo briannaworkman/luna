@@ -5,6 +5,7 @@ import { X, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/badge'
 import { Button } from '@/components/ui/button'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import type { LunarLocation } from './types'
 import { useDialogDismiss } from '@/lib/hooks/use-dialog-dismiss'
 
@@ -42,9 +43,9 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
         <div className="px-8 pt-8">
           {/* Mission crumb + close */}
           <div className="flex items-center justify-between mb-6">
-            <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-cyan">
+            <Eyebrow className="text-luna-cyan">
               {location?.region ?? ''}
-            </div>
+            </Eyebrow>
             <Button
               variant="icon"
               onClick={onClose}
@@ -74,9 +75,9 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
               <span key={i}>{part.trim()}</span>
             ))}
           </div>
-          <div className="mt-2 font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3">
+          <Eyebrow className="mt-2 text-luna-fg-3">
             LROC confirmed · Apr 6 2026
-          </div>
+          </Eyebrow>
         </div>
 
         <div className="h-px bg-luna-hairline" />
@@ -102,9 +103,9 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
           {/* Diameter */}
           {location?.diameter && (
             <div className="px-8 pt-4 pb-1">
-              <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3 mb-2.5">
+              <Eyebrow className="text-luna-fg-3 mb-2.5">
                 Diameter
-              </div>
+              </Eyebrow>
               <div className="font-mono text-[13px] text-luna-fg tracking-[0.02em]">
                 {location.diameter}
               </div>
@@ -114,9 +115,9 @@ export function LocationPanel({ location, onClose, onResearch }: LocationPanelPr
           {/* Named by */}
           {location?.namedBy && location.namedBy.length > 0 && (
             <div className="px-8 py-6">
-              <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3 mb-2.5">
+              <Eyebrow className="text-luna-fg-3 mb-2.5">
                 Named by
-              </div>
+              </Eyebrow>
               <div className="font-sans text-[13px] text-luna-fg leading-[1.55]">
                 {location.namedBy.map((name, i) => (
                   <span key={name}>

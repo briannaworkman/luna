@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Badge } from '@/components/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { FindingItem } from './FindingItem'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import { AGENTS, STUB_AGENT_IDS, type AgentId } from '@/lib/constants/agents'
 import type { MissionBrief, BriefSection } from '@/lib/types/brief'
 import type { ResolvedCitation } from '@/lib/citations/types'
@@ -18,7 +19,7 @@ function StubSection({ section }: { section: BriefSection }) {
   return (
     <section aria-label={section.agentName}>
       <div className="bg-luna-base-1 border border-luna-hairline rounded-md px-5 py-4">
-        <div className="flex items-center gap-2 font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4 mb-3">
+        <Eyebrow className="flex items-center gap-2 text-luna-fg-4 mb-3">
           {section.agentName}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -31,7 +32,7 @@ function StubSection({ section }: { section: BriefSection }) {
               </div>
             </TooltipContent>
           </Tooltip>
-        </div>
+        </Eyebrow>
         <p className="font-mono text-[13px] text-luna-fg-4 italic">
           Full analysis ships in V2.
         </p>
@@ -89,9 +90,9 @@ export function ByAgentView({ brief, citationLookup, activationOrder }: ByAgentV
 
         return (
           <section key={agentId} aria-label={section.agentName}>
-            <h3 className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4 mb-3">
+            <Eyebrow className="text-luna-fg-4 mb-3">
               {section.agentName}
-            </h3>
+            </Eyebrow>
             <div className="bg-luna-base-1 border border-luna-hairline rounded-md px-5">
               {section.findings.length === 0 ? (
                 <div className="font-mono text-[13px] text-luna-fg-4 italic py-4">

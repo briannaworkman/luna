@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { AGENTS } from '@/lib/constants/agents'
 import type { Agent, AgentId } from '@/lib/constants/agents'
 import { AgentStatusGlyph, type AgentStatus } from './AgentStatusGlyph'
+import { Eyebrow } from '@/components/ui/eyebrow'
 
 interface AgentRailProps {
   className?: string
@@ -78,9 +79,9 @@ export function AgentRail({
       aria-label="Agent status rail"
     >
       <div className="px-4 pt-6 pb-3">
-        <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3">
+        <Eyebrow className="text-luna-fg-3">
           Agents
-        </div>
+        </Eyebrow>
       </div>
 
       <div className="flex flex-col">

@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { COMPLETENESS_SOURCES, type CompletenessStatus } from '@/lib/types/brief'
 import { COMPLETENESS_LANDING_URLS } from '@/lib/brief/completenessUrls'
 import { CitationList } from '@/components/citations/CitationList'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import type { MissionBrief } from '@/lib/types/brief'
 import type { ResolvedCitation } from '@/lib/citations/types'
 
@@ -30,9 +31,9 @@ export function CompletenessPanel({ dataCompleteness, citations, inline = false 
       aria-label="Data completeness and sources"
     >
       <div className="px-4 pt-4 pb-2">
-        <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
+        <Eyebrow as="span" className="text-luna-fg-4">
           Data completeness
-        </span>
+        </Eyebrow>
       </div>
 
       {COMPLETENESS_SOURCES.map((source) => {
@@ -71,9 +72,9 @@ export function CompletenessPanel({ dataCompleteness, citations, inline = false 
       {citations.length > 0 && (
         <>
           <div className="px-4 pt-4 pb-2">
-            <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-4">
+            <Eyebrow as="span" className="text-luna-fg-4">
               Sources
-            </span>
+            </Eyebrow>
           </div>
           <CitationList citations={citations} />
         </>

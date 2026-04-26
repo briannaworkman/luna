@@ -2,6 +2,7 @@
 
 import { LocationCard } from './LocationCard'
 import type { LunarLocation } from '@/components/globe/types'
+import { Eyebrow } from '@/components/ui/eyebrow'
 
 interface LocationListViewProps {
   locations: LunarLocation[]
@@ -12,9 +13,9 @@ export function LocationListView({ locations, onLocationSelect }: LocationListVi
   if (locations.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-luna-fg-3">
+        <Eyebrow as="p" className="text-luna-fg-3">
           No locations match this filter
-        </p>
+        </Eyebrow>
       </div>
     )
   }

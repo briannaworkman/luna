@@ -211,9 +211,12 @@ export function useAgentStream(input: {
           const seconds = retryAfter ? parseInt(retryAfter, 10) : null
           if (seconds && seconds > 0) {
             const minutes = Math.ceil(seconds / 60)
-            message = `You've reached the 3 query limit for this hour. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`
+            const wait = minutes >= 60
+              ? `${Math.ceil(minutes / 60)} hour${Math.ceil(minutes / 60) === 1 ? '' : 's'}`
+              : `${minutes} minute${minutes === 1 ? '' : 's'}`
+            message = `You've reached the 10 query limit for today. Try again in ${wait}.`
           } else {
-            message = "You've reached the 3 query limit for this hour. Try again later."
+            message = "You've reached the 10 query limit for today. Try again tomorrow."
           }
         }
         if (controller.signal.aborted) return

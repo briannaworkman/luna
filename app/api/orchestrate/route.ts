@@ -5,7 +5,7 @@ import { getLocationById } from '@/components/globe/locations'
 import { runOrchestrator } from '@/lib/orchestrator/run'
 import { createSseResponse } from '@/lib/orchestrator/sse'
 
-const checkRateLimit = rateLimit(60 * 60_000, 3)
+const checkRateLimit = rateLimit(24 * 60 * 60_000, 10)
 
 const RequestSchema = z.object({
   query: z.string().trim().min(1).max(2000),
